@@ -2,11 +2,12 @@ package Test::Suite;
 use strict;
 use warnings;
 
-use Test:Builder;
+use Test::Builder;
 use Cwd qw/cwd/;
 use File::Temp qw/tempfile/;
 use Carp;
 use Scalar::Util 'blessed';
+use Test::Suite::Grouping;
 
 our $VERSION = "0.001";
 our $SINGLETON;
@@ -16,6 +17,12 @@ sub import {
     my $class = shift;
     my %options = @_;
     my ( $package ) = caller();
+
+    {
+        no strict 'refs';
+        push @{ $package . '::ISA' } => 'Test::Suite::TestBase';
+    }
+
     my $self = $class->get;
     my $test = $package->new(\%options);
     $self->add_test( $test );
@@ -25,7 +32,7 @@ sub import {
 
     my $no_plugin = { map { substr($_, 1) => 1 } grep { m/^-/ } @{ $options{ plugins }}};
     my %seen;
-    for my $plugin ( @{ $options{ plugins }}, qw/Grouping Warn Exception More Simple/) {
+    for my $plugin ( @{ $options{ plugins }}, qw/Warn Exception More Simple/) {
         next if $seen{ $plugin }++;
         next if $no_plugin->{ $plugin };
 
@@ -33,6 +40,8 @@ sub import {
         eval "require $name" || die( $@ );
         $name->export_to( $package );
     }
+
+    Test::Suite::Grouping->export_to( $package );
 
     if ( my $tested = $options{ tested }) {
         my @args = $options{ import_args };

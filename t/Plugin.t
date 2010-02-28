@@ -3,29 +3,15 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Suite::PluginTester;
 
 my $CLASS;
-my @results;
 
 BEGIN {
     $CLASS = 'Test::Suite::Plugin';
     use_ok( $CLASS, 'no_import' );
 
     {
-        package Test::Suite;
-        use strict;
-        use warnings;
-        no warnings 'redefine';
-
-        sub get {
-            return 'Test::Suite';
-        }
-
-        sub result {
-            shift;
-            push @results => @_;
-        }
-
         package Test::Suite::Plugin::A;
         use strict;
         use warnings;
@@ -96,18 +82,19 @@ is( MyPackage->a, 'a', "Correct result" );
     use warnings;
     use Test::More;
     use Test::Exception::LessClever;
+    use Test::Suite::PluginTester;
 
     BEGIN {
         Test::Suite::Plugin::A->export_to( __PACKAGE__ );
     }
 
-    @results = ();
+    results( 1 );
     my @lines;
     deep_test( 10, \$lines[0], 1, "caller at 10" );
     deep_test( 5,  \$lines[1], 0, "caller at 5", "Got 0 not 1", "More debug" );
     deep_test( 16, \$lines[2],  1, "caller at 16" );
     is_deeply(
-        \@results,
+        results(),
         [
             {
                 result => 1,
@@ -115,7 +102,7 @@ is( MyPackage->a, 'a', "Correct result" );
                 package => __PACKAGE__,
                 filename => __FILE__,
                 line => $lines[0],
-                time => $results[0]->{ 'time' },
+                time => results()->[0]->{ 'time' },
                 debug => [],
             },
             {
@@ -124,7 +111,7 @@ is( MyPackage->a, 'a', "Correct result" );
                 package => __PACKAGE__,
                 filename => __FILE__,
                 line => $lines[1],
-                time => $results[1]->{ 'time' },
+                time => results()->[1]->{ 'time' },
                 debug => [ "Got 0 not 1", "More debug" ],
             },
             {
@@ -133,7 +120,7 @@ is( MyPackage->a, 'a', "Correct result" );
                 package => __PACKAGE__,
                 filename => __FILE__,
                 line => $lines[2],
-                time => $results[2]->{ 'time' },
+                time => results()->[2]->{ 'time' },
                 debug => [],
             },
         ],
@@ -142,72 +129,72 @@ is( MyPackage->a, 'a', "Correct result" );
 
     time_this();
     is_deeply(
-        $results[-1],
+        results()->[-1],
         {
             result => 1,
             name => "finished",
             package => __PACKAGE__,
             filename => __FILE__,
-            line => $results[-1]->{ 'line' }, #Tested elsware
-            time => $results[-1]->{ 'time' }, #Test this later
+            line => results()->[-1]->{ 'line' }, #Tested elsware
+            time => results()->[-1]->{ 'time' }, #Test this later
             debug => [],
         },
         "New result"
     );
-    ok( $results[-1]->{ 'time' } > 1, "took at least 1 second" );
-    ok( $results[-1]->{ 'time' } < 4, "took less than 4 seconds" );
+    ok( results()->[-1]->{ 'time' } > 1, "took at least 1 second" );
+    ok( results()->[-1]->{ 'time' } < 4, "took less than 4 seconds" );
 
     ok(( do_sub { 1 } "Name" ), "proto worked" );
     is_deeply(
-        $results[-1],
+        results()->[-1],
         {
             result => 1,
             name => "Name",
             package => __PACKAGE__,
             filename => __FILE__,
-            line => $results[-1]->{ 'line' }, #Tested elsware
-            time => $results[-1]->{ 'time' }, #Test this later
+            line => results()->[-1]->{ 'line' }, #Tested elsware
+            time => results()->[-1]->{ 'time' }, #Test this later
             debug => [],
         },
         "Deep proto test"
     );
     ok(!( do_sub { 0 } "Name" ), "proto false" );
     is_deeply(
-        $results[-1],
+        results()->[-1],
         {
             result => 0,
             name => "Name",
             package => __PACKAGE__,
             filename => __FILE__,
-            line => $results[-1]->{ 'line' }, #Tested elsware
-            time => $results[-1]->{ 'time' }, #Test this later
+            line => results()->[-1]->{ 'line' }, #Tested elsware
+            time => results()->[-1]->{ 'time' }, #Test this later
             debug => [],
         },
         "Deep proto test"
     );
     ok(!( do_sub { } "Name" ), "proto undef" );
     is_deeply(
-        $results[-1],
+        results()->[-1],
         {
             result => 0,
             name => "Name",
             package => __PACKAGE__,
             filename => __FILE__,
-            line => $results[-1]->{ 'line' }, #Tested elsware
-            time => $results[-1]->{ 'time' }, #Test this later
+            line => results()->[-1]->{ 'line' }, #Tested elsware
+            time => results()->[-1]->{ 'time' }, #Test this later
             debug => [],
         },
         "Deep proto test"
     );
 
     extended();
-    is( $results[-1]->{result}, 'extended', "extended" );
+    is( results()->[-1]->{result}, 'extended', "extended" );
 
     light();
-    is( $results[-1]->{result}, 'light', 'light' );
+    is( results()->[-1]->{result}, 'light', 'light' );
 
     code_inline();
-    is( $results[-1]->{result}, 'code inline', 'code inline' );
+    is( results()->[-1]->{result}, 'code inline', 'code inline' );
 
     my @warn;
     local $SIG{__WARN__} = sub { push @warn => @_ };

@@ -2,7 +2,17 @@ package Test::Suite::Grouping;
 use strict;
 use warnings;
 
-use base 'Test::Suite::Plugin';
+sub export_to {
+    my $class = shift;
+    my ( $package ) = @_;
+    return 1 unless $package;
+
+    {
+        my $us = $class . '::';
+        no strict 'refs';
+        return grep { defined( *{$us . $_}{CODE} )} keys %$us;
+    }
+}
 
 sub test_set {
 

@@ -4,6 +4,7 @@ use warnings;
 use Time::HiRes qw/time/;
 use Carp;
 use Scalar::Util 'blessed';
+our @CARP_NOT = ( __PACKAGE__, 'Test::Suite::PluginTester' );
 
 #{{{ TYPES
 our %TYPES = (
@@ -31,17 +32,9 @@ for my $type ( keys %TYPES ) {
     *$type = sub { $TYPES{ $type }};
 }
 #}}}
-our @EXPORT = (qw/export_to tester Maybe/, keys %TYPES);
+our @EXPORT = (qw/export_to tester/, keys %TYPES);
 our %SUBS;
 our $TIMER;
-
-sub _ref_is {
-    my ( $val, $type ) = @_;
-    return 0 unless $val;
-    return 0 unless my $ref = ref $val;
-    return $_[0]->isa( $type ) if blessed( $_[0] );
-    return $ref eq $type;
-}
 
 sub import {
     my $class = shift;
@@ -201,7 +194,7 @@ sub _first_outside_caller {
     my $level = 0;
     do {
         ( $package, $filename, $line ) = caller($level++);
-    } until( !$package || $package ne __PACKAGE__ );
+    } until( !$package || ($package ne __PACKAGE__ && $package ne 'Test::Suite::PluginTester' ));
     return ( $package, $filename, $line );
 }
 
@@ -210,8 +203,17 @@ sub _first_non_plugin_caller {
     my $level = 0;
     do {
         ( $package, $filename, $line ) = caller($level++);
-    } until( !$package || !$package->isa( __PACKAGE__ ));
+    } until( !$package || (!$package->isa( __PACKAGE__ ) && !$package->isa('Test::Suite::PluginTester')));
     return ( $package, $filename, $line );
 }
+
+sub _ref_is {
+    my ( $val, $type ) = @_;
+    return 0 unless $val;
+    return 0 unless my $ref = ref $val;
+    return $_[0]->isa( $type ) if blessed( $_[0] );
+    return $ref eq $type;
+}
+
 
 1;
