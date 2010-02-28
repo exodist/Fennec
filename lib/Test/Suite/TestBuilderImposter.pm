@@ -3,14 +3,9 @@ use strict;
 use warnings;
 use Test::Builder;
 use Carp;
-use base 'Exporter';
-
-our @RESULTS;
-our @DIAGS;
+use base qw/Exporter Test::Builder/;
 
 our @EXPORT = qw/wrap_sub/;
-
-sub new { return bless( {}, $_[0] ) }
 
 sub wrap_sub {
     my ($sub) = @_;
@@ -25,10 +20,23 @@ sub wrap_sub {
     my $proto = prototype( $sub );
 
     my $new = sub {
-        local @RESULTS;
-        local @DIAGS;
+        my $result;
+        my @diags;
+
+        no warnings 'redefine';
+        local *Test::Builder::ok = sub {
+            shift;
+            my ( $ok, $name ) = @_;
+            $result = [ $ok, $name ];
+        };
+        local *Test::Builder::diag = sub {
+            my $class = shift;
+            push @diags => @_;
+        };
+
         $sub->( @_ );
-        return ( @{ last_result() }, @DIAGS );
+
+        return ( @$result, @diags );
     };
 
     # No prototype
@@ -38,46 +46,4 @@ sub wrap_sub {
     return eval "sub($proto) { \$new->( \@_ ) }" || die($@);
 }
 
-sub last_result {
-    pop @RESULTS;
-}
-
-sub ok{
-    shift;
-    my ( $result, $name ) = @_;
-    push @RESULTS => [ $result, $name ];
-}
-
-sub diag{
-    my $class = shift;
-    push @DIAGS => @_;
-}
-
-sub isa {
-    my $class = shift;
-    my ( $want ) = @_;
-    return 1 if $want eq 'Test::Builder';
-    return $class->SUPER::isa( @_ );
-}
-
-sub can {
-    my $class = shift;
-    my ($name) = @_;
-    no strict 'refs';
-    return \&$name
-        || sub { croak 'TestBuilderImposter->' . $name . '() is not yet implemented' };
-}
-
-our $AUTOLOAD;
-sub AUTOLOAD {
-    my $class = shift;
-    my $name = $AUTOLOAD;
-    $name =~ s/^.*:([^:]+)$/$1/g;
-    my $sub = $class->can( $1 );
-    goto &$sub;
-}
-
-sub DESTROY {}
-
 1;
-

@@ -32,10 +32,11 @@ for my $type ( keys %TYPES ) {
     *$type = sub { $TYPES{ $type }};
 }
 #}}}
-our @EXPORT = (qw/export_to tester util no_test/, keys %TYPES);
+our @EXPORT = (qw/export_to tester util todo no_test/, keys %TYPES);
 our %SUBS;
 our $TIMER;
 our $NO_TEST = \"No Test";
+our $TODO = "";
 
 sub import {
     my $class = shift;
@@ -48,6 +49,7 @@ sub import {
     *{ $package . '::' . $_ } = \&{ $_ } for @EXPORT;
 }
 
+sub TODO { $TODO }
 
 =head1 EXPORTED SUBS
 
@@ -63,14 +65,17 @@ Export all non-private subs from the subclass to the specified package.
 
 sub export_to {
     my $class = shift;
-    my ( $package ) = @_;
+    my ( $package, $prefix ) = @_;
     return 1 unless $package;
 
     return unless my $subs = $SUBS{ $class };
 
     for my $name ( keys %$subs ) {
+        my $newname = $prefix ? "$prefix$name" : $name;
         no strict 'refs';
-        *{ $package . '::' . $name } = $subs->{ $name };
+        use Data::Dumper;
+        print Dumper( $package . '::' . $newname, $subs->{ $name }, \$TODO ) if $name eq 'TODO';
+        *{ $package . '::' . $newname } = $subs->{ $name };
     }
 }
 
@@ -135,6 +140,7 @@ sub _record {
         line => $line || undef,
         time => defined( $time ) ? $time : undef,
         debug => \@debug,
+        $TODO ? ( todo => $TODO ) : (),
     });
 }
 
