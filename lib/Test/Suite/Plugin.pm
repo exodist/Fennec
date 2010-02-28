@@ -32,9 +32,10 @@ for my $type ( keys %TYPES ) {
     *$type = sub { $TYPES{ $type }};
 }
 #}}}
-our @EXPORT = (qw/export_to tester util/, keys %TYPES);
+our @EXPORT = (qw/export_to tester util no_test/, keys %TYPES);
 our %SUBS;
 our $TIMER;
+our $NO_TEST = \"No Test";
 
 sub import {
     my $class = shift;
@@ -46,6 +47,7 @@ sub import {
     push @{ $package . '::ISA' } => $class;
     *{ $package . '::' . $_ } = \&{ $_ } for @EXPORT;
 }
+
 
 =head1 EXPORTED SUBS
 
@@ -71,6 +73,15 @@ sub export_to {
         *{ $package . '::' . $name } = $subs->{ $name };
     }
 }
+
+=item no_test()
+
+If a tester sub returns the result of this function then no test will be
+recorded.
+
+=cut
+
+sub no_test { return $NO_TEST }
 
 sub util {
     my ( $name, $code, $package, $proto ) = _util_args( @_ );
@@ -147,6 +158,7 @@ sub _wrap_tester {
 
         my $start = time();
         my ( $result, $name, @debug ) = $code->( @_ );
+        return 1 if $result and $result == $NO_TEST;
         _record( $result, $name, (time() - $start), @debug);
         return $result;
     };

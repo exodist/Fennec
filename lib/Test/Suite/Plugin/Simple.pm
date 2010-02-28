@@ -12,3 +12,5 @@ tester ok => (
         return ( $result ? 1 : 0, $name );
     },
 );
+
+1;

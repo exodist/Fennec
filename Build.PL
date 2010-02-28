@@ -16,10 +16,12 @@ my $build = Module::Build->new(
         'Scalar::List::Utils' => 0,
         'Time::HiRes' => 0,
         'autodie' => 0,
+        'Test::Warn' => 0,
     },
     build_requires => {
         'Test::Exception::LessClever' => '0.001',
         'Test::Builder::Tester' => 0,
+        'Object::Quick' => '0.012',
     },
 );
 

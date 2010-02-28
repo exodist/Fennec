@@ -62,6 +62,16 @@ throws_ok { $one->add_test( $test )}
 
 ok( $one->is_parent, "is parent" );
 
+{
+    package My::Test;
+    use strict;
+    use warnings;
+
+    use Test::Suite;
+
+
+}
+
 done_testing;
 
 __END__
