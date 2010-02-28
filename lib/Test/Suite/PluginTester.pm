@@ -75,14 +75,24 @@ problems here, but I am not sure of a better way yet, just be careful.
 
 =cut
 
-our @EXPORT = qw/results/;
+our @EXPORT = qw/results diags/;
 use base 'Exporter';
 
 our $RESULTS = [];
+our $DIAG = [];
 
 sub results {
     $RESULTS = [] if @_;
     return $RESULTS;
+}
+
+sub diags {
+    $DIAG = [] if @_;
+    return $DIAG;
+}
+
+sub push_diag {
+    push @$DIAG => @_;
 }
 
 require Test::Suite::Plugin;
@@ -96,6 +106,10 @@ require Test::Suite::Plugin;
         local *{ 'Test::Suite::result' } = sub {
             shift;
             push @$RESULTS => @_;
+        };
+        local *{ 'Test::Suite::diag' } = sub {
+            shift;
+            push @$DIAG => @_;
         };
         return $old->( @_ );
     };
