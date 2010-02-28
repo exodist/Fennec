@@ -68,12 +68,9 @@ sub can {
 our $AUTOLOAD;
 sub AUTOLOAD {
     my $class = shift;
-    use Data::Dumper;
     my $name = $AUTOLOAD;
     $name =~ s/^.*:([^:]+)$/$1/g;
-    print Dumper( $AUTOLOAD, $class, $name );
     my $sub = $class->can( $1 );
-    print "Yay\n";
     goto &$sub;
 }
 
