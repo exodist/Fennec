@@ -6,7 +6,7 @@ use Test:Builder;
 use Cwd qw/cwd/;
 use File::Temp qw/tempfile/;
 use Carp;
-use use Scalar::Util 'blessed';
+use Scalar::Util 'blessed';
 
 our $VERSION = "0.001";
 our $SINGLETON;
@@ -147,10 +147,20 @@ sub result {
     $self->_send_result( @_ );
 }
 
+sub _handle_result {
+
+}
+
+sub _send_result {
+
+}
+
 sub run {
     my $self = shift;
+    croak "Already running"
+        if $self->is_running;
     $self->is_running( 1 );
-    my $socket = $self->socket;
+    my $listen = $self->socket;
 }
 
 1;

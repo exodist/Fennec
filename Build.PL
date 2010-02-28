@@ -14,6 +14,7 @@ my $build = Module::Build->new(
         'IO' => 1.2301,
         'File::Temp' => 0.20,
         'Scalar::List::Utils' => 0,
+        'Time::HiRes' => 0,
     },
     build_requires => {
         'Test::Exception::LessClever' => '0.001',

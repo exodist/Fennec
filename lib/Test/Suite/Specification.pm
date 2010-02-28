@@ -219,6 +219,10 @@ and L<Test::Warn> should be exported by default. It is unfortunate, but most
 functions will likely need to be re-implemented to work with the forking
 capabilities.
 
+=item coverage
+
+prove_suite should have a simple flag to turn on coverage testing
+
 =back
 
 =head1 AUTHORS
