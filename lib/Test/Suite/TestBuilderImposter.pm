@@ -2,48 +2,36 @@ package Test::Suite::TestBuilderImposter;
 use strict;
 use warnings;
 use Test::Builder;
-use Carp;
-use base qw/Exporter Test::Builder/;
 
-our @EXPORT = qw/wrap_sub/;
+1;
 
-sub wrap_sub {
-    my ($sub) = @_;
-    croak "wrap_sub called without sub" unless $sub;
-    unless ( ref $sub and ref $sub eq 'CODE' ) {
-        my ( $caller ) = caller;
-        $sub = $caller->can( $sub );
-    }
-    croak( "Could not find code" )
-        unless $sub && ref $sub eq 'CODE';
+package Test::Builder;
+use strict;
+use warnings;
 
-    my $proto = prototype( $sub );
+our $TBI_RESULT;
+our @TBI_DIAGS;
 
-    my $new = sub {
-        my $result;
-        my @diags;
+our %OVERRIDE = (
+    ok => sub {
+        shift;
+        my ( $ok, $name ) = @_;
+        $Test::Suite::Plugin::TB_USED++;
+        $TBI_RESULT = [ $ok, $name ];
+    },
+    diag => sub {
+        shift;
+        $Test::Suite::Plugin::TB_USED++;
+        push @TBI_DIAGS => @_;
+    },
+);
 
-        no warnings 'redefine';
-        local *Test::Builder::ok = sub {
-            shift;
-            my ( $ok, $name ) = @_;
-            $result = [ $ok, $name ];
-        };
-        local *Test::Builder::diag = sub {
-            my $class = shift;
-            push @diags => @_;
-        };
-
-        $sub->( @_ );
-
-        return ( @$result, @diags );
-    };
-
-    # No prototype
-    return $new unless $proto;
-
-    # Prototype
-    return eval "sub($proto) { \$new->( \@_ ) }" || die($@);
+for my $ref (keys %OVERRIDE) {
+    no warnings 'redefine';
+    no strict 'refs';
+    my $newref = "real_$ref";
+    *$newref = \&$ref;
+    *$ref = $OVERRIDE{ $ref };
 }
 
 1;

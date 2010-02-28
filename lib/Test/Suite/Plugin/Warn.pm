@@ -14,6 +14,6 @@ BEGIN {
 
 use Test::Warn @SUBS;
 
-tester $_ => wrap_sub( $_ ) for @SUBS;
+tester $_ => $_ for @SUBS;
 
 1;

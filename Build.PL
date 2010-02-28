@@ -13,10 +13,11 @@ my $build = Module::Build->new(
         'Test::Simple' => 0.88,
         'IO' => 1.2301,
         'File::Temp' => 0.20,
-        'Scalar::List::Utils' => 0,
+        'Scalar::Util' => 0,
         'Time::HiRes' => 0,
         'autodie' => 0,
         'Test::Warn' => 0,
+        'Sub::Uplevel' => 0.20,
     },
     build_requires => {
         'Test::Exception::LessClever' => '0.001',

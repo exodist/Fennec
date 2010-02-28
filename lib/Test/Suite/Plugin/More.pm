@@ -14,7 +14,7 @@ BEGIN {
 
 use Test::More import => \@SUBS;
 
-tester $_ => wrap_sub( $_ ) for @SUBS;
+tester $_ => $_ for @SUBS;
 util diag => sub { Test::Suite->diag( @_ ) };
 util todo => sub(&$) {
     my ( $code, $todo ) = @_;

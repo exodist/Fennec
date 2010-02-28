@@ -8,15 +8,30 @@ use File::Temp qw/tempfile/;
 use Carp;
 use Scalar::Util 'blessed';
 use Test::Suite::Grouping;
+use Test::Suite::TestBase;
+use Sub::Uplevel;
 
 our $VERSION = "0.001";
 our $SINGLETON;
 our $TB = Test::Builder->new;
+our @DEFAULT_PLUGINS = qw/Warn Exception More Simple/;
 
 sub import {
     my $class = shift;
     my %options = @_;
-    my ( $package ) = caller();
+    my ( $package, $filename ) = caller();
+
+    if ( my $get_from = $options{ testing }) {
+        eval "require $get_from" || croak( $@ );
+
+        my ( $level, $sub, @args ) = $class->_get_import( $get_from, $package );
+        next unless $sub;
+
+        push @args => @{ $options{ import_args }} if $options{ import_args };
+
+        $level ? uplevel( $level, $sub, @args )
+               : $sub->( @args );
+    }
 
     {
         no strict 'refs';
@@ -24,32 +39,50 @@ sub import {
     }
 
     my $self = $class->get;
-    my $test = $package->new(\%options);
+    my $test = $package->new( %options, filename => $filename );
     $self->add_test( $test );
 
-    # If there are no options then don't continue.
-    return $test unless keys %options;
+    $class->export_plugins( $package, $options{ plugins } );
+    Test::Suite::Grouping->export_to( $package );
+    return $test;
+}
 
-    my $no_plugin = { map { substr($_, 1) => 1 } grep { m/^-/ } @{ $options{ plugins }}};
-    my %seen;
-    for my $plugin ( @{ $options{ plugins }}, qw/Warn Exception More Simple/) {
-        next if $seen{ $plugin }++;
-        next if $no_plugin->{ $plugin };
+sub _get_import {
+    my $class = shift;
+    my ($get_from, $send_to) = @_;
+    my $import = $get_from->can( 'import' );
+    return unless $import;
 
+    return ( 1, $import, $get_from )
+        unless $get_from->isa( 'Exporter' );
+
+    return ( 1, $import, $get_from )
+        if $import != Exporter->can( 'import' );
+
+    return ( 0, $get_from->can('export_to_level'), $get_from, 1, $send_to );
+}
+
+sub export_plugins {
+    my $class = shift;
+    my ( $package, $specs ) = @_;
+    my @plugins = @DEFAULT_PLUGINS;
+
+    if ( $specs ) {
+        my %remove;
+        for ( @$specs ) {
+            m/^-(.*)$/ ? ($remove{$1}++)
+                       : (push @plugins => $_);
+        }
+
+        my %seen;
+        @plugins = grep { !($seen{$_}++ || $remove{$_}) } @plugins;
+    }
+
+    for my $plugin ( @plugins ) {
         my $name = "Test\::Suite\::Plugin\::$plugin";
         eval "require $name" || die( $@ );
         $name->export_to( $package );
     }
-
-    Test::Suite::Grouping->export_to( $package );
-
-    if ( my $tested = $options{ tested }) {
-        my @args = $options{ import_args };
-        local *{"$package\::_import_args"} = sub { @args };
-        my $r = eval "package $package; use $tested _import_args(); 'xxgoodxx'";
-        die( $@ ) unless $r eq 'xxgoodxx';
-    }
-    return $test;
 }
 
 sub get { goto &new };

@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::Suite::PluginTester;
+use Test::Suite::TestHelper;
 use Test::More;
 
 my $CLASS;
@@ -15,20 +15,26 @@ BEGIN {
 can_ok( __PACKAGE__, @Test::Suite::Plugin::More::SUBS );
 
 my_is_deeply( { a => 'a' }, { 'a' => 'a' }, "My is_deeply()" );
-ok( results->[-1]->{result}, "passed" );
-is( results->[-1]->{name}, "My is_deeply()", "Correct name" );
-ok( !results->[-1]->{todo}, "Was not todo" );
+real_tests {
+    ok( results->[-1]->{result}, "passed" );
+    is( results->[-1]->{name}, "My is_deeply()", "Correct name" );
+    ok( !results->[-1]->{todo}, "Was not todo" );
+};
 
 my_todo {
     my_is_deeply( { a => 'a' }, { 'a' => 'b' }, "TODO test" );
-    ok( !results->[-1]->{result}, "failes" );
-    is( results->[-1]->{name}, "TODO test", "Correct name" );
-    is( results->[-1]->{todo}, "This is a todo", "Was TODO" );
+    real_tests {
+        ok( !results->[-1]->{result}, "failes" );
+        is( results->[-1]->{name}, "TODO test", "Correct name" );
+        is( results->[-1]->{todo}, "This is a todo", "Was TODO" );
+    };
 } "This is a todo";
 
 my_is_deeply( { a => 'a' }, { 'a' => 'a' }, "My is_deeply()" );
-ok( results->[-1]->{result}, "passed" );
-is( results->[-1]->{name}, "My is_deeply()", "Correct name" );
-ok( !results->[-1]->{todo}, "Was not todo" );
+real_tests {
+    ok( results->[-1]->{result}, "passed" );
+    is( results->[-1]->{name}, "My is_deeply()", "Correct name" );
+    ok( !results->[-1]->{todo}, "Was not todo" );
+};
 
 done_testing;

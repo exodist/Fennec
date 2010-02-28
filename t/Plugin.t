@@ -3,13 +3,13 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Suite::PluginTester;
+use Test::Suite::TestHelper;
 
 my $CLASS;
 
 BEGIN {
     $CLASS = 'Test::Suite::Plugin';
-    use_ok( $CLASS, 'no_import' );
+    real_tests { use_ok( $CLASS, 'no_import' ) };
 
     {
         package Test::Suite::Plugin::A;
@@ -72,19 +72,21 @@ BEGIN {
     }
 }
 
-ok( !MyPackage->can($_), "MyPackage cannot $_" ) for qw/a _a/;
-Test::Suite::Plugin::A->export_to( 'MyPackage' );
-ok( !MyPackage->can($_), "MyPackage still cannot $_" ) for qw/_a/;
-can_ok( 'MyPackage', 'a' );
-is( MyPackage->a, 'a', "Correct result" );
+real_tests {
+    ok( !MyPackage->can($_), "MyPackage cannot $_" ) for qw/a _a/;
+    Test::Suite::Plugin::A->export_to( 'MyPackage' );
+    ok( !MyPackage->can($_), "MyPackage still cannot $_" ) for qw/_a/;
+    can_ok( 'MyPackage', 'a' );
+    is( MyPackage->a, 'a', "Correct result" );
+};
 
-{
+real_tests {
     package main::2;
     use strict;
     use warnings;
     use Test::More;
     use Test::Exception::LessClever;
-    use Test::Suite::PluginTester;
+    use Test::Suite::TestHelper;
 
     BEGIN {
         Test::Suite::Plugin::A->export_to( __PACKAGE__ );
@@ -249,6 +251,6 @@ is( MyPackage->a, 'a', "Correct result" );
 
     is( my_diag( 'a' ), 'a', "Util function test" );
 
-}
+};
 
 done_testing;

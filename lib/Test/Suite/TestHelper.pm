@@ -1,12 +1,13 @@
-package Test::Suite::PluginTester;
+package Test::Suite::TestHelper;
 use strict;
 use warnings;
+use Test::Suite::TestBuilderImposter;
 
 =pod
 
 =head1 NAME
 
-Test::Suite::PluginTester - Easy testing of plugins
+Test::Suite::TestHelper - Make Test::Suite testable
 
 =head1 DESCRIPTION
 
@@ -16,25 +17,27 @@ results that would be sent to Test::Suite.
 =head1 SYNOPSYS
 
     #!/usr/bin/perl
-    use Test::Suite::PluginTester;
+    use Test::Suite::TestHelper;
     use warnings;
     use strict;
     use Test::More;
     use Data::Dumper;
 
-    use_ok( 'MyPlugin' );
-
     # Should be in a BEGIN to make testers with prototypes work.
-    BEGIN { MyPlugin->export_to( __PACKAGE__ ) }
+    BEGIN {
+        real_tests { use_ok( 'MyPlugin' ) };
+        MyPlugin->export_to( __PACKAGE__ );
+    }
 
     my_tester( ... );
     my_other_tester( ... );
 
     my $results = results();
 
-    for my $result ( @$results ) {
-        print Dumper( $result );
-    }
+    # Actual tests that should produce output must be in a 'real_tests' block.
+    real_tests {
+        ok( @$results, "found results" );
+    };
 
 A single result will follow this format
 
@@ -52,6 +55,9 @@ A single result will follow this format
         package => $PACKAGE,   # Package the test was run from
         filename => $FILENAME, # Filename test was run from
         line => $LINE,         # Line number where test was run
+
+        # These may or may not be defined
+        todo => $REASON,       # If the test was run in a todo {} block.
     }
 
 =head1 EXPORTS
@@ -75,7 +81,7 @@ problems here, but I am not sure of a better way yet, just be careful.
 
 =cut
 
-our @EXPORT = qw/results diags/;
+our @EXPORT = qw/results diags real_tests/;
 use base 'Exporter';
 
 our $RESULTS = [];
@@ -93,6 +99,16 @@ sub diags {
 
 sub push_diag {
     push @$DIAG => @_;
+}
+
+sub real_tests(&) {
+    my ( $sub ) = @_;
+
+    no warnings 'redefine';
+    local *Test::Builder::ok = \&Test::Builder::real_ok;
+    local *Test::Builder::diag = \&Test::Builder::real_diag;
+
+    return $sub->();
 }
 
 require Test::Suite::Plugin;

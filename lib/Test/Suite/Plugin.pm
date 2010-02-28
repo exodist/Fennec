@@ -4,7 +4,7 @@ use warnings;
 use Time::HiRes qw/time/;
 use Carp;
 use Scalar::Util 'blessed';
-our @CARP_NOT = ( __PACKAGE__, 'Test::Suite::PluginTester' );
+our @CARP_NOT = ( __PACKAGE__, 'Test::Suite::TestHelper' );
 
 #{{{ TYPES
 our %TYPES = (
@@ -36,6 +36,7 @@ our @EXPORT = (qw/export_to tester util todo no_test/, keys %TYPES);
 our %SUBS;
 our $TIMER;
 our $NO_TEST = \"No Test";
+our $TB_USED = 0;
 our $TODO = "";
 
 sub import {
@@ -163,8 +164,16 @@ sub _wrap_tester {
         _check_args( \@_, $proto->{ checks }) if $proto->{ checks };
 
         my $start = time();
+        local $TB_USED = 0;
         my ( $result, $name, @debug ) = $code->( @_ );
-        return 1 if $result and $result == $NO_TEST;
+        {
+            no warnings 'numeric';
+            return 1 if $result and $result == $NO_TEST;
+        }
+        if ( $TB_USED ) {
+            ( $result, $name ) = @$Test::Builder::TBI_RESULT;
+            @debug =  @Test::Builder::TBI_DIAGS;
+        }
         _record( $result, $name, (time() - $start), @debug);
         return $result;
     };
@@ -225,7 +234,7 @@ sub _first_outside_caller {
     my $level = 0;
     do {
         ( $package, $filename, $line ) = caller($level++);
-    } until( !$package || ($package ne __PACKAGE__ && $package ne 'Test::Suite::PluginTester' ));
+    } until( !$package || _not_masked_caller( $package, 0 ));
     return ( $package, $filename, $line );
 }
 
@@ -234,8 +243,15 @@ sub _first_non_plugin_caller {
     my $level = 0;
     do {
         ( $package, $filename, $line ) = caller($level++);
-    } until( !$package || (!$package->isa( __PACKAGE__ ) && !$package->isa('Test::Suite::PluginTester')));
+    } until( !$package || _not_masked_caller( $package, 1 ));
     return ( $package, $filename, $line );
+}
+
+sub _not_masked_caller {
+    croak( "Not enough arguments for _not_masked_caller" )
+        unless @_ >= 2;
+    my ( $got, $isa, @not ) = (@_, @CARP_NOT);
+    return !grep { ($got eq $_) ? 1 : ($isa ? $got->isa($_) : 0) } @not;
 }
 
 sub _ref_is {
