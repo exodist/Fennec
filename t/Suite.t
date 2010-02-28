@@ -4,12 +4,63 @@ use warnings;
 
 use Test::More;
 use Test::Exception::LessClever;
+use Test::Builder::Tester;
 
 my $CLASS = 'Test::Suite';
-lives_ok { eval "require $CLASS" || die( $@ )} "Loaded $CLASS";
+require Test::Suite;
 
+#{{{ Test _handle_result before we override it.
+test_out( "ok 1" );
+$CLASS->_handle_result({ result => 1 });
+test_out( "ok 2 - NAME" );
+$CLASS->_handle_result({ result => 1, name => 'NAME' });
 
+test_out( "not ok 3 - NAME" );
+test_fail(+4);
+#test_diag( "\tTest failed in file filename\t\non line 1" );
+test_diag( "a" );
+test_diag( "b" );
+$CLASS->_handle_result({
+    result => 0,
+    name => 'NAME',
+    filename => 'filename',
+    line => '1',
+    debug => [ 'a', 'b' ],
+});
 
+test_diag( "xxx" );
+$CLASS->_handle_result({ diag => "xxx" });
+
+test_test( "_handle_result works" );
+#}}}
+
+my @results;
+{
+    no warnings 'redefine';
+    *Test::Suite::_handle_result = sub { shift and push @results => @_ };
+}
+
+Test::Suite->_handle_result( 'a' );
+is_deeply( \@results, [ 'a' ], "Saving results" );
+@results = ();
+
+my $one = $CLASS->new();
+is( $one, $CLASS->new(), "singleton" );
+is( $one, $CLASS->get(), "singleton - get" );
+is( $one->parent_pid, $$, "Parent PID" );
+is( $one->pid, $$, "PID" );
+isa_ok( $one->{ socket }, 'IO::Socket::UNIX' );
+like( $one->socket_file, qr{./\.test-suite\.$$\.....$}, "Socket file" );
+
+my $test = bless( {}, 'Some::Package' );
+$one->add_test( $test );
+is( $one->get_test( 'Some::Package' ), $test, "Got test" );
+
+throws_ok { $one->add_test( $test )}
+          qr/Some::Package has already been added as a test/,
+          "No overide";
+
+ok( $one->is_parent, "is parent" );
 
 done_testing;
 
@@ -53,125 +104,3 @@ sub import {
     }
     return $test;
 }
-
-sub get { goto &new };
-
-sub new {
-    my $class = shift;
-    return $SINGLETON if $SINGLETON;
-
-    # Create socket
-    (undef, my $file) = tempfile( cwd() . "/.test-suite.$$.XXXX", UNLINK => 1 );
-    require IO::Socket::UNIX;
-    my $socket = IO::Socket::UNIX->new(
-        Listen => 1,
-        Local => $file,
-    );
-
-    $SINGLETON = bless(
-        {
-            parent_pid => $$,
-            pid => $$,
-            socket => $socket,
-            socket_file => $file,
-        },
-        $class
-    );
-    return $SINGLETON;
-}
-
-sub add_test {
-    my $self = shift;
-    my ( $test ) = @_;
-    my $package = blessed( $test );
-
-    croak "$package has already been added as a test"
-        if $self->tests->{ $package };
-
-    $self->tests->{ $package } = $test;
-}
-
-sub get_test {
-    my $self = shift;
-    my ( $package ) = @_;
-    return $self->tests->{ $package };
-}
-
-sub tests {
-    my $self = shift;
-    return $self->{ tests };
-}
-
-sub pid {
-    my $self = shift;
-    $self->{ pid } = $$ if @_;
-    return $self->{ pid };
-}
-
-sub parent_pid {
-    my $self = shift;
-    return $self->{ parent_pid };
-}
-
-sub is_parent {
-    my $self = shift;
-    return ( $$ == $self->parent_pid ) ? 1 : 0;
-}
-
-sub socket_file {
-    my $self = shift;
-    return $self->{ socket_file },
-}
-
-sub socket {
-    my $self = shift;
-    return $self->{ socket } if $$ == $self->parent_pid;
-
-    # If we are in a new child clear existing sockets and make new ones
-    unless ( $$ == $self->pid ) {
-        delete $self->{ socket };
-        delete $self->{ client_socket };
-        $self->pid( 1 ); #Set pid.
-    }
-
-    $self->{ client_socket } ||= IO::Socket::UNIX->new(
-        Peer => $self->socket_file,
-    );
-
-    return $self->{ client_socket };
-}
-
-sub is_running {
-    my $self = shift;
-    ($self->{ is_running }) = @_ if @_;
-    return $self->{ is_running };
-}
-
-sub result {
-    my $self = shift;
-    croak( "Testing has not been started" )
-        unless $self->is_running;
-
-    $self->_handle_result( @_ )
-        if ( $self->is_parent );
-
-    $self->_send_result( @_ );
-}
-
-sub _handle_result {
-
-}
-
-sub _send_result {
-
-}
-
-sub run {
-    my $self = shift;
-    croak "Already running"
-        if $self->is_running;
-    $self->is_running( 1 );
-    my $listen = $self->socket;
-}
-
-1;

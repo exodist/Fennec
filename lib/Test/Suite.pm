@@ -59,12 +59,14 @@ sub new {
     return $SINGLETON if $SINGLETON;
 
     # Create socket
-    (undef, my $file) = tempfile( cwd() . "/.test-suite.$$.XXXX", UNLINK => 1 );
+    my ( $fh, $file ) = tempfile( cwd() . "/.test-suite.$$.XXXX", UNLINK => 1 );
     require IO::Socket::UNIX;
+    close( $fh ) || die( $! );
+    unlink( $file );
     my $socket = IO::Socket::UNIX->new(
         Listen => 1,
         Local => $file,
-    );
+    ) || die( $! );
 
     $SINGLETON = bless(
         {
@@ -97,6 +99,7 @@ sub get_test {
 
 sub tests {
     my $self = shift;
+    $self->{ tests } ||= {};
     return $self->{ tests };
 }
 
@@ -159,13 +162,18 @@ sub result {
 sub _handle_result {
     my $class = shift;
     my ($result) = @_;
+    if (( keys %$result ) == 1 && $result->{ diag }) {
+        $TB->diag( $result->{ diag });
+        return 1;
+    }
+
     $TB->ok($result->{ result } || 0, $result->{ name });
-    $TB->diag(
-        "Test failed in file " .
-        ($result->{ filename } || '(NOT FOUND)') .
-        " on line " .
-        ($results->{ line } || '(NOT FOUND)')
-    ) unless $result->{ result };
+#    $TB->diag(
+#        "  Test failed in file " .
+#        ($result->{ filename } || '(NOT FOUND)') .
+#        "\n  on line " .
+#        ($result->{ line } || '(NOT FOUND)')
+#    ) unless $result->{ result };
     $TB->diag( $_ ) for @{ $result->{ debug } || []};
 }
 
