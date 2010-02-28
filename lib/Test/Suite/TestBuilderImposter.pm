@@ -5,7 +5,9 @@ use Test::Builder;
 use Carp;
 use base 'Exporter';
 
-my @STACK;
+our @RESULTS;
+our @DIAGS;
+
 our @EXPORT = qw/wrap_sub/;
 
 sub new { return bless( {}, $_[0] ) }
@@ -17,37 +19,38 @@ sub wrap_sub {
         my ( $caller ) = caller;
         $sub = $caller->can( $sub );
     }
+    croak( "Could not find code" )
+        unless $sub && ref $sub eq 'CODE';
 
     my $proto = prototype( $sub );
 
+    my $new = sub {
+        local @RESULTS;
+        local @DIAGS;
+        $sub->( @_ );
+        return ( @{ last_result() }, @DIAGS );
+    };
+
     # No prototype
-    return sub {
-        $sub->( \@_ );
-        return @{ last_result() };
-    } unless $proto;
+    return $new unless $proto;
 
     # Prototype
-    return eval "
-        sub($proto) {
-            \$sub->( \@_ );
-            return \@{ last_result() };
-        }
-    " || die($@);
+    return eval "sub($proto) { \$new->( \@_ ) }" || die($@);
 }
 
 sub last_result {
-    pop @STACK;
+    pop @RESULTS;
 }
 
 sub ok{
     shift;
     my ( $result, $name ) = @_;
-    push @STACK => [ $result, $name ];
+    push @RESULTS => [ $result, $name ];
 }
 
 sub diag{
     my $class = shift;
-    Test::Suite::PluginTester::push_diag( @_ );
+    push @DIAGS => @_;
 }
 
 sub isa {
