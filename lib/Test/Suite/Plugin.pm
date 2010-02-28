@@ -32,7 +32,7 @@ for my $type ( keys %TYPES ) {
     *$type = sub { $TYPES{ $type }};
 }
 #}}}
-our @EXPORT = (qw/export_to tester/, keys %TYPES);
+our @EXPORT = (qw/export_to tester util/, keys %TYPES);
 our %SUBS;
 our $TIMER;
 
@@ -72,8 +72,24 @@ sub export_to {
     }
 }
 
+sub util {
+    my ( $name, $code, $package, $proto ) = _util_args( @_ );
+    croak( "No sub found for util $name" )
+        unless $code;
+
+    $SUBS{ $package }->{ $name } = $code;
+}
 
 sub tester {
+    my ( $name, $code, $package, $proto ) = _util_args( @_ );
+    croak( "No sub found for tester $name" )
+        unless $code;
+
+    $code = _wrap_tester( $code, $proto );
+    $SUBS{ $package }->{ $name } = $code;
+}
+
+sub _util_args {
     my $name = shift;
     my $code;
     my %proto;
@@ -88,13 +104,10 @@ sub tester {
 
     $proto{ name } = $name;
 
-    my ( $package ) = caller;
+    my ( $package ) = caller(1);
     $code = $package->can( $code ) unless !$code || ref( $code ) eq 'CODE';
-    croak( "No sub found for tester $name" )
-        unless $code;
 
-    $code = _wrap_tester( $code, \%proto );
-    $SUBS{ $package }->{ $name } = $code;
+    return ( $name, $code, $package, \%proto );
 }
 
 sub _record {

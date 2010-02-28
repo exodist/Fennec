@@ -157,11 +157,25 @@ sub result {
 }
 
 sub _handle_result {
+    my $class = shift;
+    my ($result) = @_;
+    $TB->ok($result->{ result } || 0, $result->{ name });
+    $TB->diag(
+        "Test failed in file " .
+        ($result->{ filename } || '(NOT FOUND)') .
+        " on line " .
+        ($results->{ line } || '(NOT FOUND)')
+    ) unless $result->{ result };
+    $TB->diag( $_ ) for @{ $result->{ debug } || []};
+}
 
+sub diag {
+    my $self = shift;
+    $self->result({ diag => \@_ });
 }
 
 sub _send_result {
-
+    croak( "Forking not yet implemented" );
 }
 
 sub run {

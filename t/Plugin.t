@@ -58,6 +58,8 @@ BEGIN {
             code => sub { 1, "Ignored" },
         );
 
+        util my_diag => sub { return $_[0] };
+
         sub _recurse {
             my ( $num, @other ) = @_;
             return _recurse( --$num, @other ) if $num;
@@ -244,6 +246,8 @@ is( MyPackage->a, 'a', "Correct result" );
         "'b' did not pass type constraint 'HashRef' at",
         "correct warning"
     );
+
+    is( my_diag( 'a' ), 'a', "Util function test" );
 
 }
 
