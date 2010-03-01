@@ -106,7 +106,6 @@ which is defined in L<Test::Suite::TestBase>.
 
 #}}}
 
-our $VERSION = "0.001";
 our $SINGLETON;
 our $TB = Test::Builder->new;
 our @DEFAULT_PLUGINS = qw/Warn Exception More Simple/;
