@@ -1,4 +1,4 @@
-package Test::Suite::Manual;
+package Fennec::Manual;
 use strict;
 use warnings;
 
@@ -11,21 +11,41 @@ __END__
 
 =head1 NAME
 
-Test::Suite::Manual - A more modern testing framework for perl
+Fennec::Manual - A more modern testing framework for perl
 
 =head1 DESCRIPTION
 
-Test-Suite is a test framework that addresses several complains I have heard,
+Fennec is a test framework that addresses several complains I have heard,
 or have myself issued forth about perl testing. It is still based off
 L<Test::Builder> and uses a lot of existing test tools.
 
-Please see L<Test::Suite::Specification> for more details.
+Please see L<Fennec::Specification> for more details.
+
+=head1 WHY FENNEC
+
+Fennec is intended to do for perl testing what L<Moose> does for OOP. It makes
+all tests classes, and defining test cases and test sets within that class is
+simple. In traditional perl testing you would have to manually loop if you
+wanted to runa set of tests multiple times in different cases, it is difficult
+to make forking tests, and you have limited options for more advanced test
+frameworks.
+
+Fennec runs around taking care of the details for you. You simply need to
+specify your sets, your cases, and weither or not you want the sets and cases
+to fork, run in parrallel or in sequence. Test sets and cases are run in random
+order by default. Forking should just plain work without worrying about the
+details.
+
+The Fennec fox is a hyper creature, it does a lot of running around, because of
+this the name fits. As well Fennec is similar in idea to Moose, so why not name
+it after another animal? Finally I already owned the namespace for a dead
+project, and the namespace I wanted was taken.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =head1 SYNOPSYS
@@ -42,7 +62,7 @@ Both package names are listed:
     use strict;
     use warnings;
 
-    use Test::Suite testing => 'My::Module',
+    use Fennec testing => 'My::Module',
                     random => 1; #Randomize tests (on by default)
 
     our $GLOBAL;
@@ -100,7 +120,7 @@ Both package names are listed:
 
 =over 4
 
-=item $ prove_suite
+=item $ prove_fennec
 
 Command line to to run the test suite.
 
@@ -116,16 +136,16 @@ L<Test::Warn> and L<Test::Simple> are provided by plugins. If you want to add
 new tester or utility functions for use in test modules you may do so in a
 plugin.
 
-To create a plugin create a module directly under the L<Test::Suite::Plugin>
+To create a plugin create a module directly under the L<Fennec::Plugin>
 namespace. Define testers and utilies.
 
-    package Test::Suite::Plugin::MyPlugin;
+    package Fennec::Plugin::MyPlugin;
     use strict;
     use references;
-    use Test::Suite::Plugin;
+    use Fennec::Plugin;
 
     # define a util function
-    util my_diag => sub { Test::Suite->diag( @_ ) };
+    util my_diag => sub { Fennec->diag( @_ ) };
 
     # define a tester
     tester my_ok => (
@@ -140,13 +160,13 @@ namespace. Define testers and utilies.
     # Define one with a prototype
     tester my_dies_ok => sub(&;$) {
         eval $_[0]->() || return ( 1, $_[1]);
-        Test::Suite->diag( "Test did not die as expected" );
+        Fennec->diag( "Test did not die as expected" );
         return ( 0, $_[1] );
     };
 
     1;
 
-Look at L<Test::Suite::TestHelper> and L<Test::Suite::Plugin> for information
+Look at L<Fennec::TestHelper> and L<Fennec::Plugin> for information
 on testing plugins.
 
 =head1 WRAPPER PLUGINS
@@ -155,11 +175,11 @@ Plugins can be made to wrap around existing L<Test::Builder> based testing
 utilities. This is how L<Test::More> and L<Test::Warn> functionality is
 provided. Here is the Test::More wrapper plugin as an example.
 
-    package Test::Suite::Plugin::More;
+    package Fennec::Plugin::More;
     use strict;
     use warnings;
 
-    use Test::Suite::Plugin;
+    use Fennec::Plugin;
 
     our @SUBS;
     BEGIN {
@@ -169,10 +189,10 @@ provided. Here is the Test::More wrapper plugin as an example.
     use Test::More import => \@SUBS;
 
     tester $_ => $_ for @SUBS;
-    util diag => sub { Test::Suite->diag( @_ ) };
+    util diag => sub { Fennec->diag( @_ ) };
     util todo => sub(&$) {
         my ( $code, $todo ) = @_;
-        local $Test::Suite::Plugin::TODO = $todo;
+        local $Fennec::Plugin::TODO = $todo;
         $code->();
     };
 
@@ -186,8 +206,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

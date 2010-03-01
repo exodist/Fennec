@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::Suite random => 1;
+use Fennec random => 1;
 
 test_case 'a' => sub {1};
 test_case 'b' => sub {1};
@@ -29,7 +29,7 @@ test_set set_e => sub {
     is_deeply( { a => 'a' }, { a => 'a' }, "is_deeply" );
 };
 
-require Test::Suite::Tester;
-Test::Suite::Tester->run();
+require Fennec::Tester;
+Fennec::Tester->run();
 
 1;

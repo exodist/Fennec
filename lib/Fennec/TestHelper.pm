@@ -1,23 +1,23 @@
-package Test::Suite::TestHelper;
+package Fennec::TestHelper;
 use strict;
 use warnings;
-use Test::Suite::TestBuilderImposter;
+use Fennec::TestBuilderImposter;
 
 =pod
 
 =head1 NAME
 
-Test::Suite::TestHelper - Make Test::Suite testable
+Fennec::TestHelper - Make Fennec testable
 
 =head1 DESCRIPTION
 
 Prevents plugins from producing TAP output and instead provides you with
-results that would be sent to Test::Suite.
+results that would be sent to Fennec.
 
 =head1 SYNOPSYS
 
     #!/usr/bin/perl
-    use Test::Suite::TestHelper;
+    use Fennec::TestHelper;
     use warnings;
     use strict;
     use Test::More;
@@ -131,19 +131,19 @@ sub real_tests(&) {
     return $sub->();
 }
 
-require Test::Suite::Plugin;
+require Fennec::Plugin;
 
 {
     no strict 'refs';
     no warnings 'redefine';
-    my $old = \&{ 'Test::Suite::Plugin::_record' };
-    *{ 'Test::Suite::Plugin::_record' } = sub {
-        local *{ 'Test::Suite::get' } = sub { 'Test::Suite' };
-        local *{ 'Test::Suite::result' } = sub {
+    my $old = \&{ 'Fennec::Plugin::_record' };
+    *{ 'Fennec::Plugin::_record' } = sub {
+        local *{ 'Fennec::get' } = sub { 'Fennec' };
+        local *{ 'Fennec::result' } = sub {
             shift;
             push @$RESULTS => @_;
         };
-        local *{ 'Test::Suite::diag' } = sub {
+        local *{ 'Fennec::diag' } = sub {
             shift;
             push @$DIAG => @_;
         };
@@ -159,8 +159,8 @@ __END__
 
 =head1 MAGIC BE HERE
 
-This works by overriding parts of L<Test::Suite::Plugin> so that when called
-parts of Test::Suite are lexically overriden. There is all kinds of room from
+This works by overriding parts of L<Fennec::Plugin> so that when called
+parts of Fennec are lexically overriden. There is all kinds of room from
 problems here, but I am not sure of a better way yet, just be careful.
 
 =cut
@@ -173,8 +173,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

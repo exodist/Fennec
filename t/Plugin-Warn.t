@@ -2,17 +2,17 @@
 use strict;
 use warnings;
 
-use Test::Suite::TestHelper;
+use Fennec::TestHelper;
 use Test::More;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Test::Suite::Plugin::Warn';
+    $CLASS = 'Fennec::Plugin::Warn';
     use_ok( $CLASS );
     $CLASS->export_to( __PACKAGE__ );
 }
 
-can_ok( __PACKAGE__, @Test::Suite::Plugin::Warn::SUBS );
+can_ok( __PACKAGE__, @Fennec::Plugin::Warn::SUBS );
 
 warning_is { warn 'a' } "a", "got warning";
 real_tests {

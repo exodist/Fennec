@@ -1,4 +1,4 @@
-package Test::Suite::Grouping::Base;
+package Fennec::Grouping::Base;
 use strict;
 use warnings;
 
@@ -8,7 +8,7 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::Grouping::Base - Base class for grouping classes
+Fennec::Grouping::Base - Base class for grouping classes
 
 =head1 DESCRIPTION
 
@@ -16,9 +16,9 @@ Sets and Cases use this as a base class.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =head1 METHODS
@@ -30,7 +30,7 @@ greatest.
 #}}}
 
 use Carp;
-our @CARP_NOT = ( __PACKAGE__, qw/Test::Suite::Grouping Test::Suite Test::Suite::Plugin/ );
+our @CARP_NOT = ( __PACKAGE__, qw/Fennec::Grouping Fennec Fennec::Plugin/ );
 use Scalar::Util qw/blessed/;
 
 =item $class->new( $name, %proto )
@@ -106,8 +106,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

@@ -1,4 +1,4 @@
-package Test::Suite::Specification;
+package Fennec::Specification;
 use strict;
 use warnings;
 
@@ -8,28 +8,28 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::Specification - Specification for Test::Suite
+Fennec::Specification - Specification for Fennec
 
 =head1 DESCRIPTION
 
-Test-Suite is a test module that addresses several complains I have heard, or
+Fennec is a test module that addresses several complains I have heard, or
 have myself issued forth about perl testing.
 
 =head1 TOOLS
 
 =over 4
 
-=item $ prove_suite file(s)
+=item $ prove_fennec file(s)
 
-=item $ prove_suite file1 [case(s)] [set(s)] file2 ...
+=item $ prove_fennec file1 [case(s)] [set(s)] file2 ...
 
-=item $ prove_suite dir
+=item $ prove_fennec dir
 
 Command line tool to run specified tests.
 
-=item Test::Suite::Tester->run( @PARAMS )
+=item Fennec::Tester->run( @PARAMS )
 
-Used to run L<Test::Suite> tests from a test script.
+Used to run L<Fennec> tests from a test script.
 
 =back
 
@@ -44,8 +44,8 @@ Used to run L<Test::Suite> tests from a test script.
     use warnings;
 
     # This is also equivilent to 'use MyModule @args;'
-    use Test::Suite testing => 'MyModule', import_args => \@args,
-        # Load specified Test::Suite::XXX plugins, 'more', 'exception', and
+    use Fennec testing => 'MyModule', import_args => \@args,
+        # Load specified Fennec::XXX plugins, 'more', 'exception', and
         # 'warn' are automatically loaded unless specified with a '-' prefix.
         plugins => [qw//],
         # if 'case' then run all cases in parallel (but sets in sequence)
@@ -137,7 +137,7 @@ Used to run L<Test::Suite> tests from a test script.
 This is partially solved by L<Test::More::Fork> as well as L<Test::Fork> and a
 few others. But no current solution is ideal.
 
-L<Test::Suite> will work with forking. When the module if first loaded it will
+L<Fennec> will work with forking. When the module if first loaded it will
 record the current pid and create a listen socket. If a test is run under
 another pid it will connect to the root process's socket and send it the
 results as opposed to printing the TAP output itself.
@@ -152,14 +152,14 @@ the script each time.
 =item test randomisation
 
 Cases and sets will be run in random order unless random is turned off when
-importing L<Test::Suite>. Random can also be tunred off using a command line
+importing L<Fennec>. Random can also be tunred off using a command line
 option. Every set will be run once per case.
 
 =item running only specified tests as well as all
 
 Must be able to run specific cases/sets
 
-    $ prove_suite TestModule [Case(s)] [Set(s)]
+    $ prove_fennec TestModule [Case(s)] [Set(s)]
 
 =item test grouping
 
@@ -179,7 +179,7 @@ single test failure.
 
 =item tests mirror code
 
-L<Test::Suite> tests will be modules with a package name nearly identical to
+L<Fennec> tests will be modules with a package name nearly identical to
 the package being tested.
 
 Options (TIMTOWTDI)
@@ -199,11 +199,11 @@ You will need to configure L<Module::Build> or L<Module::Install> to ignore
 your test files for installation (unless you really don't care, but please do).
 
 L<Module::Build> and L<Module::Install> do not directly support running
-L<Test::Suite> tests, so you can create a test.pl test script that runs the
+L<Fennec> tests, so you can create a test.pl test script that runs the
 tests, or a t/suite.t which does the same.
 
 There should probably be extensions to the install/build modules to make
-Test::Suite work.
+Fennec work.
 
 =item test reporting
 
@@ -220,7 +220,7 @@ capabilities.
 
 =item coverage
 
-prove_suite should have a simple flag to turn on coverage testing
+prove_fennec should have a simple flag to turn on coverage testing
 
 =back
 
@@ -232,8 +232,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

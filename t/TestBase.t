@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use Test::Exception::LessClever;
 
-my $CLASS = 'Test::Suite::TestBase';
+my $CLASS = 'Fennec::TestBase';
 use_ok( $CLASS );
 
 throws_ok { my $one = $CLASS->new() }
@@ -16,7 +16,7 @@ throws_ok { my $one = $CLASS->new() }
     package My::Test;
     use strict;
     use warnings;
-    use base 'Test::Suite::TestBase';
+    use base 'Fennec::TestBase';
 
     sub case_CASE_FROM_SUB {1}
     sub set_SET_FROM_SUB {1}
@@ -36,7 +36,7 @@ ok(
     ),
     "New instance"
 );
-isa_ok( $one, 'Test::Suite::TestBase' );
+isa_ok( $one, 'Fennec::TestBase' );
 isa_ok( $one, $CLASS );
 is( $one, $CLASS->new, "singleton" );
 
@@ -84,7 +84,7 @@ our %RUNS;
     package My::Test2;
     use strict;
     use warnings;
-    use base 'Test::Suite::TestBase';
+    use base 'Fennec::TestBase';
     use Test::More;
     {
         no warnings 'once';

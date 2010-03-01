@@ -2,17 +2,17 @@
 use strict;
 use warnings;
 
-use Test::Suite::TestHelper;
+use Fennec::TestHelper;
 use Test::More;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Test::Suite::Plugin::More';
+    $CLASS = 'Fennec::Plugin::More';
     use_ok( $CLASS );
     $CLASS->export_to( __PACKAGE__, 'my_' );
 }
 
-can_ok( __PACKAGE__, @Test::Suite::Plugin::More::SUBS );
+can_ok( __PACKAGE__, @Fennec::Plugin::More::SUBS );
 
 my_is_deeply( { a => 'a' }, { 'a' => 'a' }, "My is_deeply()" );
 real_tests {

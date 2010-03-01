@@ -1,4 +1,4 @@
-package Test::Suite::TestBuilderImposter;
+package Fennec::TestBuilderImposter;
 use strict;
 use warnings;
 
@@ -8,18 +8,18 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::TestBuilderImposter - Override parts of Test::Builder.
+Fennec::TestBuilderImposter - Override parts of Test::Builder.
 
 =head1 DESCRIPTION
 
 This package loads L<Test::Builder> and overrides parts of it so that outside
-test utilities can be wrapped and don't interfere with L<Test::Suite>.
+test utilities can be wrapped and don't interfere with L<Fennec>.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =cut
@@ -41,12 +41,12 @@ our %OVERRIDE = (
     ok => sub {
         shift;
         my ( $ok, $name ) = @_;
-        $Test::Suite::Plugin::TB_USED++;
+        $Fennec::Plugin::TB_USED++;
         $TBI_RESULT = [ $ok, $name ];
     },
     diag => sub {
         shift;
-        $Test::Suite::Plugin::TB_USED++;
+        $Fennec::Plugin::TB_USED++;
         push @TBI_DIAGS => @_;
     },
 );
@@ -69,8 +69,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

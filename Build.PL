@@ -5,13 +5,13 @@ use Module::Build;
 
 eval {
     use lib 'lib';
-    require 'lib/Test/Suite.pm';
+    require 'lib/Fennec.pm';
 };
 
 my $build = Module::Build->new(
-    module_name => 'Test::Suite',
-    dist_version_from => 'lib/Test/Suite/Manual.pm',
-    dist_version     => $Test::Suite::VERSION || 0.001,
+    module_name => 'Fennec',
+    dist_version_from => 'lib/Fennec/Manual.pm',
+    dist_version     => $Fennec::VERSION || 0.001,
     license     => 'perl',
     dist_author => 'Chad Granum <exodist7@gmail.com>',
     create_readme => 1,
@@ -43,8 +43,8 @@ my $build = Module::Build->new(
     },
     meta_merge => {
         resources => {
-            repository  => 'http://github.com/exodist/Test-Suite',
-            bugtracker  => 'http://github.com/exodist/Test-Suite/issues',
+            repository  => 'http://github.com/exodist/Fennec',
+            bugtracker  => 'http://github.com/exodist/Fennec/issues',
         },
     }
 );

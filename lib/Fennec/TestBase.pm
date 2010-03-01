@@ -1,4 +1,4 @@
-package Test::Suite::TestBase;
+package Fennec::TestBase;
 use strict;
 use warnings;
 
@@ -8,7 +8,7 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::TestBase - Base class for Test classes.
+Fennec::TestBase - Base class for Test classes.
 
 =head1 DESCRIPTION
 
@@ -17,15 +17,15 @@ This class is the base class for test classes users define.
 =head1 SYNOPSYS
 
     package My::Test;
-    use Test::Suite;
+    use Fennec;
 
 This is all you need to make a test class using this as a base.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =cut
@@ -36,8 +36,8 @@ use Carp;
 use Try::Tiny;
 use List::Util qw/shuffle/;
 use Scalar::Util qw/blessed/;
-use Test::Suite::Grouping::Case;
-use Test::Suite::Grouping::Set;
+use Fennec::Grouping::Case;
+use Fennec::Grouping::Set;
 
 our %SINGLETONS;
 sub _get_self(\@);
@@ -84,7 +84,7 @@ sub add_case {
     my ( $name, %proto ) = @_;
     croak( "Case with name $name already exists" )
         if $self->_cases->{ $name };
-    $self->_cases->{ $name } = Test::Suite::Grouping::Case->new( $name, %{ $self->case_defaults }, %proto );
+    $self->_cases->{ $name } = Fennec::Grouping::Case->new( $name, %{ $self->case_defaults }, %proto );
 }
 
 sub add_set {
@@ -92,7 +92,7 @@ sub add_set {
     my ( $name, %proto ) = @_;
     croak( "Set with name $name already exists" )
         if $self->_sets->{ $name };
-    $self->_sets->{ $name } = Test::Suite::Grouping::Set->new( $name, %{ $self->case_defaults }, %proto );
+    $self->_sets->{ $name } = Fennec::Grouping::Set->new( $name, %{ $self->case_defaults }, %proto );
 }
 
 sub cases {
@@ -103,7 +103,7 @@ sub cases {
     my @list = values %$cases;
 
     # 'DEFAULT' case
-    push @list => Test::Suite::Grouping::Case->new( 'DEFAULT', %{ $self->case_defaults }, method => sub {1} )
+    push @list => Fennec::Grouping::Case->new( 'DEFAULT', %{ $self->case_defaults }, method => sub {1} )
         unless @list;
     return $random ? (shuffle @list) : (sort { $a->name cmp $b->name } @list);
 }
@@ -189,8 +189,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

@@ -1,4 +1,4 @@
-package Test::Suite::Plugin::Exception;
+package Fennec::Plugin::Exception;
 use strict;
 use warnings;
 
@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::Plugin::Exception - Test::Exception functionality for L<Test::Suite>
+Fennec::Plugin::Exception - Test::Exception functionality for L<Fennec>
 
 =head1 CREDITS
 
@@ -17,10 +17,10 @@ re-write of L<Test::Exception>
 
 #}}}
 
-use Test::Suite::Plugin;
+use Fennec::Plugin;
 use Carp;
 
-our @CARP_NOT = ( __PACKAGE__, 'Test::Suite::Plugin' );
+our @CARP_NOT = ( __PACKAGE__, 'Fennec::Plugin' );
 
 =head1 TEST FUNCTIONS
 
@@ -159,8 +159,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

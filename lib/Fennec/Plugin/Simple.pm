@@ -1,4 +1,4 @@
-package Test::Suite::Plugin::Simple;
+package Fennec::Plugin::Simple;
 use strict;
 use warnings;
 
@@ -8,7 +8,7 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::Plugin::Simple - L<Test::Simple> functionality.
+Fennec::Plugin::Simple - L<Test::Simple> functionality.
 
 =head1 DESCRIPTION
 
@@ -16,9 +16,9 @@ This provides the ok() function.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =head1 TESTER FUNCTIONS
@@ -35,7 +35,7 @@ Test passes if $result is true, otherwise it fails.
 
 #}}}
 
-use Test::Suite::Plugin;
+use Fennec::Plugin;
 
 tester ok => (
     min_args => 1,
@@ -58,8 +58,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

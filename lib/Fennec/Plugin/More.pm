@@ -1,4 +1,4 @@
-package Test::Suite::Plugin::More;
+package Fennec::Plugin::More;
 use strict;
 use warnings;
 
@@ -8,18 +8,18 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::Plugin::More - Wrapper around L<Test::More> for Test::Suite
+Fennec::Plugin::More - Wrapper around L<Test::More> for Fennec
 
 =head1 DESCRIPTION
 
-Wraps all the testers from L<Test::More> for use in Test::Suite. Also provides
+Wraps all the testers from L<Test::More> for use in Fennec. Also provides
 diag() and a new todo() function.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =head1 TESTER FUNCTIONS
@@ -50,7 +50,7 @@ Please see L<Test::More> for more details on any of these.
 
 #}}}
 
-use Test::Suite::Plugin;
+use Fennec::Plugin;
 
 our @SUBS;
 BEGIN {
@@ -71,7 +71,7 @@ Display a message in the test output.
 
 =cut
 
-util diag => sub { Test::Suite->diag( @_ ) };
+util diag => sub { Fennec->diag( @_ ) };
 
 =item todo( $sub, $reason )
 
@@ -86,7 +86,7 @@ Run a group of tests under TODO.
 
 util todo => sub(&$) {
     my ( $code, $todo ) = @_;
-    local $Test::Suite::Plugin::TODO = $todo;
+    local $Fennec::Plugin::TODO = $todo;
     $code->();
 };
 
@@ -102,8 +102,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

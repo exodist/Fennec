@@ -2,16 +2,16 @@
 use strict;
 use warnings;
 
-use Test::Suite::TestHelper;
+use Fennec::TestHelper;
 use Test::More;
 use Object::Quick qw/obj method/;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Test::Suite::Plugin::Exception';
+    $CLASS = 'Fennec::Plugin::Exception';
     real_tests { use_ok( $CLASS ) };
     $CLASS->export_to( __PACKAGE__ );
-    *live_or_die = \&Test::Suite::Plugin::Exception::live_or_die;
+    *live_or_die = \&Fennec::Plugin::Exception::live_or_die;
 }
 
 # Exception is not a wrapper around a TB based implementation, all tests are

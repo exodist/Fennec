@@ -2,12 +2,12 @@
 use strict;
 use warnings;
 
-use Test::Suite::TestHelper;
+use Fennec::TestHelper;
 use Test::More;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Test::Suite::Plugin::Simple';
+    $CLASS = 'Fennec::Plugin::Simple';
     real_tests { use_ok( $CLASS )};
     $CLASS->export_to( __PACKAGE__, 'my_' );
 }

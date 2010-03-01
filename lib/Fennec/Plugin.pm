@@ -1,10 +1,10 @@
-package Test::Suite::Plugin;
+package Fennec::Plugin;
 use strict;
 use warnings;
 use Time::HiRes qw/time/;
 use Carp;
 use Scalar::Util 'blessed';
-our @CARP_NOT = ( __PACKAGE__, 'Test::Suite::TestHelper' );
+our @CARP_NOT = ( __PACKAGE__, 'Fennec::TestHelper' );
 
 #{{{ POD
 
@@ -12,7 +12,7 @@ our @CARP_NOT = ( __PACKAGE__, 'Test::Suite::TestHelper' );
 
 =head1 NAME
 
-Test::Suite::Plugin - Used by plugins to turn them into plugins.
+Fennec::Plugin - Used by plugins to turn them into plugins.
 
 =head1 DESCRIPTION
 
@@ -20,23 +20,23 @@ All plugins must use this class to define their exported functionality.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =head1 SYNOPSYS
 
-To create a plugin create a module directly under the L<Test::Suite::Plugin>
+To create a plugin create a module directly under the L<Fennec::Plugin>
 namespace. Define testers and utilies.
 
-    package Test::Suite::Plugin::MyPlugin;
+    package Fennec::Plugin::MyPlugin;
     use strict;
     use references;
-    use Test::Suite::Plugin;
+    use Fennec::Plugin;
 
     # define a util function
-    util my_diag => sub { Test::Suite->diag( @_ ) };
+    util my_diag => sub { Fennec->diag( @_ ) };
 
     # define a tester
     tester my_ok => (
@@ -51,7 +51,7 @@ namespace. Define testers and utilies.
     # Define one with a prototype
     tester my_dies_ok => sub(&;$) {
         eval $_[0]->() || return ( 1, $_[1]);
-        Test::Suite->diag( "Test did not die as expected" );
+        Fennec->diag( "Test did not die as expected" );
         return ( 0, $_[1] );
     };
 
@@ -63,11 +63,11 @@ Plugins can be made to wrap around existing L<Test::Builder> based testing
 utilities. This is how L<Test::More> and L<Test::Warn> functionality is
 provided. Here is the Test::More wrapper plugin as an example.
 
-    package Test::Suite::Plugin::More;
+    package Fennec::Plugin::More;
     use strict;
     use warnings;
 
-    use Test::Suite::Plugin;
+    use Fennec::Plugin;
 
     our @SUBS;
     BEGIN {
@@ -77,10 +77,10 @@ provided. Here is the Test::More wrapper plugin as an example.
     use Test::More import => \@SUBS;
 
     tester $_ => $_ for @SUBS;
-    util diag => sub { Test::Suite->diag( @_ ) };
+    util diag => sub { Fennec->diag( @_ ) };
     util todo => sub(&$) {
         my ( $code, $todo ) = @_;
-        local $Test::Suite::Plugin::TODO = $todo;
+        local $Fennec::Plugin::TODO = $todo;
         $code->();
     };
 
@@ -258,7 +258,7 @@ sub _record {
     # Get the first caller outside of the plugin(s)
     my ( $package, $filename, $line ) = _first_non_plugin_caller();
 
-    Test::Suite->get->result({
+    Fennec->get->result({
         result => $result || 0,
         name => $name || undef,
         package => $package || undef,
@@ -400,8 +400,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

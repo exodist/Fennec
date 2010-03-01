@@ -5,14 +5,14 @@ use warnings;
 use Test::More;
 use Test::Exception::LessClever;
 use Test::Builder::Tester;
-use Test::Suite::TestHelper;
+use Fennec::TestHelper;
 
 my $CLASS;
 
 #{{{ Test _handle_result before we override it.
 BEGIN {
-    $CLASS = 'Test::Suite';
-    require Test::Suite;
+    $CLASS = 'Fennec';
+    require Fennec;
 
     test_out( "ok 1" );
     $CLASS->_handle_result({ result => 1 });
@@ -42,11 +42,11 @@ BEGIN {
 my @results;
 {
     no warnings 'redefine';
-    *Test::Suite::_handle_result = sub { shift and push @results => @_ };
+    *Fennec::_handle_result = sub { shift and push @results => @_ };
 }
 
 real_tests {
-    Test::Suite->_handle_result( 'a' );
+    Fennec->_handle_result( 'a' );
     is_deeply( \@results, [ 'a' ], "Saving results" );
     @results = ();
 
@@ -86,24 +86,24 @@ real_tests {
     package My::TestA;
     use strict;
     use warnings;
-    use Test::Suite testing => 'My::LoadIt';
+    use Fennec testing => 'My::LoadIt';
 
     package My::TestB;
     use strict;
     use warnings;
-    use Test::Suite testing => 'My::LoadIt',
+    use Fennec testing => 'My::LoadIt',
                     import_args => [ 'return_b' ];
 }
 
 real_tests {
-    throws_ok { package My::Test::Die; Test::Suite->import( testing => 'Fake::Package::Name' )}
+    throws_ok { package My::Test::Die; Fennec->import( testing => 'Fake::Package::Name' )}
               qr{Can't locate Fake/Package/Name\.pm},
               "Dies when testing invalid or broken package";
 
-    isa_ok( 'My::TestA', 'Test::Suite::TestBase' );
+    isa_ok( 'My::TestA', 'Fennec::TestBase' );
     can_ok( 'My::TestA', qw/ok throws_ok is_deeply warning_is return_a test_set test_case/ );
 
-    isa_ok( 'My::TestB', 'Test::Suite::TestBase' );
+    isa_ok( 'My::TestB', 'Fennec::TestBase' );
     can_ok( 'My::TestB', qw/ok throws_ok is_deeply warning_is return_b test_set test_case/ );
 };
 

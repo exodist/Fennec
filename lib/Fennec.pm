@@ -1,4 +1,4 @@
-package Test::Suite;
+package Fennec;
 use strict;
 use warnings;
 
@@ -8,8 +8,8 @@ use File::Temp qw/tempfile/;
 use Carp;
 use Scalar::Util 'blessed';
 use List::Util 'shuffle';
-use Test::Suite::Grouping;
-use Test::Suite::TestBase;
+use Fennec::Grouping;
+use Fennec::TestBase;
 use Sub::Uplevel;
 use autodie;
 
@@ -19,41 +19,61 @@ use autodie;
 
 =head1 NAME
 
-Test::Suite - A more modern testing framework for perl
+Fennec - A more modern testing framework for perl
 
 =head1 DESCRIPTION
 
-Test-Suite is a test framework that addresses several complains I have heard,
+Fennec is a test framework that addresses several complains I have heard,
 or have myself issued forth about perl testing. It is still based off
 L<Test::Builder> and uses a lot of existing test tools.
 
-Please see L<Test::Suite::Specification> for more details.
+Please see L<Fennec::Specification> for more details.
+
+=head1 WHY FENNEC
+
+Fennec is intended to do for perl testing what L<Moose> does for OOP. It makes
+all tests classes, and defining test cases and test sets within that class is
+simple. In traditional perl testing you would have to manually loop if you
+wanted to runa set of tests multiple times in different cases, it is difficult
+to make forking tests, and you have limited options for more advanced test
+frameworks.
+
+Fennec runs around taking care of the details for you. You simply need to
+specify your sets, your cases, and weither or not you want the sets and cases
+to fork, run in parrallel or in sequence. Test sets and cases are run in random
+order by default. Forking should just plain work without worrying about the
+details.
+
+The Fennec fox is a hyper creature, it does a lot of running around, because of
+this the name fits. As well Fennec is similar in idea to Moose, so why not name
+it after another animal? Finally I already owned the namespace for a dead
+project, and the namespace I wanted was taken.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =head1 DOCUMENTATION
 
-This is the internal Test::Suite API documentation. For more detailed end-user
-documentation please see L<Test::Suite::Manual>.
+This is the internal Fennec API documentation. For more detailed end-user
+documentation please see L<Fennec::Manual>.
 
 =head1 IMPORT
 
-Test::Suite is the only module someone using Test::Suite should have to 'use'.
+Fennec is the only module someone using Fennec should have to 'use'.
 The parameters provided to import() on use do a significant portion of the test
-setup. When Test::Suite is used it will instantate a singleton of the calling
+setup. When Fennec is used it will instantate a singleton of the calling
 class and store it as a test to be run.
 
-Using Test::Suite also automatically adds 'Test::Suite::TestBase' to the
+Using Fennec also automatically adds 'Fennec::TestBase' to the
 calling classes @ISA.
 
 =head1 IMPORT OPTIONS
 
-    use Test::Suite %OPTIONS;
+    use Fennec %OPTIONS;
 
 These are the options supported, all are optional.
 
@@ -69,14 +89,14 @@ Anything exported by the tested module will be loaded before the rest of the
 test class is compiled. This allows the use of exported functions with
 prototypes and the use of constants within the test class.
 
-    use Test::Suite testing => 'My::Module';
+    use Fennec testing => 'My::Module';
 
 =item import_args => [ @ARGS ]
 
 Specify the arguments to provide the import() method of the module specified by
 'testing => ...'.
 
-    use Test::Suite testing     => 'My::Module',
+    use Fennec testing     => 'My::Module',
                     import_args => [ 'a', 'b' ];
 
 =item plugins => [ 'want', 'another', '-do_not_want', '-this_either' ]
@@ -86,15 +106,15 @@ Specify which plugins to load or prevent loading. By default 'More', 'Simple',
 plugins. You may also prevent the loadign of a default plugin by listing it
 prefixed by a '-'.
 
-See L<Test::Suite::Plugin> for more information about plugins.
+See L<Fennec::Plugin> for more information about plugins.
 
-See Also L<Test::Suite::Plugin::Simple>, L<Test::Suite::Plugin::More>,
-L<Test::Suite::Plugin::Exception>, L<Test::Suite::Plugin::Warn>
+See Also L<Fennec::Plugin::Simple>, L<Fennec::Plugin::More>,
+L<Fennec::Plugin::Exception>, L<Fennec::Plugin::Warn>
 
 =item all others
 
 All other arguments will be passed into the constructor for your test class,
-which is defined in L<Test::Suite::TestBase>.
+which is defined in L<Fennec::TestBase>.
 
 =back
 
@@ -131,11 +151,11 @@ sub import {
 
     {
         no strict 'refs';
-        push @{ $package . '::ISA' } => 'Test::Suite::TestBase';
+        push @{ $package . '::ISA' } => 'Fennec::TestBase';
     }
 
     $class->_export_plugins( $package, $options{ plugins } );
-    Test::Suite::Grouping->export_to( $package );
+    Fennec::Grouping->export_to( $package );
 
     my $self = $class->get;
     my $test = $package->new( %options, filename => $filename );
@@ -175,7 +195,7 @@ sub _export_plugins {
     }
 
     for my $plugin ( @plugins ) {
-        my $name = "Test\::Suite\::Plugin\::$plugin";
+        my $name = "Fennec\::Plugin\::$plugin";
         eval "require $name" || die( $@ );
         $name->export_to( $package );
     }
@@ -184,7 +204,7 @@ sub _export_plugins {
 
 =item $ts = $class->new()
 
-Takes no arguments. Returns the Test::Suite singleton object.
+Takes no arguments. Returns the Fennec singleton object.
 
 =item $ts = $class->get()
 
@@ -228,7 +248,7 @@ sub get { goto &new };
 
 =item $ts->add_test( $test )
 
-Add a <Test::Suite::TestBase> object to be tested when run is called.
+Add a <Fennec::TestBase> object to be tested when run is called.
 
 =cut
 
@@ -281,7 +301,7 @@ sub pid {
 
 =item $pid = $ts->parent_pid()
 
-Returns the pid of the process which instantiated the Test::Suite singleton.
+Returns the pid of the process which instantiated the Fennec singleton.
 
 =cut
 
@@ -317,8 +337,8 @@ sub is_running {
 =item $ts->result({ result => $BOOL, name => 'My Test', ... })
 
 Issue a test result for output. You almost certainly do not want to call this
-directly. If you are witing a plugin please see L<Test::Suite::Plugin> or the
-PLUGINS section of L<Test::Suite::Manual>.
+directly. If you are witing a plugin please see L<Fennec::Plugin> or the
+PLUGINS section of L<Fennec::Manual>.
 
 =cut
 
@@ -427,8 +447,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.

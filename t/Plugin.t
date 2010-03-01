@@ -3,20 +3,20 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Suite::TestHelper;
+use Fennec::TestHelper;
 
 my $CLASS;
 
 BEGIN {
-    $CLASS = 'Test::Suite::Plugin';
+    $CLASS = 'Fennec::Plugin';
     real_tests { use_ok( $CLASS, 'no_import' ) };
 
     {
-        package Test::Suite::Plugin::A;
+        package Fennec::Plugin::A;
         use strict;
         use warnings;
 
-        use Test::Suite::Plugin;
+        use Fennec::Plugin;
 
         tester a => sub { 'a' };
 
@@ -74,7 +74,7 @@ BEGIN {
 
 real_tests {
     ok( !MyPackage->can($_), "MyPackage cannot $_" ) for qw/a _a/;
-    Test::Suite::Plugin::A->export_to( 'MyPackage' );
+    Fennec::Plugin::A->export_to( 'MyPackage' );
     ok( !MyPackage->can($_), "MyPackage still cannot $_" ) for qw/_a/;
     can_ok( 'MyPackage', 'a' );
     is( MyPackage->a, 'a', "Correct result" );
@@ -86,10 +86,10 @@ real_tests {
     use warnings;
     use Test::More;
     use Test::Exception::LessClever;
-    use Test::Suite::TestHelper;
+    use Fennec::TestHelper;
 
     BEGIN {
-        Test::Suite::Plugin::A->export_to( __PACKAGE__ );
+        Fennec::Plugin::A->export_to( __PACKAGE__ );
     }
 
     results( 1 );

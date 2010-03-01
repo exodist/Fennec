@@ -1,4 +1,4 @@
-package Test::Suite::Plugin::Warn;
+package Fennec::Plugin::Warn;
 use strict;
 use warnings;
 
@@ -8,17 +8,17 @@ use warnings;
 
 =head1 NAME
 
-Test::Suite::Plugin::Warn - L<Test::Warn> functionality.
+Fennec::Plugin::Warn - L<Test::Warn> functionality.
 
 =head1 DESCRIPTION
 
-Wraps the methods from L<Test::Warn> for use in L<Test::Suite>.
+Wraps the methods from L<Test::Warn> for use in L<Fennec>.
 
 =head1 EARLY VERSION WARNING
 
-This is VERY early version. Test::Suite does not run yet.
+This is VERY early version. Fennec does not run yet.
 
-Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
 
 =head1 TESTER FUNCTIONS
@@ -41,8 +41,8 @@ See L<Test::Warn> for more details on any of these.
 
 #}}}
 
-use Test::Suite::Plugin;
-use Test::Suite::TestBuilderImposter;
+use Fennec::Plugin;
+use Fennec::TestBuilderImposter;
 use Test::Builder;
 use Carp;
 
@@ -67,8 +67,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2010 Chad Granum
 
-Test-Suite is free software; Standard perl licence.
+Fennec is free software; Standard perl licence.
 
-Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.
