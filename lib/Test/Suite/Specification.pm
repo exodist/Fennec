@@ -48,8 +48,8 @@ Used to run L<Test::Suite> tests from a test script.
         # Load specified Test::Suite::XXX plugins, 'more', 'exception', and
         # 'warn' are automatically loaded unless specified with a '-' prefix.
         plugins => [qw//],
-        # if 'case' then run all cases in parrallel (but sets in sequence)
-        # if 'set' then run all cases in sequence, but sets in parrallel within them
+        # if 'case' then run all cases in parallel (but sets in sequence)
+        # if 'set' then run all cases in sequence, but sets in parallel within them
         parallel => BOOL || 'case' || 'set'
         # Default is true, to randomize order of cases/sets
         random => BOOL,

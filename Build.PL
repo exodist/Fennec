@@ -27,6 +27,17 @@ my $build = Module::Build->new(
         'Test::Builder::Tester'       => 0,
         'Test::Exception::LessClever' => '0.001',
     },
+    meta_merge => {
+        resources => {
+            repository  => 'http://github.com/exodist/Test-Suite',
+            bugtracker  => 'http://github.com/exodist/Test-Suite/issues',
+        },
+        no_ndex => {
+            file => [qw{
+                lib/Test/Suite/TestBuilderImposter.pm
+            }],
+        },
+    }
 );
 
 $build->create_build_script;

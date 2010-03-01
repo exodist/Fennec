@@ -124,14 +124,14 @@ sub run {
     $self->$init if $init;
 
     for my $case ( $self->cases( $self->random )) {
-        # TODO: If parrallel then fork before running the case
+        # TODO: If parallel then fork before running the case
         #       If force_fork then fork but wait before continuing (unless parallel)
-        #       If no_fork, but in parrallel, then store case/set pair for later.
+        #       If no_fork, but in parallel, then store case/set pair for later.
         $self->case( $case );
         $case->run( $self );
 
         for my $set ( $self->sets( $self->random )) {
-            # TODO: If parrallel then fork before running the set
+            # TODO: If parallel then fork before running the set
             #       See rules for CASE above.
             $self->set( $set );
 
