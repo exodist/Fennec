@@ -1,42 +1,62 @@
-package Test::Suite::TestBase;
+#!/usr/bin/perl
 use strict;
 use warnings;
-use List::Util qw/shuffle/;
-use Scalar::Util qw/blessed/;
-use Test::Suite::Grouping::Set;
-use Test::Suite::Grouping::Case;
-use Carp;
 
-our %SINGLETONS;
-sub _get_self(\@);
+use Test::More;
+use Test::Exception::LessClever;
 
-sub new {
-    my $class = shift;
-    croak( "$class cannot not be instantiated" )
-        if $class eq __PACKAGE__;
-    my %proto = @_;
-    $SINGLETONS{$class} ||= bless( {%proto, _cases => {}, _sets => {}}, $class );
-    return $SINGLETONS{$class};
+my $CLASS = 'Test::Suite::TestBase';
+use_ok( $CLASS );
+
+throws_ok { my $one = $CLASS->new() }
+          qr/$CLASS cannot not be instantiated/,
+          "Cannot init base class";
+
+{
+    package My::Test;
+    use strict;
+    use warnings;
+    use base 'Test::Suite::TestBase';
 }
 
-for my $reader (qw/filename parallel random case_defaults set_defaults/) {
-    my $sub = sub {
-        my ( $class, $self ) = _get_self( @_ );
-        return $self->{ $reader };
-    };
-    no strict 'refs';
-    *$reader = $sub;
+$CLASS = 'My::Test';
+
+ok(
+    my $one = $CLASS->new(
+        random => 1,
+        parallel => 1,
+        case_defaults => {},
+        set_defaults => {},
+        filename => 1,
+    ),
+    "New instance"
+);
+isa_ok( $one, 'Test::Suite::TestBase' );
+isa_ok( $one, $CLASS );
+is( $one, $CLASS->new, "singleton" );
+
+is( $one->random, 1, "random()" );
+is( $one->parallel, 1, "parallel()" );
+is( $one->filename, 1, "filename()" );
+is_deeply( $one->case_defaults, {}, "case_defaults" );
+is_deeply( $one->set_defaults, {}, "set_defaults" );
+is_deeply( $one->_cases, {}, "_cases" );
+is_deeply( $one->_sets, {}, "_sets" );
+ok( $one->_cases != $one->_cases({}), "Accessors" );
+ok( $one->random(5) != 5, "Readers" );
+can_ok( $one, 'set', 'case', '__find_subs' );
+
+{
+    no warnings 'redefine';
+    *Test::Suite::Grouping::Case::new = sub { \@_ };
+    *Test::Suite::Grouping::Set::new = sub { \@_ };
 }
 
-for my $accessor (qw/set case _cases _sets __find_subs/) {
-    my $sub = sub {
-        my ( $class, $self ) = _get_self( @_ );
-        ($self->{ $accessor }) = @_ if @_;
-        return $self->{ $accessor };
-    };
-    no strict 'refs';
-    *$accessor = $sub;
-}
+
+
+done_testing;
+
+__END__
 
 sub add_case {
     my ( $class, $self ) = _get_self( @_ );

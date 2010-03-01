@@ -38,12 +38,12 @@ sub import {
         push @{ $package . '::ISA' } => 'Test::Suite::TestBase';
     }
 
+    $class->export_plugins( $package, $options{ plugins } );
+    Test::Suite::Grouping->export_to( $package );
+
     my $self = $class->get;
     my $test = $package->new( %options, filename => $filename );
     $self->add_test( $test );
-
-    $class->export_plugins( $package, $options{ plugins } );
-    Test::Suite::Grouping->export_to( $package );
     return $test;
 }
 

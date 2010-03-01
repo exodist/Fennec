@@ -44,20 +44,24 @@ A single result will follow this format
     {
         # These are reliable.
         result => $TEST_RESULT, # what your custom tester returned
-        name => $TEST_NAME,     # The second item your custom tester returned
-        time => $RUN_TIME,      # How long the test took to run (Timer::HiRes)
-        debug => \@DEBUG,       # If the test failed this should contain
+        name   => $TEST_NAME,   # The second item your custom tester returned
+        time   => $RUN_TIME,    # How long the test took to run (Timer::HiRes)
+        debug  => \@DEBUG,      # If the test failed this should contain
                                 # extra information that should be printed for
                                 # the user (This is all the other elements your
                                 # custom tester returned)
 
         # These should be reliable
-        package => $PACKAGE,   # Package the test was run from
-        filename => $FILENAME, # Filename test was run from
-        line => $LINE,         # Line number where test was run
+        package  => $PACKAGE,   # Package the test was run from
+        filename => $FILENAME,  # Filename test was run from
+        line     => $LINE,      # Line number where test was run
 
         # These may or may not be defined
-        todo => $REASON,       # If the test was run in a todo {} block.
+        todo => $REASON,        # If the test was run in a todo {} block.
+
+        # If run under a set/case these will be references to the case/set objects
+        case => $CASE,
+        set => $SET,
     }
 
 =head1 EXPORTS

@@ -101,10 +101,10 @@ real_tests {
               "Dies when testing invalid or broken package";
 
     isa_ok( 'My::TestA', 'Test::Suite::TestBase' );
-    can_ok( 'My::TestA', qw/ok throws_ok is_deeply warning_is return_a/ );
+    can_ok( 'My::TestA', qw/ok throws_ok is_deeply warning_is return_a test_set test_case/ );
 
     isa_ok( 'My::TestB', 'Test::Suite::TestBase' );
-    can_ok( 'My::TestB', qw/ok throws_ok is_deeply warning_is return_b/ );
+    can_ok( 'My::TestB', qw/ok throws_ok is_deeply warning_is return_b test_set test_case/ );
 };
 
 done_testing;
