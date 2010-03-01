@@ -32,9 +32,12 @@ my $build = Module::Build->new(
             repository  => 'http://github.com/exodist/Test-Suite',
             bugtracker  => 'http://github.com/exodist/Test-Suite/issues',
         },
-        no_ndex => {
+        no_index => {
             file => [qw{
                 lib/Test/Suite/TestBuilderImposter.pm
+            }],
+            package => [qw{
+                Test::Builder
             }],
         },
     }
