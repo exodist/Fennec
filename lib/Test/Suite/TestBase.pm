@@ -1,6 +1,37 @@
 package Test::Suite::TestBase;
 use strict;
 use warnings;
+
+#{{{ POD
+
+=pod
+
+=head1 NAME
+
+Test::Suite::TestBase - Base class for Test classes.
+
+=head1 DESCRIPTION
+
+This class is the base class for test classes users define.
+
+=head1 SYNOPSYS
+
+    package My::Test;
+    use Test::Suite;
+
+This is all you need to make a test class using this as a base.
+
+=head1 EARLY VERSION WARNING
+
+This is VERY early version. Test::Suite does not run yet.
+
+Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+greatest.
+
+=cut
+
+#}}}
+
 use Carp;
 use Try::Tiny;
 use List::Util qw/shuffle/;
@@ -149,3 +180,17 @@ sub _find_subs {
 }
 
 1;
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Test-Suite is free software; Standard perl licence.
+
+Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

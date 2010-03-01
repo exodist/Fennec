@@ -1,0 +1,194 @@
+package Test::Suite::Manual;
+use strict;
+use warnings;
+
+our $VERSION = "0.002";
+
+$VERSION;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Test::Suite::Manual - A more modern testing framework for perl
+
+=head1 DESCRIPTION
+
+Test-Suite is a test framework that addresses several complains I have heard,
+or have myself issued forth about perl testing. It is still based off
+L<Test::Builder> and uses a lot of existing test tools.
+
+Please see L<Test::Suite::Specification> for more details.
+
+=head1 EARLY VERSION WARNING
+
+This is VERY early version. Test::Suite does not run yet.
+
+Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+greatest.
+
+=head1 SYNOPSYS
+
+Lets assume you have a module My::Module, to write a test object for it you can
+create lib/My/TEST/Module.pm or ts/My/Module.pm. If in the ts/ directory you
+should prefix the package name with TEST::
+
+    package TEST::My::Module;
+
+Both package names are listed:
+
+    package My::TEST::Module;
+    use strict;
+    use warnings;
+
+    use Test::Suite testing => 'My::Module',
+                    random => 1; #Randomize tests (on by default)
+
+    our $GLOBAL;
+
+    # You can also call it initialize if you prefer long names.
+    # This will only be run once, prior to the first test case.
+    sub init {
+        my $self = shift;
+        $self->do_stuff;
+    }
+
+    # Define a test case
+    test_case ALL_PASS => sub {
+        my $self = shift;
+        $GLOBAL = 1;
+    };
+
+    # Define another test case just as a sub.
+    sub case_MORE_PASS {
+        my $self = shift;
+        $GLOBAL = 1;
+    }
+
+    test_case advanced => (
+        method => \&_do_advanced,
+        todo => "These will all fail because GLOBAL is 0",
+        ...
+    );
+
+    sub _do_advanced { $GLOBAL = 0 }
+
+    # Define a test set, this will be run once per case
+    test_set SET_A => sub {
+        my $self = shift;
+        ok( $GLOBAL, "Testing GLOBAL" );
+        is( $GLOBAL, 1, "Testing GLOBAL again" );
+    };
+
+    # Define another set
+    set_SET_B => sub {
+        my $self = shift;
+        ok( $GLOBAL > 0, "Global is positive" );
+        ok( $GLOBAL != 0, "Global is not zero" );
+    };
+
+    test_set advanced => (
+        method => sub { $GLOBAL = 0 },
+        todo => 'global is 0, these fail.',
+        ...
+    );
+
+    1;
+
+=head1 TOOLS
+
+=over 4
+
+=item $ prove_suite
+
+Command line to to run the test suite.
+
+*** This utility is not yet complete ***
+
+=back
+
+=head1 PLUGINS
+
+Plugins are used to provide new functionality for the test writer. For instance
+all the functionality of L<Test::More>, L<Test::Exception::LessClever>,
+L<Test::Warn> and L<Test::Simple> are provided by plugins. If you want to add
+new tester or utility functions for use in test modules you may do so in a
+plugin.
+
+To create a plugin create a module directly under the L<Test::Suite::Plugin>
+namespace. Define testers and utilies.
+
+    package Test::Suite::Plugin::MyPlugin;
+    use strict;
+    use references;
+    use Test::Suite::Plugin;
+
+    # define a util function
+    util my_diag => sub { Test::Suite->diag( @_ ) };
+
+    # define a tester
+    tester my_ok => (
+        min_args => 1,
+        max_args => 2,
+        code => sub {
+            my ( $result, $name ) = @_;
+            return ( $result ? 1 : 0, $name );
+        },
+    );
+
+    # Define one with a prototype
+    tester my_dies_ok => sub(&;$) {
+        eval $_[0]->() || return ( 1, $_[1]);
+        Test::Suite->diag( "Test did not die as expected" );
+        return ( 0, $_[1] );
+    };
+
+    1;
+
+Look at L<Test::Suite::TestHelper> and L<Test::Suite::Plugin> for information
+on testing plugins.
+
+=head1 WRAPPER PLUGINS
+
+Plugins can be made to wrap around existing L<Test::Builder> based testing
+utilities. This is how L<Test::More> and L<Test::Warn> functionality is
+provided. Here is the Test::More wrapper plugin as an example.
+
+    package Test::Suite::Plugin::More;
+    use strict;
+    use warnings;
+
+    use Test::Suite::Plugin;
+
+    our @SUBS;
+    BEGIN {
+        @SUBS = qw/ is isnt like unlike cmp_ok is_deeply can_ok isa_ok /;
+    }
+
+    use Test::More import => \@SUBS;
+
+    tester $_ => $_ for @SUBS;
+    util diag => sub { Test::Suite->diag( @_ ) };
+    util todo => sub(&$) {
+        my ( $code, $todo ) = @_;
+        local $Test::Suite::Plugin::TODO = $todo;
+        $code->();
+    };
+
+    1;
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Test-Suite is free software; Standard perl licence.
+
+Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

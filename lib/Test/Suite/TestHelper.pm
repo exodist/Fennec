@@ -64,9 +64,17 @@ A single result will follow this format
         set => $SET,
     }
 
-=head1 EXPORTS
+=head1 EXPORTED FUNCTIONS
 
 =over 4
+
+=cut
+
+our @EXPORT = qw/results diags real_tests push_diag/;
+use base 'Exporter';
+
+our $RESULTS = [];
+our $DIAG = [];
 
 =item $results = results()
 
@@ -75,35 +83,43 @@ A single result will follow this format
 Returns an arrayref with all the results obtained since results was last
 cleared. Optional argument tells results() to clear all results.
 
-=back
-
-=head1 MAGIC BE HERE
-
-This works by overriding parts of L<Test::Suite::Plugin> so that when called
-parts of Test::Suite are lexically overriden. There is all kinds of room from
-problems here, but I am not sure of a better way yet, just be careful.
-
 =cut
-
-our @EXPORT = qw/results diags real_tests/;
-use base 'Exporter';
-
-our $RESULTS = [];
-our $DIAG = [];
 
 sub results {
     $RESULTS = [] if @_;
     return $RESULTS;
 }
 
+=item $diags = diags()
+
+=item diags(1)
+
+Returns an arrayref with all diags issued since diags were last cleared.
+Optional argument will clear the list.
+
+=cut
+
 sub diags {
     $DIAG = [] if @_;
     return $DIAG;
 }
 
+=item push_diags( @messages )
+
+Add messages to diags.
+
+=cut
+
 sub push_diag {
     push @$DIAG => @_;
 }
+
+=item real_tests( $code )
+
+Run tests with normal L<Test::Builder>. This is where your tests actually work
+as tests.
+
+=cut
 
 sub real_tests(&) {
     my ( $sub ) = @_;
@@ -138,6 +154,16 @@ require Test::Suite::Plugin;
 1;
 
 __END__
+
+=back
+
+=head1 MAGIC BE HERE
+
+This works by overriding parts of L<Test::Suite::Plugin> so that when called
+parts of Test::Suite are lexically overriden. There is all kinds of room from
+problems here, but I am not sure of a better way yet, just be careful.
+
+=cut
 
 =head1 AUTHORS
 

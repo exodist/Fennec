@@ -188,14 +188,12 @@ Options (TIMTOWTDI)
     lib/App/MyApp.pm
 
     Options:
-    test/App/MyApp.pm
-    lib/App/MyAppTest.pm
+    ts/App/MyApp.pm
     lib/App/TEST/MyApp.pm
 
-Tests can mirror lib inside /test (/t should be reserved for script based tests
-and prove). They can also be next to the tested module but postfixed with
-'Test'. They can also be in an uppercase 'TEST' directory within the directory
-containing the tested module.
+Tests can mirror lib inside /ts (/t should be reserved for script based tests
+and prove). They can also be in an uppercase 'TEST' directory within the
+directory containing the tested module.
 
 You will need to configure L<Module::Build> or L<Module::Install> to ignore
 your test files for installation (unless you really don't care, but please do).

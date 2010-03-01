@@ -56,7 +56,7 @@ real_tests {
     is( $one->parent_pid, $$, "Parent PID" );
     is( $one->pid, $$, "PID" );
     isa_ok( $one->{ socket }, 'IO::Socket::UNIX' );
-    like( $one->socket_file, qr{./\.test-suite\.$$\.....$}, "Socket file" );
+    like( $one->_socket_file, qr{./\.test-suite\.$$\.....$}, "Socket file" );
 
     my $test = bless( {}, 'Some::Package' );
     $one->add_test( $test );

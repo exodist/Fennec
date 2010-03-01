@@ -6,6 +6,98 @@ use Carp;
 use Scalar::Util 'blessed';
 our @CARP_NOT = ( __PACKAGE__, 'Test::Suite::TestHelper' );
 
+#{{{ POD
+
+=pod
+
+=head1 NAME
+
+Test::Suite::Plugin - Used by plugins to turn them into plugins.
+
+=head1 DESCRIPTION
+
+All plugins must use this class to define their exported functionality.
+
+=head1 EARLY VERSION WARNING
+
+This is VERY early version. Test::Suite does not run yet.
+
+Please go to L<http://github.com/exodist/Test-Suite> to see the latest and
+greatest.
+
+=head1 SYNOPSYS
+
+To create a plugin create a module directly under the L<Test::Suite::Plugin>
+namespace. Define testers and utilies.
+
+    package Test::Suite::Plugin::MyPlugin;
+    use strict;
+    use references;
+    use Test::Suite::Plugin;
+
+    # define a util function
+    util my_diag => sub { Test::Suite->diag( @_ ) };
+
+    # define a tester
+    tester my_ok => (
+        min_args => 1,
+        max_args => 2,
+        code => sub {
+            my ( $result, $name ) = @_;
+            return ( $result ? 1 : 0, $name );
+        },
+    );
+
+    # Define one with a prototype
+    tester my_dies_ok => sub(&;$) {
+        eval $_[0]->() || return ( 1, $_[1]);
+        Test::Suite->diag( "Test did not die as expected" );
+        return ( 0, $_[1] );
+    };
+
+    1;
+
+=head1 WRAPPER PLUGINS
+
+Plugins can be made to wrap around existing L<Test::Builder> based testing
+utilities. This is how L<Test::More> and L<Test::Warn> functionality is
+provided. Here is the Test::More wrapper plugin as an example.
+
+    package Test::Suite::Plugin::More;
+    use strict;
+    use warnings;
+
+    use Test::Suite::Plugin;
+
+    our @SUBS;
+    BEGIN {
+        @SUBS = qw/ is isnt like unlike cmp_ok is_deeply can_ok isa_ok /;
+    }
+
+    use Test::More import => \@SUBS;
+
+    tester $_ => $_ for @SUBS;
+    util diag => sub { Test::Suite->diag( @_ ) };
+    util todo => sub(&$) {
+        my ( $code, $todo ) = @_;
+        local $Test::Suite::Plugin::TODO = $todo;
+        $code->();
+    };
+
+    1;
+
+=head1 TESTING
+
+TODO
+
+=head1 ADVANCED TESTERS
+
+TODO - talk about defining argument types
+
+=cut
+
+#}}}
+
 #{{{ TYPES
 our %TYPES = (
     Ref         => sub { ref( $_[0] ) ? 1 : 0},
@@ -39,6 +131,10 @@ our $NO_TEST = \"No Test";
 our $TB_USED = 0;
 our $TODO = "";
 
+=head1 IMPORT
+
+=cut
+
 sub import {
     my $class = shift;
     my ( $arg ) = @_;
@@ -50,17 +146,22 @@ sub import {
     *{ $package . '::' . $_ } = \&{ $_ } for @EXPORT;
 }
 
-sub TODO { $TODO }
-
-=head1 EXPORTED SUBS
+=head1 CLASS METHODS
 
 =over 4
 
+=item my $reason = $class->todo()
+
+If the tests are currently runnign under TODO this will returnt he reason,
+otherwise it will return false.
+
+=cut
+
+sub todo { $TODO }
+
 =item $class->export_to( $package )
 
-Export all non-private subs from the subclass to the specified package.
-
-=back
+Export testers and utils from the plugin to the specified package.
 
 =cut
 
@@ -80,14 +181,30 @@ sub export_to {
     }
 }
 
+=back
+
+=head1 EXPORTED FUNCTIONS
+
+These functions are exported for use in your plugins.
+
+=over 4
+
 =item no_test()
 
 If a tester sub returns the result of this function then no test will be
-recorded.
+recorded. This can be used to abord a tester without any record.
 
 =cut
 
 sub no_test { return $NO_TEST }
+
+=item util( $name, $code )
+
+=item util( $name, %proto )
+
+Define a utility function.
+
+=cut
 
 sub util {
     my ( $name, $code, $package, $proto ) = _util_args( @_ );
@@ -96,6 +213,14 @@ sub util {
 
     $SUBS{ $package }->{ $name } = $code;
 }
+
+=item tester( $name, $code )
+
+=item tester( $name, %proto )
+
+Define a tester function.
+
+=cut
 
 sub tester {
     my ( $name, $code, $package, $proto ) = _util_args( @_ );
@@ -264,3 +389,19 @@ sub _ref_is {
 
 
 1;
+
+=back
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Test-Suite is free software; Standard perl licence.
+
+Test-Suite is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

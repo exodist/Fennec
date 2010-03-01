@@ -5,6 +5,7 @@ use Module::Build;
 
 my $build = Module::Build->new(
     module_name => 'Test::Suite',
+    dist_version_from => 'lib/Test/Suite/Manual.pm',
     license     => 'perl',
     dist_author => 'Chad Granum <exodist7@gmail.com>',
     create_readme => 1,
