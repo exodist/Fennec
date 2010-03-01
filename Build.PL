@@ -3,9 +3,15 @@ use strict;
 use warnings;
 use Module::Build;
 
+eval {
+    use lib 'lib';
+    require 'lib/Test/Suite.pm';
+};
+
 my $build = Module::Build->new(
     module_name => 'Test::Suite',
     dist_version_from => 'lib/Test/Suite/Manual.pm',
+    dist_version     => $Test::Suite::VERSION || 0.001,
     license     => 'perl',
     dist_author => 'Chad Granum <exodist7@gmail.com>',
     create_readme => 1,

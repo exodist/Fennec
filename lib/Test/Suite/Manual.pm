@@ -2,9 +2,8 @@ package Test::Suite::Manual;
 use strict;
 use warnings;
 
-our $VERSION = "0.005";
+1;
 
-$VERSION;
 
 __END__
 
