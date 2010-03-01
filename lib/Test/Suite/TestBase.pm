@@ -119,10 +119,11 @@ sub _find_subs {
         @subs = grep { defined( *{$us . $_}{CODE} )}
                   keys %$us;
     }
-    for my $sub ( @subs ) {
-        next unless m/^(set|case)_(.*)$/;
-        my $add = "add_$1";
-        $self->$add( $2, method => $2 );
+    for ( @subs ) {
+        next unless m/^(set|case)_(.*)$/i;
+        my ( $name, $type ) = ( $2, lc($1));
+        my $add = "add_$type";
+        $self->$add( $name, method => $_ );
     }
 }
 

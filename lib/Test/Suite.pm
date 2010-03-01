@@ -227,4 +227,11 @@ sub run {
     my $listen = $self->socket;
 }
 
+sub DESTROY {
+    my $self = shift;
+    my $socket = $self->socket;
+    close( $socket ) if $socket;
+    unlink( $self->socket_file ) if $self->is_parent;
+}
+
 1;

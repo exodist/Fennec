@@ -17,6 +17,11 @@ throws_ok { my $one = $CLASS->new() }
     use strict;
     use warnings;
     use base 'Test::Suite::TestBase';
+
+    sub case_CASE_FROM_SUB {1}
+    sub set_SET_FROM_SUB {1}
+    sub CaSe_CaSe_WiTh_CaPs {1}
+    sub SeT_sEt_WiTh_CaPs {1}
 }
 
 $CLASS = 'My::Test';
@@ -46,104 +51,106 @@ ok( $one->_cases != $one->_cases({}), "Accessors" );
 ok( $one->random(5) != 5, "Readers" );
 can_ok( $one, 'set', 'case', '__find_subs' );
 
+is_deeply( $one->_cases, {}, "No Cases yet." );
+is_deeply( $one->_sets, {}, "No sets yet." );
+ok( !$one->__find_subs, "havn't found subs yet" );
+$one->_find_subs;
+ok( $one->__find_subs, "found subs" );
+is_deeply(
+    [ map { $_->name } $one->cases ],
+    [ sort qw/CASE_FROM_SUB CaSe_WiTh_CaPs/ ],
+    "Found all cases"
+);
+is_deeply(
+    [ map { $_->name } $one->sets ],
+    [ sort qw/SET_FROM_SUB sEt_WiTh_CaPs/],
+    "Found all sets"
+);
+
+throws_ok { $one->add_set( 'SET_FROM_SUB' )}
+          qr/Set with name SET_FROM_SUB already exists/,
+          "No duplicate sets";
+
+throws_ok { $one->add_case( 'CASE_FROM_SUB' )}
+          qr/Case with name CASE_FROM_SUB already exists/,
+          "No duplicate cases";
+
+ok(( $one->cases(1)), "We get results when testing with random" );
+ok(( $one->sets(1)), "We get results when testing with random" );
+
+
+our %RUNS;
 {
-    no warnings 'redefine';
-    *Test::Suite::Grouping::Case::new = sub { \@_ };
-    *Test::Suite::Grouping::Set::new = sub { \@_ };
+    package My::Test2;
+    use strict;
+    use warnings;
+    use base 'Test::Suite::TestBase';
+    use Test::More;
+    {
+        no warnings 'once';
+        *RUNS = %main::RUNS;
+    }
+
+    sub init {
+        my $self = shift;
+        ok( $self, "got self" );
+        isa_ok( $self, __PACKAGE__ );
+        $RUNS{ count }->{ init }++;
+        push @{$RUNS{ as }} => [ $self->case, $self->set, 'init' ];
+    }
+
+    sub case_case_a {
+        my $self = shift;
+        ok( $self, "got self" );
+        isa_ok( $self, __PACKAGE__ );
+        $RUNS{ count }->{ case_a }++;
+        push @{$RUNS{ as }} => [ $self->case->name, $self->set ];
+    }
+
+    sub case_case_b {
+        my $self = shift;
+        ok( $self, "got self" );
+        isa_ok( $self, __PACKAGE__ );
+        $RUNS{ count }->{ case_b }++;
+        push @{$RUNS{ as }} => [ $self->case->name, $self->set ];
+    }
+
+    sub set_set_a {
+        my $self = shift;
+        ok( $self, "got self" );
+        isa_ok( $self, __PACKAGE__ );
+        $RUNS{ count }->{ set_a }++;
+        push @{$RUNS{ as }} => [ $self->case->name, $self->set->name ];
+    }
+
+    sub set_set_b {
+        my $self = shift;
+        ok( $self, "got self" );
+        isa_ok( $self, __PACKAGE__ );
+        $RUNS{ count }->{ set_b }++;
+        push @{$RUNS{ as }} => [ $self->case->name, $self->set->name ];
+    }
 }
+$CLASS = 'My::Test2';
+$one = $CLASS->new( random => 0 );
+$one->run();
+is_deeply(
+    \%RUNS,
+    {
+        count => { init => 1, case_a => 1, case_b => 1, set_a => 2, set_b => 2 },
+        as => [
+            [ undef, undef, 'init' ],
 
+            [ 'case_a', undef ],
+            [ 'case_a', 'set_a' ],
+            [ 'case_a', 'set_b' ],
 
+            [ 'case_b', undef ],
+            [ 'case_b', 'set_a' ],
+            [ 'case_b', 'set_b' ],
+        ]
+    },
+    "run() behaved as expected"
+);
 
 done_testing;
-
-__END__
-
-sub add_case {
-    my ( $class, $self ) = _get_self( @_ );
-    my ( $name, %proto ) = @_;
-    croak( "Case with name $name already exists" )
-        if $self->_cases->{ $name };
-    $self->_cases->{ $name } = Test::Suite::Grouping::Case->new( $name, %proto );
-}
-
-sub add_set {
-    my ( $class, $self ) = _get_self( @_ );
-    my ( $name, %proto ) = @_;
-    croak( "Set with name $name already exists" )
-        if $self->_sets->{ $name };
-    $self->_sets->{ $name } = Test::Suite::Grouping::Set->new( $name, %proto );
-}
-
-sub cases {
-    my ( $class, $self ) = _get_self( @_ );
-    $self->_find_subs;
-    my ( $random ) = @_;
-    my $cases = $self->_cases;
-    my @list = values %$cases;
-    return $random ? (shuffle @list) : (sort { $a->name cmp $b->name } @list);
-}
-
-sub sets {
-    my ( $class, $self ) = _get_self( @_ );
-    $self->_find_subs;
-    my ( $random ) = @_;
-    my $sets = $self->_sets;
-    my @list = values %$sets;
-    return $random ? (shuffle @list) : (sort { $a->name cmp $b->name } @list);
-}
-
-sub run {
-    my ( $class, $self ) = _get_self( @_ );
-    $self->_find_subs;
-    my $init = $self->can( 'initialize' ) || $self->can( 'init' );
-    $self->$init if $init;
-
-    for my $case ( $self->cases( $self->random )) {
-        $self->case( $case );
-        $case->run( $self );
-
-        for my $set ( $self->sets( $self->random )) {
-            $self->set( $set );
-
-            $set->run( $self );
-
-            $self->set( undef );
-        }
-
-        $self->case( undef );
-    }
-}
-
-sub _get_self(\@) {
-    my $in = eval { shift(@{$_[0]}) } || confess($@);
-    my $class = blessed( $in ) || $in;
-    croak( "No class or object specified" )
-        unless( $class );
-
-    my $self = $SINGLETONS{$class};
-    croak( "Could not find singleton for class '$class'" )
-        unless $self;
-
-    return ($class, $self);
-}
-
-sub _find_subs {
-    my ( $class, $self ) = _get_self( @_ );
-    return if $self->__find_subs;
-    $self->__find_subs(1);
-
-    my @subs;
-    {
-        my $us = $class . '::';
-        no strict 'refs';
-        @subs = grep { defined( *{$us . $_}{CODE} )}
-                  keys %$us;
-    }
-    for my $sub ( @subs ) {
-        next unless m/^(set|case)_(.*)$/;
-        my $add = "add_$1";
-        $self->$add( $2, method => $2 );
-    }
-}
-
-1;
