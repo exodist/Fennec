@@ -1,11 +1,12 @@
 package Test::Suite::TestBase;
 use strict;
 use warnings;
+use Carp;
+use Try::Tiny;
 use List::Util qw/shuffle/;
 use Scalar::Util qw/blessed/;
-use Test::Suite::Grouping::Set;
 use Test::Suite::Grouping::Case;
-use Carp;
+use Test::Suite::Grouping::Set;
 
 our %SINGLETONS;
 sub _get_self(\@);
@@ -15,7 +16,16 @@ sub new {
     croak( "$class cannot not be instantiated" )
         if $class eq __PACKAGE__;
     my %proto = @_;
-    $SINGLETONS{$class} ||= bless( {%proto, _cases => {}, _sets => {}}, $class );
+    $SINGLETONS{$class} ||= bless(
+        {
+            case_defaults => {},
+            set_defaults => {},
+            %proto,
+            _cases => {},
+            _sets => {}
+        },
+        $class
+    );
     return $SINGLETONS{$class};
 }
 
@@ -43,7 +53,7 @@ sub add_case {
     my ( $name, %proto ) = @_;
     croak( "Case with name $name already exists" )
         if $self->_cases->{ $name };
-    $self->_cases->{ $name } = Test::Suite::Grouping::Case->new( $name, %proto );
+    $self->_cases->{ $name } = Test::Suite::Grouping::Case->new( $name, %{ $self->case_defaults }, %proto );
 }
 
 sub add_set {
@@ -51,7 +61,7 @@ sub add_set {
     my ( $name, %proto ) = @_;
     croak( "Set with name $name already exists" )
         if $self->_sets->{ $name };
-    $self->_sets->{ $name } = Test::Suite::Grouping::Set->new( $name, %proto );
+    $self->_sets->{ $name } = Test::Suite::Grouping::Set->new( $name, %{ $self->case_defaults }, %proto );
 }
 
 sub cases {
@@ -60,6 +70,10 @@ sub cases {
     my ( $random ) = @_;
     my $cases = $self->_cases;
     my @list = values %$cases;
+
+    # 'DEFAULT' case
+    push @list => Test::Suite::Grouping::Case->new( 'DEFAULT', %{ $self->case_defaults }, method => sub {1} )
+        unless @list;
     return $random ? (shuffle @list) : (sort { $a->name cmp $b->name } @list);
 }
 
@@ -79,17 +93,24 @@ sub run {
     $self->$init if $init;
 
     for my $case ( $self->cases( $self->random )) {
+        # TODO: If parrallel then fork before running the case
+        #       If force_fork then fork but wait before continuing (unless parallel)
+        #       If no_fork, but in parrallel, then store case/set pair for later.
         $self->case( $case );
         $case->run( $self );
 
         for my $set ( $self->sets( $self->random )) {
+            # TODO: If parrallel then fork before running the set
+            #       See rules for CASE above.
             $self->set( $set );
 
             $set->run( $self );
 
+            #TODO report status of set.
             $self->set( undef );
         }
 
+        #TODO report status of case.
         $self->case( undef );
     }
 }

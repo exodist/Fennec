@@ -7,7 +7,7 @@ sub run {
     require Test::Suite;
     #Parse Args
 
-    Test::Suite->new->run(args);
+    Test::Suite->new->run();
 }
 
 1;

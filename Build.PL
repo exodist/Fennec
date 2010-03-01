@@ -18,6 +18,7 @@ my $build = Module::Build->new(
         'Test::Simple' => 0.88,
         'Test::Warn'   => 0,
         'Time::HiRes'  => 0,
+        'Try::Tiny'    => 0,
         'autodie'      => 0,
     },
     build_requires => {

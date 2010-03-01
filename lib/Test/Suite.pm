@@ -7,6 +7,7 @@ use Cwd qw/cwd/;
 use File::Temp qw/tempfile/;
 use Carp;
 use Scalar::Util 'blessed';
+use List::Util 'shuffle';
 use Test::Suite::Grouping;
 use Test::Suite::TestBase;
 use Sub::Uplevel;
@@ -186,8 +187,8 @@ sub result {
     croak( "Testing has not been started" )
         unless $self->is_running;
 
-    $self->_handle_result( @_ )
-        if ( $self->is_parent );
+    return $self->_handle_result( @_ )
+        if $self->is_parent;
 
     $self->_send_result( @_ );
 }
@@ -200,14 +201,8 @@ sub _handle_result {
         return 1;
     }
 
-    $TB->ok($result->{ result } || 0, $result->{ name });
-#    $TB->diag(
-#        "  Test failed in file " .
-#        ($result->{ filename } || '(NOT FOUND)') .
-#        "\n  on line " .
-#        ($result->{ line } || '(NOT FOUND)')
-#    ) unless $result->{ result };
-    $TB->diag( $_ ) for @{ $result->{ debug } || []};
+    $TB->real_ok($result->{ result } || 0, $result->{ name });
+    $TB->real_diag( $_ ) for @{ $result->{ debug } || []};
 }
 
 sub diag {
@@ -216,7 +211,7 @@ sub diag {
 }
 
 sub _send_result {
-    croak( "Forking not yet implemented" );
+    confess( "Forking not yet implemented" );
 }
 
 sub run {
@@ -225,6 +220,12 @@ sub run {
         if $self->is_running;
     $self->is_running( 1 );
     my $listen = $self->socket;
+
+    for my $test ( shuffle values %{ $self->tests }) {
+        $test->run();
+    }
+
+    $TB->done_testing;
 }
 
 sub DESTROY {
