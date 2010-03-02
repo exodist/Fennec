@@ -100,10 +100,10 @@ real_tests {
               qr{Can't locate Fake/Package/Name\.pm},
               "Dies when testing invalid or broken package";
 
-    isa_ok( 'My::TestA', 'Fennec::TestBase' );
+    isa_ok( 'My::TestA', 'Fennec::Test' );
     can_ok( 'My::TestA', qw/ok throws_ok is_deeply warning_is return_a test_set test_case/ );
 
-    isa_ok( 'My::TestB', 'Fennec::TestBase' );
+    isa_ok( 'My::TestB', 'Fennec::Test' );
     can_ok( 'My::TestB', qw/ok throws_ok is_deeply warning_is return_b test_set test_case/ );
 };
 

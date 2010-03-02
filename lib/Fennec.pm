@@ -9,7 +9,7 @@ use Carp;
 use Scalar::Util 'blessed';
 use List::Util 'shuffle';
 use Fennec::Grouping;
-use Fennec::TestBase;
+use Fennec::Test;
 use Sub::Uplevel;
 use autodie;
 
@@ -68,7 +68,7 @@ The parameters provided to import() on use do a significant portion of the test
 setup. When Fennec is used it will instantate a singleton of the calling
 class and store it as a test to be run.
 
-Using Fennec also automatically adds 'Fennec::TestBase' to the
+Using Fennec also automatically adds 'Fennec::Test' to the
 calling classes @ISA.
 
 =head1 IMPORT OPTIONS
@@ -114,7 +114,7 @@ L<Fennec::Plugin::Exception>, L<Fennec::Plugin::Warn>
 =item all others
 
 All other arguments will be passed into the constructor for your test class,
-which is defined in L<Fennec::TestBase>.
+which is defined in L<Fennec::Test>.
 
 =back
 
@@ -151,7 +151,7 @@ sub import {
 
     {
         no strict 'refs';
-        push @{ $package . '::ISA' } => 'Fennec::TestBase';
+        push @{ $package . '::ISA' } => 'Fennec::Test';
     }
 
     $class->_export_plugins( $package, $options{ plugins } );
@@ -248,7 +248,7 @@ sub get { goto &new };
 
 =item $ts->add_test( $test )
 
-Add a <Fennec::TestBase> object to be tested when run is called.
+Add a <Fennec::Test> object to be tested when run is called.
 
 =cut
 
