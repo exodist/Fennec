@@ -70,7 +70,8 @@ sub test_set {
         if !$name || ref $name;
 
     my $code = shift if @_ == 1;
-    my %proto = ( method => $code, @_ );
+    my ( $caller ) = caller;
+    my %proto = ( method => $code, @_, test => $caller );
     my ( $package ) = caller;
 
     $package->add_set( $name, %proto );
@@ -90,7 +91,8 @@ sub test_case {
         if !$name || ref $name;
 
     my $code = shift if @_ == 1;
-    my %proto = ( method => $code, @_ );
+    my ( $caller ) = caller;
+    my %proto = ( method => $code, @_, test => $caller );
     my ( $package ) = caller;
 
     $package->add_case( $name, %proto );

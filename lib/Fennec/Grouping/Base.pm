@@ -32,6 +32,7 @@ greatest.
 use Carp;
 our @CARP_NOT = ( __PACKAGE__, qw/Fennec::Grouping Fennec Fennec::Plugin/ );
 use Scalar::Util qw/blessed/;
+use Sub::Information as => 'inspect';
 
 =item $class->new( $name, %proto )
 
@@ -42,9 +43,47 @@ Create a new instance
 sub new {
     my $class = shift;
     my ( $name, %proto ) = @_;
-    croak( "No method provided" )
-        unless $proto{method};
-    return bless({%proto, name => $name}, $class );
+
+    my $method = $proto{method};
+    my $ref = ref( $method ) ? $method
+                             : $proto{test}->can( $method );
+
+    croak(
+        $method ? "$method is not a valid method for $class"
+                : "No method provided"
+    ) unless $ref;
+
+    my $info = inspect( $ref );
+
+    return bless(
+        {
+            %proto,
+            name => $name,
+            filename => $info->file,
+            line => $info->line,
+        },
+        $class
+    );
+}
+
+sub todo {
+    my $self = shift;
+    return $self->{ todo };
+}
+
+sub test {
+    my $self = shift;
+    return $self->{ test };
+}
+
+sub filename {
+    my $self = shift;
+    return $self->{ filename };
+}
+
+sub line {
+    my $self = shift;
+    return $self->{ line };
 }
 
 =item $name = $obj->name()
@@ -77,21 +116,16 @@ Get the type of object. Subclasses should override this.
 
 sub type { 'Base' }
 
-=item $obj->run( $test )
+=item $obj->run()
 
-Run the object method on the the specified test object.
+Run the object method.
 
 =cut
 
 sub run {
     my $self = shift;
-    my ( $test ) = @_;
     my $method = $self->method;
-    croak(
-        $self->type . " '" . $self->name . "': test '"
-        . blessed( $test ) . "' does not have a method named '$method'"
-    ) unless ( ref( $method ) || $test->can( $method ));
-    $test->$method();
+    $self->test->$method();
 }
 
 1;

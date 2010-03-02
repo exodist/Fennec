@@ -130,6 +130,7 @@ our $VERSION = "0.005";
 our $SINGLETON;
 our $TB = Test::Builder->new;
 our @DEFAULT_PLUGINS = qw/Warn Exception More Simple/;
+our @CARP_NOT = qw/Fennec::Test Fennec::TestHelper/;
 
 #{{{ IMPORT STUFF
 sub import {
@@ -376,7 +377,7 @@ sub run {
     my $self = shift;
     croak "Already running"
         if $self->is_running;
-    croak "run() may only be run fromt he parent process."
+    croak "run() may only be run from the parent process."
         unless $self->is_parent;
 
     $self->is_running( 1 );
