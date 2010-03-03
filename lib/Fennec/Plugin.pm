@@ -6,98 +6,6 @@ use Carp;
 use Scalar::Util 'blessed';
 our @CARP_NOT = ( __PACKAGE__, 'Fennec::TestHelper' );
 
-#{{{ POD
-
-=pod
-
-=head1 NAME
-
-Fennec::Plugin - Used by plugins to turn them into plugins.
-
-=head1 DESCRIPTION
-
-All plugins must use this class to define their exported functionality.
-
-=head1 EARLY VERSION WARNING
-
-This is VERY early version. Fennec does not run yet.
-
-Please go to L<http://github.com/exodist/Fennec> to see the latest and
-greatest.
-
-=head1 SYNOPSYS
-
-To create a plugin create a module directly under the L<Fennec::Plugin>
-namespace. Define testers and utilies.
-
-    package Fennec::Plugin::MyPlugin;
-    use strict;
-    use references;
-    use Fennec::Plugin;
-
-    # define a util function
-    util my_diag => sub { Fennec->diag( @_ ) };
-
-    # define a tester
-    tester my_ok => (
-        min_args => 1,
-        max_args => 2,
-        code => sub {
-            my ( $result, $name ) = @_;
-            return ( $result ? 1 : 0, $name );
-        },
-    );
-
-    # Define one with a prototype
-    tester my_dies_ok => sub(&;$) {
-        eval $_[0]->() || return ( 1, $_[1]);
-        Fennec->diag( "Test did not die as expected" );
-        return ( 0, $_[1] );
-    };
-
-    1;
-
-=head1 WRAPPER PLUGINS
-
-Plugins can be made to wrap around existing L<Test::Builder> based testing
-utilities. This is how L<Test::More> and L<Test::Warn> functionality is
-provided. Here is the Test::More wrapper plugin as an example.
-
-    package Fennec::Plugin::More;
-    use strict;
-    use warnings;
-
-    use Fennec::Plugin;
-
-    our @SUBS;
-    BEGIN {
-        @SUBS = qw/ is isnt like unlike cmp_ok is_deeply can_ok isa_ok /;
-    }
-
-    use Test::More import => \@SUBS;
-
-    tester $_ => $_ for @SUBS;
-    util diag => sub { Fennec->diag( @_ ) };
-    util todo => sub(&$) {
-        my ( $code, $todo ) = @_;
-        local $Fennec::Plugin::TODO = $todo;
-        $code->();
-    };
-
-    1;
-
-=head1 TESTING
-
-TODO
-
-=head1 ADVANCED TESTERS
-
-TODO - talk about defining argument types
-
-=cut
-
-#}}}
-
 #{{{ TYPES
 our %TYPES = (
     Ref         => sub { ref( $_[0] ) ? 1 : 0},
@@ -131,10 +39,6 @@ our $NO_TEST = \"No Test";
 our $TB_USED = 0;
 our $TODO = "";
 
-=head1 IMPORT
-
-=cut
-
 sub import {
     my $class = shift;
     my ( $arg ) = @_;
@@ -146,24 +50,7 @@ sub import {
     *{ $package . '::' . $_ } = \&{ $_ } for @EXPORT;
 }
 
-=head1 CLASS METHODS
-
-=over 4
-
-=item my $reason = $class->todo()
-
-If the tests are currently runnign under TODO this will returnt he reason,
-otherwise it will return false.
-
-=cut
-
 sub todo { $TODO }
-
-=item $class->export_to( $package )
-
-Export testers and utils from the plugin to the specified package.
-
-=cut
 
 sub export_to {
     my $class = shift;
@@ -181,30 +68,7 @@ sub export_to {
     }
 }
 
-=back
-
-=head1 EXPORTED FUNCTIONS
-
-These functions are exported for use in your plugins.
-
-=over 4
-
-=item no_test()
-
-If a tester sub returns the result of this function then no test will be
-recorded. This can be used to abord a tester without any record.
-
-=cut
-
 sub no_test { return $NO_TEST }
-
-=item util( $name, $code )
-
-=item util( $name, %proto )
-
-Define a utility function.
-
-=cut
 
 sub util {
     my ( $name, $code, $package, $proto ) = _util_args( @_ );
@@ -213,14 +77,6 @@ sub util {
 
     $SUBS{ $package }->{ $name } = $code;
 }
-
-=item tester( $name, $code )
-
-=item tester( $name, %proto )
-
-Define a tester function.
-
-=cut
 
 sub tester {
     my ( $name, $code, $package, $proto ) = _util_args( @_ );
@@ -252,22 +108,28 @@ sub _util_args {
     return ( $name, $code, $package, \%proto );
 }
 
-sub _record {
-    my ( $result, $name, $time, @debug ) = @_;
+sub _result {
+    my ( $ok, $name, $time, @diag ) = @_;
 
     # Get the first caller outside of the plugin(s)
     my ( $package, $filename, $line ) = _first_non_plugin_caller();
 
-    Fennec->get->result({
-        result => $result || 0,
-        name => $name || undef,
-        package => $package || undef,
-        filename => $filename || undef,
-        line => $line || undef,
-        time => defined( $time ) ? $time : undef,
-        debug => \@debug,
+    my $test = Fennec::Tester->get->test;
+    my $case = $test ? $test->case : undef;
+    my $set = $test ? $test->set : undef;
+
+    my $result = Fennec::Result->new(
+        result => $ok || 0,
+        name   => $name,
+        diag   => \@diag,
+        time   => $time,
+        case   => $case,
+        set    => $set,
+        line   => $line     || ($case ? $set ? $set->line : $case->line : undef),
+        file   => $filename || ($case ? $set ? $set->filename : $case->filename : undef),
         $TODO ? ( todo => $TODO ) : (),
-    });
+    );
+    Fennec::Tester->get->result( $result );
 }
 
 sub _wrap_tester {
@@ -299,7 +161,7 @@ sub _wrap_tester {
             ( $result, $name ) = @$Test::Builder::TBI_RESULT;
             @debug =  @Test::Builder::TBI_DIAGS;
         }
-        _record( $result, $name, (time() - $start), @debug);
+        _result( $result, $name, (time() - $start), @debug);
         return $result;
     };
 
@@ -389,6 +251,132 @@ sub _ref_is {
 
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Fennec::Plugin - Used by plugins to turn them into plugins.
+
+=head1 DESCRIPTION
+
+All plugins must use this class to define their exported functionality.
+
+=head1 EARLY VERSION WARNING
+
+This is VERY early version. Fennec does not run yet.
+
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
+greatest.
+
+=head1 SYNOPSYS
+
+To create a plugin create a module directly under the L<Fennec::Plugin>
+namespace. Define testers and utilies.
+
+    package Fennec::Plugin::MyPlugin;
+    use strict;
+    use references;
+    use Fennec::Plugin;
+
+    # define a util function
+    util my_diag => sub { Fennec::Tester->diag( @_ ) };
+
+    # define a tester
+    tester my_ok => (
+        min_args => 1,
+        max_args => 2,
+        code => sub {
+            my ( $result, $name ) = @_;
+            return ( $result ? 1 : 0, $name );
+        },
+    );
+
+    # Define one with a prototype
+    tester my_dies_ok => sub(&;$) {
+        eval $_[0]->() || return ( 1, $_[1]);
+        Fennec::Tester->diag( "Test did not die as expected" );
+        return ( 0, $_[1] );
+    };
+
+    1;
+
+=head1 WRAPPER PLUGINS
+
+Plugins can be made to wrap around existing L<Test::Builder> based testing
+utilities. This is how L<Test::More> and L<Test::Warn> functionality is
+provided. Here is the Test::More wrapper plugin as an example.
+
+    package Fennec::Plugin::More;
+    use strict;
+    use warnings;
+
+    use Fennec::Plugin;
+
+    our @SUBS;
+    BEGIN {
+        @SUBS = qw/ is isnt like unlike cmp_ok is_deeply can_ok isa_ok /;
+    }
+
+    use Test::More import => \@SUBS;
+
+    tester $_ => $_ for @SUBS;
+    util diag => sub { Fennec::Tester->diag( @_ ) };
+    util todo => sub(&$) {
+        my ( $code, $todo ) = @_;
+        local $Fennec::Plugin::TODO = $todo;
+        $code->();
+    };
+
+    1;
+
+=head1 TESTING
+
+TODO
+
+=head1 ADVANCED TESTERS
+
+TODO - talk about defining argument types
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item my $reason = $class->todo()
+
+If the tests are currently runnign under TODO this will returnt he reason,
+otherwise it will return false.
+
+=item $class->export_to( $package )
+
+Export testers and utils from the plugin to the specified package.
+
+=back
+
+=head1 EXPORTED FUNCTIONS
+
+These functions are exported for use in your plugins.
+
+=over 4
+
+=item no_test()
+
+If a tester sub returns the result of this function then no test will be
+recorded. This can be used to abord a tester without any record.
+
+=item util( $name, $code )
+
+=item util( $name, %proto )
+
+Define a utility function.
+
+=item tester( $name, $code )
+
+=item tester( $name, %proto )
+
+Define a tester function.
 
 =back
 

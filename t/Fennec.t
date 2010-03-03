@@ -7,67 +7,8 @@ use Test::Exception::LessClever;
 use Test::Builder::Tester;
 use Fennec::TestHelper;
 
-my $CLASS;
-
-#{{{ Test _handle_result before we override it.
-BEGIN {
-    $CLASS = 'Fennec';
-    require Fennec;
-
-    test_out( "ok 1" );
-    $CLASS->_handle_result({ result => 1 });
-    test_out( "ok 2 - NAME" );
-    $CLASS->_handle_result({ result => 1, name => 'NAME' });
-
-    test_out( "not ok 3 - NAME" );
-    test_fail(+4);
-    #test_diag( "\tTest failed in file filename\t\non line 1" );
-    test_diag( "a" );
-    test_diag( "b" );
-    $CLASS->_handle_result({
-        result => 0,
-        name => 'NAME',
-        filename => 'filename',
-        line => '1',
-        debug => [ 'a', 'b' ],
-    });
-
-    test_diag( "xxx" );
-    $CLASS->_handle_result({ diag => "xxx" });
-
-    test_test( "_handle_result works" );
-}
-#}}}
-
-my @results;
-{
-    no warnings 'redefine';
-    *Fennec::_handle_result = sub { shift and push @results => @_ };
-}
-
-real_tests {
-    Fennec->_handle_result( 'a' );
-    is_deeply( \@results, [ 'a' ], "Saving results" );
-    @results = ();
-
-    my $one = $CLASS->new();
-    is( $one, $CLASS->new(), "singleton" );
-    is( $one, $CLASS->get(), "singleton - get" );
-    is( $one->parent_pid, $$, "Parent PID" );
-    is( $one->pid, $$, "PID" );
-    isa_ok( $one->{ socket }, 'IO::Socket::UNIX' );
-    like( $one->_socket_file, qr{./\.test-suite\.$$\.....$}, "Socket file" );
-
-    my $test = bless( {}, 'Some::Package' );
-    $one->add_test( $test );
-    is( $one->get_test( 'Some::Package' ), $test, "Got test" );
-
-    throws_ok { $one->add_test( $test )}
-              qr/Some::Package has already been added as a test/,
-              "No overide";
-
-    ok( $one->is_parent, "is parent" );
-};
+my $CLASS = 'Fennec';
+require Fennec;
 
 {
     package My::LoadIt;
@@ -83,6 +24,17 @@ real_tests {
     sub return_a { 'a' };
     sub return_b { 'b' };
 
+    package My::LoadIt2;
+    use strict;
+    use warnings;
+    BEGIN{ $INC{ 'My/LoadIt2.pm' } = __FILE__ }
+
+    sub import {
+        my ($caller) = caller;
+        no strict 'refs';
+        *{$caller . '::return_c'} = sub {'c'};
+    }
+
     package My::TestA;
     use strict;
     use warnings;
@@ -93,6 +45,11 @@ real_tests {
     use warnings;
     use Fennec testing => 'My::LoadIt',
                     import_args => [ 'return_b' ];
+
+    package My::TestC;
+    use strict;
+    use warnings;
+    use Fennec testing => 'My::LoadIt2';
 }
 
 real_tests {
@@ -105,6 +62,9 @@ real_tests {
 
     isa_ok( 'My::TestB', 'Fennec::Test' );
     can_ok( 'My::TestB', qw/ok throws_ok is_deeply warning_is return_b test_set test_case/ );
+
+    isa_ok( 'My::TestC', 'Fennec::Test' );
+    can_ok( 'My::TestC', qw/ok throws_ok is_deeply warning_is return_c test_set test_case/ );
 };
 
 done_testing;

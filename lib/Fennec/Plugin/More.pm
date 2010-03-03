@@ -2,7 +2,26 @@ package Fennec::Plugin::More;
 use strict;
 use warnings;
 
-#{{{ POD
+use Fennec::Plugin;
+
+our @SUBS;
+BEGIN {
+    @SUBS = qw/ is isnt like unlike cmp_ok is_deeply can_ok isa_ok /;
+}
+
+use Test::More import => \@SUBS;
+
+tester $_ => $_ for @SUBS;
+
+util diag => sub { Fennec::Tester->diag( @_ ) };
+
+util todo => sub(&$) {
+    my ( $code, $todo ) = @_;
+    local $Fennec::Plugin::TODO = $todo;
+    $code->();
+};
+
+1;
 
 =pod
 
@@ -46,21 +65,6 @@ Please see L<Test::More> for more details on any of these.
 
 =back
 
-=cut
-
-#}}}
-
-use Fennec::Plugin;
-
-our @SUBS;
-BEGIN {
-    @SUBS = qw/ is isnt like unlike cmp_ok is_deeply can_ok isa_ok /;
-}
-
-use Test::More import => \@SUBS;
-
-tester $_ => $_ for @SUBS;
-
 =head1 UTILITY FUNCTIONS
 
 =over 4
@@ -68,10 +72,6 @@ tester $_ => $_ for @SUBS;
 =item diag( @messages )
 
 Display a message in the test output.
-
-=cut
-
-util diag => sub { Fennec->diag( @_ ) };
 
 =item todo( $sub, $reason )
 
@@ -81,16 +81,6 @@ Run a group of tests under TODO.
         ok( 0, "Will fail" );
         is( 1, 2, "1 != 2" );
     } "These fail";
-
-=cut
-
-util todo => sub(&$) {
-    my ( $code, $todo ) = @_;
-    local $Fennec::Plugin::TODO = $todo;
-    $code->();
-};
-
-1;
 
 =back
 

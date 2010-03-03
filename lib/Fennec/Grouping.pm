@@ -3,7 +3,54 @@ use strict;
 use warnings;
 use Carp;
 
-#{{{ POD
+sub export_to {
+    my $class = shift;
+    my ( $package ) = @_;
+    return 1 unless $package;
+
+    {
+        my $us = $class . '::';
+        no strict 'refs';
+        my @subs = grep { defined( *{$us . $_}{CODE} )} keys %$us;
+        for my $sub ( @subs ) {
+            *{ $package . '::' . $sub } = \&$sub;
+        }
+    }
+}
+
+sub partition {
+    my $name = shift;
+    my ( $package, $filename, $line ) = caller;
+    my %proto = ( test => $package, filename => $filename, line => $line );
+
+    $package->add_partition( $name || "anonymous", %proto );
+}
+
+sub test_set {
+    my $name = shift;
+    croak( "You must provide a set name, and it must not be a reference" )
+        if !$name || ref $name;
+
+    my $code = shift if @_ == 1;
+    my ( $package, $filename, $line ) = caller;
+    my %proto = ( method => $code, @_, test => $package, filename => $filename, line => $line );
+
+    $package->add_set( $name, %proto );
+}
+
+sub test_case {
+    my $name = shift;
+    croak( "You must provide a case name, and it must not be a reference" )
+        if !$name || ref $name;
+
+    my $code = shift if @_ == 1;
+    my ( $package, $filename, $line ) = caller;
+    my %proto = ( method => $code, @_, test => $package, filename => $filename, line => $line );
+
+    $package->add_case( $name, %proto );
+}
+
+1;
 
 =pod
 
@@ -33,25 +80,6 @@ Export all functions to the specified package.
 
 =back
 
-=cut
-
-#}}}
-
-sub export_to {
-    my $class = shift;
-    my ( $package ) = @_;
-    return 1 unless $package;
-
-    {
-        my $us = $class . '::';
-        no strict 'refs';
-        my @subs = grep { defined( *{$us . $_}{CODE} )} keys %$us;
-        for my $sub ( @subs ) {
-            *{ $package . '::' . $sub } = \&$sub;
-        }
-    }
-}
-
 =head1 EXPORTABLE FUNCTIONS
 
 =over 4
@@ -62,43 +90,11 @@ sub export_to {
 
 Define a test set in the calling test class.
 
-=cut
-
-sub test_set {
-    my $name = shift;
-    croak( "You must provide a set name, and it must not be a reference" )
-        if !$name || ref $name;
-
-    my $code = shift if @_ == 1;
-    my ( $caller ) = caller;
-    my %proto = ( method => $code, @_, test => $caller );
-    my ( $package ) = caller;
-
-    $package->add_set( $name, %proto );
-}
-
 =item test_case( $name, $code )
 
 =item test_case( $name, %proto )
 
 Define a test case in the calling test class.
-
-=cut
-
-sub test_case {
-    my $name = shift;
-    croak( "You must provide a case name, and it must not be a reference" )
-        if !$name || ref $name;
-
-    my $code = shift if @_ == 1;
-    my ( $caller ) = caller;
-    my %proto = ( method => $code, @_, test => $caller );
-    my ( $package ) = caller;
-
-    $package->add_case( $name, %proto );
-}
-
-1;
 
 =back
 

@@ -154,7 +154,7 @@ $CLASS = 'My::Test2';
 
 {
     no warnings 'redefine';
-    *Fennec::result = sub {};
+    *Fennec::Tester::result = sub {};
 }
 my $one = $CLASS->new( random => 0 );
 $one->run();

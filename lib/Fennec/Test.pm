@@ -38,6 +38,7 @@ use List::Util qw/shuffle/;
 use Scalar::Util qw/blessed/;
 use Fennec::Grouping::Case;
 use Fennec::Grouping::Set;
+use Time::HiRes;
 
 our %SINGLETONS;
 sub _get_self(\@);
@@ -57,6 +58,9 @@ sub new {
         },
         $class
     );
+
+    # Insert partition to start.
+
     return $SINGLETONS{$class};
 }
 
@@ -117,54 +121,123 @@ sub sets {
     return $random ? (shuffle @list) : (sort { $a->name cmp $b->name } @list);
 }
 
+sub partitions {
+    my ( $class, $self ) = _get_self( @_ );
+}
+
 sub run {
     my ( $class, $self ) = _get_self( @_ );
+    my ( $case_name, $set_name ) = @_;
     $self->_find_subs;
     my $init = $self->can( 'initialize' ) || $self->can( 'init' );
     $self->$init if $init;
 
     for my $case ( $self->cases( $self->random )) {
+        next if $case_name and $case_name ne $case->name;
+
         # TODO: If parallel then fork before running the case
         #       If force_fork then fork but wait before continuing (unless parallel)
         #       If no_fork, but in parallel, then store case/set pair for later.
-        $self->case( $case );
-        my ( $cr, @cd ) = try {
-            $case->run( $self );
-            my $failures = 0;
 
-            for my $set ( $self->sets( $self->random )) {
-                # TODO: If parallel then fork before running the set
-                #       See rules for CASE above.
-
-                my ( $sr, @sd ) = try {
-                    $self->set( $set );
-                    my $out = $set->run( $self );
-                    $self->set( undef );
-                    return $out ? ($out) : (0, "One or more tests failed.");
-                } catch { $failures++; return (0, $_ )};
-
-                Fennec->get->result({
-                    result => $sr,      name => $case->name . " - Set: " . $set->name,
-                    debug => \@sd,      todo => $set->todo || $case->todo || undef,
-                    time => undef,      line => $set->line || undef,
-                    package => $class,  filename => $set->filename || $self->filename,
-                });
-            }
-
-            return $failures ? ( 0, "One or more sets had a failure." )
-                             : ( 1 );
-        }
-        catch { return ( 0, $_ )};
-
-        Fennec->get->result({
-            result => $cr,      name => "Case: " . $case->name,
-            debug => \@cd,      todo => $case->todo || undef,
-            time => undef,      line => $case->line || undef,
-            package => $class,  filename => $case->filename || $self->filename,
-        });
-
-        $self->case( undef );
+        $self->_run_case( $case, $set_name );
     }
+}
+
+sub specs {
+    my ( $class, $self ) = _get_self( @_ );
+    my %specs = (
+        sets => '',
+        cases => '',
+        partitions => '',
+        # This is how many times this test will run a set
+        # p1cases * p1sets + p2cases * p2sets ...
+        runs => '',
+    );
+}
+
+sub _organize {
+    my ( $class, $self ) = _get_self( @_ );
+    return {
+        p1 => {
+            sets => [],
+            cases => [],
+        },
+        p2 => {
+            sets => [],
+            cases => [],
+        }
+    }
+}
+
+sub _run_case {
+    my $self = shift;
+    my ( $case, $set_name ) = @_;
+    croak( "Already running a case" )
+        if $self->case;
+
+    Fennec::Tester->get->diag( "Running case: " . $case->name );
+    $self->case( $case );
+    my $time = time();
+    $case->run( $self );
+
+    my ( $cr, @cd ) = try {
+        my $failures = 0;
+
+        for my $set ( $self->sets( $self->random )) {
+            next if $set_name and $set_name ne $set->name;
+            # TODO: If parallel then fork before running the set
+            #       See rules for CASE above.
+            $self->_run_set( $set ) || $failures++;
+        }
+
+        return $failures
+            ? ( 0, "One or more sets had a failure." )
+            : ( 1 );
+    }
+    catch { return ( 0, $_ )};
+
+    $self->_result( $cr, "End of case - " . $case->name, ( time() - $time ), \@cd );
+    $self->case( undef );
+}
+
+sub _run_set {
+    my $self = shift;
+    my ( $set ) = @_;
+    croak( "Already running a set" )
+        if $self->set;
+
+    Fennec::Tester->get->diag( "Running set: " . $set->name );
+    $self->set( $set );
+    my $time = time;
+
+    my ( $sr, @sd ) = try {
+        my $out = $set->run( $self );
+        return $out ? ($out) : (0, "One or more tests failed.");
+    } catch { return (0, $_ )};
+
+    $self->_result( $sr, "End of set - " . $set->name, (time() - $time), \@sd );
+    $self->set( undef );
+    return $sr;
+}
+
+sub _result {
+    my $self = shift;
+    my ( $ok, $name, $time, $diag ) = @_;
+
+    my $case = $self->case || undef;
+    my $set = $self->set || undef;
+
+    my $result = Fennec::Result->new(
+        result => $ok,
+        name   => $name,
+        diag   => $diag,
+        time   => $time,
+        case   => $case,
+        set    => $set,
+        line   => $case ? $set ? $set->line : $case->line : undef,
+        file   => $case ? $set ? $set->filename : $case->filename : $self->filename,
+    );
+    Fennec::Tester->get->result( $result );
 }
 
 sub _get_self(\@) {

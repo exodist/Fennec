@@ -3,19 +3,13 @@ use strict;
 use warnings;
 use Module::Build;
 
-eval {
-    use lib 'lib';
-    require 'lib/Fennec.pm';
-};
-
 my $build = Module::Build->new(
     module_name => 'Fennec',
-    dist_version_from => 'lib/Fennec/Manual.pm',
-    dist_version     => $Fennec::VERSION || 0.001,
     license     => 'perl',
     dist_author => 'Chad Granum <exodist7@gmail.com>',
     create_readme => 1,
     requires => {
+        'Cwd'               => 0,
         'File::Find'        => 0,
         'File::Temp'        => 0.20,
         'IO'                => 1.2301,
@@ -27,7 +21,6 @@ my $build = Module::Build->new(
         'Test::Warn'        => 0,
         'Time::HiRes'       => 0,
         'Try::Tiny'         => 0,
-        'autodie'           => 0,
     },
     build_requires => {
         'Object::Quick'               => '0.012',

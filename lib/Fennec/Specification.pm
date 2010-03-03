@@ -218,6 +218,33 @@ and L<Test::Warn> should be exported by default. It is unfortunate, but most
 functions will likely need to be re-implemented to work with the forking
 capabilities.
 
+=item test output
+
+TAP output is not sufficient.
+
+Fennec will maintain a table at the top of the display that will always be
+visible. Diagnostics messages will be printed below the table unless quiet is
+on. In both quiet and non-quiet mode the final table and all diagnostics
+messages will be put into the fennec-out.txt file.
+
+    HH::MM::SS | files | Cases | Sets
+    -----------|-------|-------|------
+    passes:    | 2     | 15    | 90
+    failes:    | 1     | 2     | 2
+    skipped:   | 0     | 0     | 1
+    todo:      | 0     | 0     | 2
+    remaining: | 109   | 12    | 248
+    ----------------------------------
+
+    filename | case name | set name | count (tests run so far)
+    ---------|-----------|----------|-------
+    ..MyFile | ..My Case | ..My Set | 05
+    ----------------------------------------
+
+    [messages in verbose mode]
+
+The fennec test runner will exit true in success, false in failure.
+
 =item coverage
 
 prove_fennec should have a simple flag to turn on coverage testing

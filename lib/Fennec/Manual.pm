@@ -145,7 +145,7 @@ namespace. Define testers and utilies.
     use Fennec::Plugin;
 
     # define a util function
-    util my_diag => sub { Fennec->diag( @_ ) };
+    util my_diag => sub { Fennec::Tester->diag( @_ ) };
 
     # define a tester
     tester my_ok => (
@@ -160,7 +160,7 @@ namespace. Define testers and utilies.
     # Define one with a prototype
     tester my_dies_ok => sub(&;$) {
         eval $_[0]->() || return ( 1, $_[1]);
-        Fennec->diag( "Test did not die as expected" );
+        Fennec::Tester->diag( "Test did not die as expected" );
         return ( 0, $_[1] );
     };
 
@@ -189,7 +189,7 @@ provided. Here is the Test::More wrapper plugin as an example.
     use Test::More import => \@SUBS;
 
     tester $_ => $_ for @SUBS;
-    util diag => sub { Fennec->diag( @_ ) };
+    util diag => sub { Fennec::Tester->diag( @_ ) };
     util todo => sub(&$) {
         my ( $code, $todo ) = @_;
         local $Fennec::Plugin::TODO = $todo;

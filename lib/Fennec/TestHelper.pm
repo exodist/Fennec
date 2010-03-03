@@ -1,7 +1,63 @@
 package Fennec::TestHelper;
 use strict;
 use warnings;
+use Fennec::Tester;
 use Fennec::TestBuilderImposter;
+
+our @EXPORT = qw/results diags real_tests push_diag/;
+use base 'Exporter';
+
+our $RESULTS = [];
+our $DIAG = [];
+
+sub results {
+    $RESULTS = [] if @_;
+    return $RESULTS;
+}
+
+sub diags {
+    $DIAG = [] if @_;
+    return $DIAG;
+}
+
+sub push_diag {
+    push @$DIAG => @_;
+}
+
+sub real_tests(&) {
+    my ( $sub ) = @_;
+
+    no warnings 'redefine';
+    local *Test::Builder::ok = \&Test::Builder::real_ok;
+    local *Test::Builder::diag = \&Test::Builder::real_diag;
+    local *Test::Builder::real_done_testing = \&Test::Builder::done_testing;
+    local *Test::Builder::done_testing = sub {1};
+
+    return $sub->();
+}
+
+require Fennec::Plugin;
+
+{
+    no strict 'refs';
+    no warnings 'redefine';
+    my $old = \&{ 'Fennec::Plugin::_result' };
+    *{ 'Fennec::Plugin::_result' } = sub {
+        local *{ 'Fennec::Tester::result' } = sub {
+            shift;
+            push @$RESULTS => @_;
+        };
+        local *{ 'Fennec::Tester::diag' } = sub {
+            shift;
+            push @$DIAG => @_;
+        };
+        return $old->( @_ );
+    };
+}
+
+1;
+
+__END__
 
 =pod
 
@@ -68,27 +124,12 @@ A single result will follow this format
 
 =over 4
 
-=cut
-
-our @EXPORT = qw/results diags real_tests push_diag/;
-use base 'Exporter';
-
-our $RESULTS = [];
-our $DIAG = [];
-
 =item $results = results()
 
 =item results(1)
 
 Returns an arrayref with all the results obtained since results was last
 cleared. Optional argument tells results() to clear all results.
-
-=cut
-
-sub results {
-    $RESULTS = [] if @_;
-    return $RESULTS;
-}
 
 =item $diags = diags()
 
@@ -97,63 +138,14 @@ sub results {
 Returns an arrayref with all diags issued since diags were last cleared.
 Optional argument will clear the list.
 
-=cut
-
-sub diags {
-    $DIAG = [] if @_;
-    return $DIAG;
-}
-
 =item push_diags( @messages )
 
 Add messages to diags.
-
-=cut
-
-sub push_diag {
-    push @$DIAG => @_;
-}
 
 =item real_tests( $code )
 
 Run tests with normal L<Test::Builder>. This is where your tests actually work
 as tests.
-
-=cut
-
-sub real_tests(&) {
-    my ( $sub ) = @_;
-
-    no warnings 'redefine';
-    local *Test::Builder::ok = \&Test::Builder::real_ok;
-    local *Test::Builder::diag = \&Test::Builder::real_diag;
-
-    return $sub->();
-}
-
-require Fennec::Plugin;
-
-{
-    no strict 'refs';
-    no warnings 'redefine';
-    my $old = \&{ 'Fennec::Plugin::_record' };
-    *{ 'Fennec::Plugin::_record' } = sub {
-        local *{ 'Fennec::get' } = sub { 'Fennec' };
-        local *{ 'Fennec::result' } = sub {
-            shift;
-            push @$RESULTS => @_;
-        };
-        local *{ 'Fennec::diag' } = sub {
-            shift;
-            push @$DIAG => @_;
-        };
-        return $old->( @_ );
-    };
-}
-
-1;
-
-__END__
 
 =back
 
@@ -162,8 +154,6 @@ __END__
 This works by overriding parts of L<Fennec::Plugin> so that when called
 parts of Fennec are lexically overriden. There is all kinds of room from
 problems here, but I am not sure of a better way yet, just be careful.
-
-=cut
 
 =head1 AUTHORS
 

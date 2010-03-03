@@ -103,29 +103,35 @@ real_tests {
             {
                 result => 1,
                 name => "caller at 10",
-                package => __PACKAGE__,
-                filename => __FILE__,
+                file => __FILE__,
                 line => $lines[0],
                 time => results()->[0]->{ 'time' },
-                debug => [],
+                diag => [],
+                case => results()->[0]->case,
+                set  => results()->[0]->set,
+                is_diag => 0,
             },
             {
                 result => 0,
                 name => "caller at 5",
-                package => __PACKAGE__,
-                filename => __FILE__,
+                file => __FILE__,
                 line => $lines[1],
                 time => results()->[1]->{ 'time' },
-                debug => [ "Got 0 not 1", "More debug" ],
+                diag => [ "Got 0 not 1", "More debug" ],
+                case => results()->[1]->case,
+                set  => results()->[1]->set,
+                is_diag => 0,
             },
             {
                 result => 1,
                 name => "caller at 16",
-                package => __PACKAGE__,
-                filename => __FILE__,
+                file => __FILE__,
                 line => $lines[2],
                 time => results()->[2]->{ 'time' },
-                debug => [],
+                diag => [],
+                case => results()->[2]->case,
+                set  => results()->[2]->set,
+                is_diag => 0,
             },
         ],
         "Results were correct and had proper package, file, and line number"
@@ -137,11 +143,13 @@ real_tests {
         {
             result => 1,
             name => "finished",
-            package => __PACKAGE__,
-            filename => __FILE__,
+            file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
             time => results()->[-1]->{ 'time' }, #Test this later
-            debug => [],
+            diag => [],
+            case => results()->[-1]->case,
+            set  => results()->[-1]->set,
+            is_diag => 0,
         },
         "New result"
     );
@@ -154,11 +162,13 @@ real_tests {
         {
             result => 1,
             name => "Name",
-            package => __PACKAGE__,
-            filename => __FILE__,
+            file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
             time => results()->[-1]->{ 'time' }, #Test this later
-            debug => [],
+            diag => [],
+            case => results()->[-1]->case,
+            set  => results()->[-1]->set,
+            is_diag => 0,
         },
         "Deep proto test"
     );
@@ -168,11 +178,13 @@ real_tests {
         {
             result => 0,
             name => "Name",
-            package => __PACKAGE__,
-            filename => __FILE__,
+            file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
             time => results()->[-1]->{ 'time' }, #Test this later
-            debug => [],
+            diag => [],
+            case => results()->[-1]->case,
+            set  => results()->[-1]->set,
+            is_diag => 0,
         },
         "Deep proto test"
     );
@@ -182,11 +194,13 @@ real_tests {
         {
             result => 0,
             name => "Name",
-            package => __PACKAGE__,
-            filename => __FILE__,
+            file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
             time => results()->[-1]->{ 'time' }, #Test this later
-            debug => [],
+            diag => [],
+            case => results()->[-1]->case,
+            set  => results()->[-1]->set,
+            is_diag => 0,
         },
         "Deep proto test"
     );
