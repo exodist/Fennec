@@ -2,10 +2,6 @@ package Fennec::Tester;
 use strict;
 use warnings;
 
-# This will eventually go away
-use Test::Builder;
-our $TB = Test::Builder->new;
-
 use Fennec::TestBuilderImposter;
 use IO::Socket::UNIX;
 use Fennec::Result;
@@ -21,9 +17,10 @@ our $SINGLETON;
 
 sub import {
     my $class = shift;
-    my ( $arg, $inline ) = @_;
-    return unless $arg and $arg eq 'run';
-    $class->new(inline => $inline)->run;
+    my %proto = @_;
+
+    return unless $proto{ run };
+    $class->new(%proto)->run;
 }
 
 sub new {
@@ -55,12 +52,12 @@ sub new {
         $class
     );
 
-    croak("WTF?!") unless $SINGLETON->parent_pid;
-
     $SINGLETON->_load_config;
 
     # %proto takes precidence over config;
     %$SINGLETON = ( %$SINGLETON, %proto );
+
+    $self->_init_output;
 
     $SINGLETON->find_files
         unless $SINGLETON->files;
@@ -168,6 +165,12 @@ sub is_running {
     return $self->{ is_running };
 }
 
+sub output {
+    my $self = shift;
+    push @{ $self->{ output }} => @_ if @_;
+    return @{ $self->{ output }};
+}
+
 sub result {
     my $self = shift;
     my ($result) = @_;
@@ -190,8 +193,9 @@ sub result {
 
 sub diag {
     my $self = shift;
-    my $result = Fennec::Result->new( diag => \@_ );
-    $self->result( $result );
+    for my $plugin ( $self->output ) {
+        $plugin->diag( @_ );
+    }
 }
 
 sub run {
@@ -213,9 +217,21 @@ sub run {
         $self->test( undef );
     }
 
-    $TB->done_testing();
+    $_->finish for $self->output;
     return 0 if (@{ $self->bad_files });
     return !$self->failures;
+}
+
+sub _init_plugin {
+    my $self = shift;
+    my $plugins = delete $self->{ output } || [ 'TAP', 'Database' ];
+    $plugins = [ $plugins ] unless ref $plugins eq 'ARRAY';
+    my @loaded;
+    for my $plugin ( @$plugins ) {
+        my $pclass = 'Fennec::Output::' . $plugin;
+        push @loaded => $pclass->new;
+    }
+    $self->{ output } = \@loaded;
 }
 
 sub _handle_result {
@@ -226,13 +242,8 @@ sub _handle_result {
     confess( "Invalid result" )
         unless blessed($result) and $result->isa('Fennec::Result');
 
-    if ( $result->is_diag ) {
-        $TB->diag(@{ $result->diag });
-        return 1;
-    }
+    $_->result( $result ) for $self->output;
 
-    $TB->real_ok($result->result || 0, $result->name);
-    $TB->real_diag( $_ ) for @{ $result->diag || []};
     $class->get->failures($result) unless $result->result;
 }
 

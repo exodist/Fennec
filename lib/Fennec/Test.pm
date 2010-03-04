@@ -34,7 +34,7 @@ greatest.
 
 use Carp;
 use Try::Tiny;
-use List::Util qw/shuffle/;
+use List::Util qw/shuffle sum/;
 use Scalar::Util qw/blessed/;
 use Fennec::Grouping::Case;
 use Fennec::Grouping::Set;
@@ -58,8 +58,6 @@ sub new {
         },
         $class
     );
-
-    # Insert partition to start.
 
     return $SINGLETONS{$class};
 }
@@ -102,27 +100,20 @@ sub add_set {
 sub cases {
     my ( $class, $self ) = _get_self( @_ );
     $self->_find_subs;
-    my ( $random ) = @_;
     my $cases = $self->_cases;
     my @list = values %$cases;
 
     # 'DEFAULT' case
     push @list => Fennec::Grouping::Case->new( 'DEFAULT', %{ $self->case_defaults }, method => sub {1} )
         unless @list;
-    return $random ? (shuffle @list) : (sort { $a->name cmp $b->name } @list);
+    return @list;
 }
 
 sub sets {
     my ( $class, $self ) = _get_self( @_ );
     $self->_find_subs;
-    my ( $random ) = @_;
     my $sets = $self->_sets;
-    my @list = values %$sets;
-    return $random ? (shuffle @list) : (sort { $a->name cmp $b->name } @list);
-}
-
-sub partitions {
-    my ( $class, $self ) = _get_self( @_ );
+    return values %$sets;
 }
 
 sub run {
@@ -132,46 +123,57 @@ sub run {
     my $init = $self->can( 'initialize' ) || $self->can( 'init' );
     $self->$init if $init;
 
-    for my $case ( $self->cases( $self->random )) {
-        next if $case_name and $case_name ne $case->name;
+    my $data = $self_organize;
+    my @partitions = values %$data;
+    @partitions = shuffle( @partitions ) if $self->random;
 
-        # TODO: If parallel then fork before running the case
-        #       If force_fork then fork but wait before continuing (unless parallel)
-        #       If no_fork, but in parallel, then store case/set pair for later.
+    for my $partition ( @partitions ) {
+        my @cases = @{ $partition->{ cases }};
+        my @sets = @{ $partition->{ sets }};
+        @cases = shuffle( @cases ) if ( $self->random );
+        for my $case ( @cases ) {
+            next if $case_name and $case_name ne $case->name;
 
-        $self->_run_case( $case, $set_name );
+            # TODO: If parallel then fork before running the case
+            #       If force_fork then fork but wait before continuing (unless parallel)
+            #       If no_fork, but in parallel, then store case/set pair for later.
+
+            $self->_run_case( $case, $set_name, @sets );
+        }
     }
 }
 
 sub specs {
     my ( $class, $self ) = _get_self( @_ );
     my %specs = (
-        sets => '',
-        cases => '',
-        partitions => '',
+        sets => ($self->sets),
+        cases => ($self->cases),
+        partitions => (keys %{$self->_organize}),
         # This is how many times this test will run a set
         # p1cases * p1sets + p2cases * p2sets ...
-        runs => '',
+        runs => sum( map { @{$_->{cases}} * @{$_->{sets}} } values %{$self->_organize}),
     );
 }
 
 sub _organize {
     my ( $class, $self ) = _get_self( @_ );
-    return {
-        p1 => {
-            sets => [],
-            cases => [],
-        },
-        p2 => {
-            sets => [],
-            cases => [],
+    unless ( $self->{ _organize }) {
+        my %out;
+        for my $item ( $self->cases, $self->sets ) {
+            my $type = lc($item->type) . 's';
+            for my $part (@{ $item->partition }) {
+                $out{ $part } ||= [ cases => [], sets => []];
+                push @{ $out{$part}{$type}} => $item;
+            }
         }
+        $self->{ _organize } = \%out;
     }
+    $self->{ _organize };
 }
 
 sub _run_case {
     my $self = shift;
-    my ( $case, $set_name ) = @_;
+    my ( $case, $set_name, @sets ) = @_;
     croak( "Already running a case" )
         if $self->case;
 
@@ -183,7 +185,8 @@ sub _run_case {
     my ( $cr, @cd ) = try {
         my $failures = 0;
 
-        for my $set ( $self->sets( $self->random )) {
+        @sets = shuffle( @sets ) if $self->random;
+        for my $set ( @sets ) {
             next if $set_name and $set_name ne $set->name;
             # TODO: If parallel then fork before running the set
             #       See rules for CASE above.

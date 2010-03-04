@@ -40,6 +40,14 @@ sub type { 'Base' }
 
 sub needs_method { 1 }
 
+sub partition {
+    my $self = shift;
+    my $data = $self->{ partition };
+    return [ "" ] unless $data;
+    return [ $data ] unless ref $data eq 'ARRAY';
+    return $data;
+}
+
 sub todo {
     my $self = shift;
     return $self->{ todo };

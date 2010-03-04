@@ -19,11 +19,11 @@ have myself issued forth about perl testing.
 
 =over 4
 
-=item $ prove_fennec file(s)
+=item $ fennec_prove file(s)
 
-=item $ prove_fennec file1 [case(s)] [set(s)] file2 ...
+=item $ fennec_prove file1 [case(s)] [set(s)] file2 ...
 
-=item $ prove_fennec dir
+=item $ fennec_prove dir
 
 Command line tool to run specified tests.
 
@@ -159,7 +159,7 @@ option. Every set will be run once per case.
 
 Must be able to run specific cases/sets
 
-    $ prove_fennec TestModule [Case(s)] [Set(s)]
+    $ fennec_prove TestModule [Case(s)] [Set(s)]
 
 =item test grouping
 
@@ -220,7 +220,10 @@ capabilities.
 
 =item test output
 
-TAP output is not sufficient.
+When fennec tests are run through test.pl or t/fennec.t it should produce
+standard TAP output. To deviate from this would be asking for trouble.
+
+=item test output under fennec_prove:
 
 Fennec will maintain a table at the top of the display that will always be
 visible. Diagnostics messages will be printed below the table unless quiet is
@@ -245,9 +248,14 @@ messages will be put into the fennec-out.txt file.
 
 The fennec test runner will exit true in success, false in failure.
 
+=item database
+
+Fennec will record all results into a database. A database tool will be
+provided to view information about a test run.
+
 =item coverage
 
-prove_fennec should have a simple flag to turn on coverage testing
+fennec_prove should have a simple flag to turn on coverage testing
 
 =back
 
