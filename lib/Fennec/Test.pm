@@ -9,7 +9,7 @@ use Scalar::Util qw/blessed/;
 use Fennec::Grouping::Case;
 use Fennec::Grouping::Set;
 use Time::HiRes;
-use Benchmark qw/timeit/;
+use Benchmark qw/timeit :hireswallclock/;
 use Fennec::Util qw/add_accessors get_all_subs/;
 
 our %SINGLETONS;

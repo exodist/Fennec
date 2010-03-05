@@ -12,11 +12,13 @@ use_ok( $CLASS );
 ok( my $one = $CLASS->new( output => sub { push @output => @_ }), "Created" );
 isa_ok( $one, $CLASS );
 
-is( $one->count, 1, "Start counter" );
-is( $one->count, 2, "More counter" );
-is( $one->count, 3, "Yet more counter" );
+is( $one->count, "0001", "Start counter" );
+is( $one->count, "0002", "More counter" );
+is( $one->count, "0003", "Yet more counter" );
 ok( $one->finish, "Finished" );
 is( shift( @output ), '1..3', "Plan" );
+$one->{ count } = 10000;
+is( $one->count, "10000", "counter 10000+" );
 delete $one->{ count };
 
 $one->diag( 'a', 'b', 'c' ), "diag";
@@ -35,10 +37,11 @@ $one->result( obj(
     file => 'fake',
     skip => undef,
     todo => undef,
+    benchmark => [ 5678.3245 ],
 ));
 is_deeply(
     \@output,
-    [ 'ok 1 - test a' ],
+    [ 'ok 0001 - [5678.32] test a' ],
     "ok result, no diag"
 );
 
@@ -53,11 +56,12 @@ $one->result( obj(
     set => obj( name => 'set a' ),
     todo => undef,
     skip => undef,
+    benchmark => undef,
 ));
 is_deeply(
     \@output,
     [
-        'not ok 2 - test b',
+        'not ok 0002 - [  N/A  ] test b',
         "# Test failure at fake line 1",
         "#     case: case a",
         "#     set: set a",
@@ -77,11 +81,12 @@ $one->result( obj(
     set => obj( name => 'set a' ),
     todo => "XXX",
     skip => undef,
+    benchmark => undef,
 ));
 is_deeply(
     \@output,
     [
-        'not ok 3 - test c # TODO XXX',
+        'not ok 0003 - [  N/A  ] test c # TODO XXX',
         "# help message"
     ],
     "not ok result, with todo"
@@ -98,14 +103,32 @@ $one->result( obj(
     set => obj( name => 'set a' ),
     todo => undef,
     skip => "XXX",
+    benchmark => undef,
 ));
 is_deeply(
     \@output,
     [
-        'ok 4 - test d # SKIP XXX',
+        'ok 0004 - [  N/A  ] test d # SKIP XXX',
         "# help message"
     ],
     "not ok result, with skip"
+);
+
+@output = ();
+$one->result( obj(
+    result => 1,
+    name => 'test a',
+    diag => undef,
+    line => 1,
+    file => 'fake',
+    skip => undef,
+    todo => undef,
+    benchmark => [ 8.3245 ],
+));
+is_deeply(
+    \@output,
+    [ 'ok 0005 - [   8.32] test a' ],
+    "ok result, no diag"
 );
 
 done_testing();

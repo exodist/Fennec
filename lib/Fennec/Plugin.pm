@@ -2,7 +2,7 @@ package Fennec::Plugin;
 use strict;
 use warnings;
 use Time::HiRes qw/time/;
-use Benchmark qw/timeit/;
+use Benchmark qw/timeit :hireswallclock/;
 use Carp;
 use Scalar::Util 'blessed';
 our @CARP_NOT = ( __PACKAGE__, 'Fennec::TestHelper' );

@@ -12,7 +12,8 @@ sub init {
 sub count {
     my $self = shift;
     $self->{ count } ||= 1;
-    return $self->{ count }++;
+    my $num = $self->{ count }++;
+    sprintf( "%.4d", $num );
 }
 
 sub output {
@@ -25,7 +26,8 @@ sub result {
     my ( $result ) = @_;
     return unless $result;
     my $out = ($result->result || $result->skip ? 'ok ' : 'not ok ' ) . $self->count . " -";
-#    $out .= sprintf("[%8s]", $result->time) if $result->time;
+    $out .= $result->benchmark ? sprintf( " [%7.2f]", $result->benchmark->[0])
+                               : " [  N/A  ]";
     $out .= " " . $result->name if $result->name;
     if ( my $todo = $result->todo ) {
         $out .= " # TODO $todo";
