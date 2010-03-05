@@ -32,6 +32,7 @@ sub new {
         {
             filename => $info ? $info->file : undef,
             line => $info ? $info->line : undef,
+            random => 1,
             %proto,
             name => $name,
         },
@@ -55,6 +56,13 @@ sub run {
     my $self = shift;
     my $method = $self->method;
     $self->test->$method();
+}
+
+sub random {
+    my $self = shift;
+    return 0 unless $self->{ random };
+    return 0 unless Fennec::Tester->get->get_test($self->test)->random;
+    return 1;
 }
 
 1;

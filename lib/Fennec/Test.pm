@@ -15,7 +15,7 @@ use Fennec::Util qw/add_accessors get_all_subs/;
 our %SINGLETONS;
 sub _get_self(\@);
 
-add_accessors qw/filename parallel random case_defaults set_defaults todo set
+add_accessors qw/filename parallel case_defaults set_defaults todo set
                  case _cases _sets __find_subs/;
 
 sub new {
@@ -29,12 +29,20 @@ sub new {
             set_defaults => {},
             _cases => {},
             _sets => {},
+            random => 1,
             %proto,
         },
         $class
     );
 
     return $SINGLETONS{$class};
+}
+
+sub random {
+    my $self = shift;
+    return 0 unless $self->{ random };
+    return 0 unless Fennec::Tester->get->random;
+    return 1;
 }
 
 sub add_case {
@@ -143,7 +151,7 @@ sub _run_case {
                 $case->run( $self );
                 my $failures = 0;
 
-                @sets = shuffle( @sets ) if $self->random;
+                @sets = shuffle( @sets ) if $case->random;
                 for my $set ( @sets ) {
                     next if $set_name and $set_name ne $set->name;
                     # TODO: If parallel then fork before running the set

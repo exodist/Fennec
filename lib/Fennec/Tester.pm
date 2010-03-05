@@ -16,7 +16,7 @@ use Carp         qw/croak confess/;
 our @CARP_NOT = qw/Fennec::Test Fennec::TestHelper Fennec::Plugin/;
 our $SINGLETON;
 
-add_accessors qw/no_load bad_files ignore inline case set test/;
+add_accessors qw/no_load bad_files ignore inline case set test random/;
 
 sub import {
     my $class = shift;
@@ -69,6 +69,7 @@ sub new {
             tests => {},
             failures => [],
             root => $root,
+            random => 1,
             # proto takes priority over config
             $config ? (%$config) : (),
             %proto,
