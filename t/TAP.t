@@ -108,35 +108,4 @@ is_deeply(
     "not ok result, with skip"
 );
 
-
 done_testing();
-
-__END__
-
-sub result {
-    my $self = shift;
-    my ( $result ) = @_;
-    return unless $result;
-    my $out = ($result->result ? 'ok ' : 'not ok ' ) . $self->count . " -";
-    $out .= " " . $result->name if $result->name;
-    if ( my $todo = $result->todo ) {
-        $out .= " # TODO $todo";
-    }
-    elsif ( my $skip = $result->skip ) {
-        $out .= " # SKIP $skip";
-    }
-    elsif ( !$result->result ) {
-        $self->diag( "Test failure at " $result->file ." line " . $result->line );
-    }
-    $self->output( $out );
-    my $diag = $result->diag;
-    return unless $diag;
-    $self->diag( $_ ) for @$diag
-}
-
-sub output {
-    my $self = shift;
-    $self->{ output }->( @_ );
-}
-
-1;
