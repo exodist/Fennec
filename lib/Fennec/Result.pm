@@ -6,6 +6,9 @@ use Carp;
 our @REQUIRED = qw/result name time case set file line/;
 our @ALT_REQUIRED = qw/diag/;
 our @CARP_NOT = qw/Fennec::Tester/;
+use Fennec::Util qw/add_accessors/;
+
+add_accessors qw/result name case set time diag is_diag file line/;
 
 sub new {
     my $class = shift;
@@ -27,15 +30,6 @@ sub new {
         },
         $class
     );
-}
-
-for my $reader (qw/result name case set time diag is_diag file line/) {
-    my $sub = sub {
-        my $self = shift;
-        return $self->{ $reader };
-    };
-    no strict 'refs';
-    *$reader = $sub;
 }
 
 sub todo {

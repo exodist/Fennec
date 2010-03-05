@@ -5,6 +5,7 @@ use warnings;
 use Fennec::TestBuilderImposter;
 use IO::Socket::UNIX;
 use Fennec::Result;
+use Fennec::Util qw/add_accessors/;
 use Cwd          qw/cwd/;
 use File::Temp   qw/tempfile/;
 use Scalar::Util qw/blessed/;
@@ -15,6 +16,8 @@ use Carp         qw/croak confess/;
 our @CARP_NOT = qw/Fennec::Test Fennec::TestHelper Fennec::Plugin/;
 our $SINGLETON;
 
+add_accessors qw/no_load bad_files ignore inline case set test/;
+
 sub import {
     my $class = shift;
     my %proto = @_;
@@ -23,21 +26,37 @@ sub import {
     $class->new(%proto)->run;
 }
 
+sub get { goto &new };
+
+# XXX This could stand some cleanup.
 sub new {
     my $class = shift;
     return $SINGLETON if $SINGLETON;
 
     my %proto = @_;
 
+    # TODO put this into a method?
     # Create socket
-    my ( $fh, $file ) = tempfile( cwd() . "/.test-suite.$$.XXXX", UNLINK => 1 );
+    my ( $fh, $socket_file ) = tempfile( cwd() . "/.test-suite.$$.XXXX", UNLINK => 1 );
     require IO::Socket::UNIX;
     close( $fh ) || die( $! );
-    unlink( $file );
+    unlink( $socket_file );
     my $socket = IO::Socket::UNIX->new(
         Listen => 1,
-        Local => $file,
+        Local => $socket_file,
     ) || die( $! );
+
+    # This was pulld out of an object method,
+    # but it probably does belong in one.
+    my $config;
+    my $root = $proto{ root } ||$class->root;
+    my $conf_file = $root . "/.fennec";
+    if ( -f $conf_file ) {
+        $config = eval { require $conf_file }
+            || croak( "Error loading config file: $@" );
+        croak( "config file did not return a hashref" )
+            unless ref( $config ) eq 'HASH';
+    }
 
     $SINGLETON = bless(
         {
@@ -46,18 +65,18 @@ sub new {
             parent_pid => $$,
             pid => $$,
             socket => $socket,
-            _socket_file => $file,
+            _socket_file => $socket_file,
+            tests => {},
+            failures => [],
+            root => $root,
+            # proto takes priority over config
+            $config ? (%$config) : (),
             %proto,
         },
         $class
     );
 
-    $SINGLETON->_load_config;
-
-    # %proto takes precidence over config;
-    %$SINGLETON = ( %$SINGLETON, %proto );
-
-    $self->_init_output;
+    $SINGLETON->_init_output;
 
     $SINGLETON->find_files
         unless $SINGLETON->files;
@@ -65,39 +84,27 @@ sub new {
     return $SINGLETON;
 }
 
-sub get { goto &new };
-
-for my $accessor (qw/no_load bad_files ignore inline case set _config test/) {
-    my $sub = sub {
-        my $self = shift;
-        die( "wtf?" ) unless ref( $self );
-        ($self->{ $accessor }) = @_ if @_;
-        return $self->{ $accessor };
-    };
-    no strict 'refs';
-    *$accessor = $sub;
-}
-
 sub failures {
     my $class = shift;
     my $self = $class->get;
     push @{ $self->{ failures }} => @_ if @_;
-    return @{ $self->{ failures } || []};
+    return @{ $self->{ failures }};
 }
 
 sub root {
-    my $self = shift;
+    my $class = shift;
+    my $self = $class if blessed( $class );
 
-    unless ( $self->{ root }) {
-        my $cd = cwd() || croak ( "Blah" );
-        do {
-            $self->{ root } = $cd
-                if $self->_looks_like_root( $cd );
-        } while !$self->{ root } && $cd =~ s,/[^/]*$,,g && $cd;
-        $self->{ root } ||= cwd();
-    }
+    return $self->{ root } if $self and $self->{ root };
 
-    return $self->{ root };
+    my $cd = cwd();
+    my $root;
+    do {
+        $root = $cd if $class->_looks_like_root( $cd );
+    } while !$root && $cd =~ s,/[^/]*$,,g && $cd;
+
+    $self->{ root } = $root if $self;
+    return $root;
 }
 
 sub files {
@@ -139,14 +146,12 @@ sub get_test {
 
 sub tests {
     my $self = shift;
-    $self->{ tests } ||= {};
     return $self->{ tests };
 }
 
 sub pid {
     my $self = shift;
-    $self->{ pid } = $$ if @_;
-    return $self->{ pid };
+    return $$;
 }
 
 sub parent_pid {
@@ -156,7 +161,7 @@ sub parent_pid {
 
 sub is_parent {
     my $self = shift;
-    return ( $$ == $self->parent_pid ) ? 1 : 0;
+    return ( $self->pid == $self->parent_pid ) ? 1 : 0;
 }
 
 sub is_running {
@@ -165,10 +170,10 @@ sub is_running {
     return $self->{ is_running };
 }
 
-sub output {
+sub output_handlers {
     my $self = shift;
-    push @{ $self->{ output }} => @_ if @_;
-    return @{ $self->{ output }};
+    push @{ $self->{ output_handlers }} => @_ if @_;
+    return @{ $self->{ output_handlers }};
 }
 
 sub result {
@@ -193,7 +198,7 @@ sub result {
 
 sub diag {
     my $self = shift;
-    for my $plugin ( $self->output ) {
+    for my $plugin ( $self->output_handlers ) {
         $plugin->diag( @_ );
     }
 }
@@ -217,21 +222,22 @@ sub run {
         $self->test( undef );
     }
 
-    $_->finish for $self->output;
+    $_->finish for $self->output_handlers;
     return 0 if (@{ $self->bad_files });
     return !$self->failures;
 }
 
-sub _init_plugin {
+sub _init_output {
     my $self = shift;
     my $plugins = delete $self->{ output } || [ 'TAP', 'Database' ];
     $plugins = [ $plugins ] unless ref $plugins eq 'ARRAY';
     my @loaded;
     for my $plugin ( @$plugins ) {
         my $pclass = 'Fennec::Output::' . $plugin;
+        eval "require $pclass" || die( $@ );
         push @loaded => $pclass->new;
     }
-    $self->{ output } = \@loaded;
+    $self->{ output_handlers } = \@loaded;
 }
 
 sub _handle_result {
@@ -242,12 +248,14 @@ sub _handle_result {
     confess( "Invalid result" )
         unless blessed($result) and $result->isa('Fennec::Result');
 
-    $_->result( $result ) for $self->output;
+    $_->result( $result ) for $class->get->output_handlers;
 
+    # Add failures to the list of failures.
     $class->get->failures($result) unless $result->result;
 }
 
 sub _send_result {
+    # This will be used to serialize and send all results to the main process.
     confess( "Forking not yet implemented" );
 }
 
@@ -274,20 +282,6 @@ sub _socket {
     return $self->{ client_socket };
 }
 
-sub _load_config {
-    my $self = shift;
-    return if $self->_config;
-    $self->_config(1);
-
-    my $file = $self->root . "/.fennec";
-    return unless -e $file;
-    my $data = eval { require $file }
-        || croak( "Error loading config file: $@" );
-    croak( "config file did not return a hashref" )
-        unless ref( $data ) eq 'HASH';
-    %$self = (%$self, %$data);
-}
-
 sub _load_files {
     my $self = shift;
     for my $file ( @{ $self->files }) {
@@ -297,7 +291,7 @@ sub _load_files {
 }
 
 sub _looks_like_root {
-    my $self = shift;
+    my $class = shift;
     my ( $dir ) = @_;
     return unless $dir;
     return 1 if -e "$dir/.fennec";

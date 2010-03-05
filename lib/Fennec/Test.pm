@@ -2,36 +2,6 @@ package Fennec::Test;
 use strict;
 use warnings;
 
-#{{{ POD
-
-=pod
-
-=head1 NAME
-
-Fennec::Test - Base class for Test classes.
-
-=head1 DESCRIPTION
-
-This class is the base class for test classes users define.
-
-=head1 SYNOPSYS
-
-    package My::Test;
-    use Fennec;
-
-This is all you need to make a test class using this as a base.
-
-=head1 EARLY VERSION WARNING
-
-This is VERY early version. Fennec does not run yet.
-
-Please go to L<http://github.com/exodist/Fennec> to see the latest and
-greatest.
-
-=cut
-
-#}}}
-
 use Carp;
 use Try::Tiny;
 use List::Util qw/shuffle sum/;
@@ -39,9 +9,13 @@ use Scalar::Util qw/blessed/;
 use Fennec::Grouping::Case;
 use Fennec::Grouping::Set;
 use Time::HiRes;
+use Fennec::Util qw/add_accessors get_all_subs/;
 
 our %SINGLETONS;
 sub _get_self(\@);
+
+add_accessors qw/filename parallel random case_defaults set_defaults todo set
+                 case _cases _sets __find_subs/;
 
 sub new {
     my $class = shift;
@@ -52,33 +26,14 @@ sub new {
         {
             case_defaults => {},
             set_defaults => {},
-            %proto,
             _cases => {},
-            _sets => {}
+            _sets => {},
+            %proto,
         },
         $class
     );
 
     return $SINGLETONS{$class};
-}
-
-for my $reader (qw/filename parallel random case_defaults set_defaults todo/) {
-    my $sub = sub {
-        my ( $class, $self ) = _get_self( @_ );
-        return $self->{ $reader };
-    };
-    no strict 'refs';
-    *$reader = $sub;
-}
-
-for my $accessor (qw/set case _cases _sets __find_subs/) {
-    my $sub = sub {
-        my ( $class, $self ) = _get_self( @_ );
-        ($self->{ $accessor }) = @_ if @_;
-        return $self->{ $accessor };
-    };
-    no strict 'refs';
-    *$accessor = $sub;
 }
 
 sub add_case {
@@ -123,14 +78,14 @@ sub run {
     my $init = $self->can( 'initialize' ) || $self->can( 'init' );
     $self->$init if $init;
 
-    my $data = $self_organize;
+    my $data = $self->_organize;
     my @partitions = values %$data;
     @partitions = shuffle( @partitions ) if $self->random;
 
     for my $partition ( @partitions ) {
         my @cases = @{ $partition->{ cases }};
         my @sets = @{ $partition->{ sets }};
-        @cases = shuffle( @cases ) if ( $self->random );
+        @cases = shuffle( @cases ) if $self->random;
         for my $case ( @cases ) {
             next if $case_name and $case_name ne $case->name;
 
@@ -159,10 +114,10 @@ sub _organize {
     my ( $class, $self ) = _get_self( @_ );
     unless ( $self->{ _organize }) {
         my %out;
-        for my $item ( $self->cases, $self->sets ) {
+        for my $item ( sort { $a->name cmp $b->name } $self->cases, $self->sets ) {
             my $type = lc($item->type) . 's';
             for my $part (@{ $item->partition }) {
-                $out{ $part } ||= [ cases => [], sets => []];
+                $out{ $part } ||= { cases => [], sets => []};
                 push @{ $out{$part}{$type}} => $item;
             }
         }
@@ -180,24 +135,26 @@ sub _run_case {
     Fennec::Tester->get->diag( "Running case: " . $case->name );
     $self->case( $case );
     my $time = time();
-    $case->run( $self );
 
-    my ( $cr, @cd ) = try {
-        my $failures = 0;
+    my ( $cr, @cd ) = $case->skip
+        ? ( 1, $case->skip )
+        : try {
+            $case->run( $self );
+            my $failures = 0;
 
-        @sets = shuffle( @sets ) if $self->random;
-        for my $set ( @sets ) {
-            next if $set_name and $set_name ne $set->name;
-            # TODO: If parallel then fork before running the set
-            #       See rules for CASE above.
-            $self->_run_set( $set ) || $failures++;
+            @sets = shuffle( @sets ) if $self->random;
+            for my $set ( @sets ) {
+                next if $set_name and $set_name ne $set->name;
+                # TODO: If parallel then fork before running the set
+                #       See rules for CASE above.
+                $self->_run_set( $set ) || $failures++;
+            }
+
+            return $failures
+                ? ( 0, "One or more sets had a failure." )
+                : ( 1 );
         }
-
-        return $failures
-            ? ( 0, "One or more sets had a failure." )
-            : ( 1 );
-    }
-    catch { return ( 0, $_ )};
+        catch { return ( 0, $_ )};
 
     $self->_result( $cr, "End of case - " . $case->name, ( time() - $time ), \@cd );
     $self->case( undef );
@@ -213,13 +170,16 @@ sub _run_set {
     $self->set( $set );
     my $time = time;
 
-    my ( $sr, @sd ) = try {
-        my $out = $set->run( $self );
-        return $out ? ($out) : (0, "One or more tests failed.");
-    } catch { return (0, $_ )};
+    my ( $sr, @sd ) = $set->skip
+        ? ( 1, $set->skip )
+        : try {
+            my $out = $set->run( $self );
+            return $out ? ($out) : (0, "One or more tests failed.");
+        } catch { return (0, $_ )};
 
     $self->_result( $sr, "End of set - " . $set->name, (time() - $time), \@sd );
     $self->set( undef );
+    return 1 if $set->todo;
     return $sr;
 }
 
@@ -261,14 +221,7 @@ sub _find_subs {
     return if $self->__find_subs;
     $self->__find_subs(1);
 
-    my @subs;
-    {
-        my $us = $class . '::';
-        no strict 'refs';
-        @subs = grep { defined( *{$us . $_}{CODE} )}
-                  keys %$us;
-    }
-    for ( @subs ) {
+    for ( get_all_subs( $class )) {
         next unless m/^(set|case)_(.*)$/i;
         my ( $name, $type ) = ( $2, lc($1));
         my $add = "add_$type";
@@ -277,6 +230,32 @@ sub _find_subs {
 }
 
 1;
+
+=pod
+
+=head1 NAME
+
+Fennec::Test - Base class for Test classes.
+
+=head1 DESCRIPTION
+
+This class is the base class for test classes users define.
+
+=head1 SYNOPSYS
+
+    package My::Test;
+    use Fennec;
+
+This is all you need to make a test class using this as a base.
+
+=head1 EARLY VERSION WARNING
+
+This is VERY early version. Fennec does not run yet.
+
+Please go to L<http://github.com/exodist/Fennec> to see the latest and
+greatest.
+
+=cut
 
 =head1 AUTHORS
 

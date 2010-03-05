@@ -2,29 +2,21 @@ package Fennec::Grouping;
 use strict;
 use warnings;
 use Carp;
+use Fennec::Util qw/get_all_subs/;
 
 sub export_to {
     my $class = shift;
     my ( $package ) = @_;
     return 1 unless $package;
 
-    {
-        my $us = $class . '::';
+    my @subs = get_all_subs($class);
+    for my $sub ( @subs ) {
         no strict 'refs';
-        my @subs = grep { defined( *{$us . $_}{CODE} )} keys %$us;
-        for my $sub ( @subs ) {
-            *{ $package . '::' . $sub } = \&$sub;
-        }
+        *{ $package . '::' . $sub } = \&$sub;
     }
 }
 
-sub partition {
-    my $name = shift;
-    my ( $package, $filename, $line ) = caller;
-    my %proto = ( test => $package, filename => $filename, line => $line );
-
-    $package->add_partition( $name || "anonymous", %proto );
-}
+#XXX These 2 functions are almost identical, can we abstract this?
 
 sub test_set {
     my $name = shift;

@@ -4,7 +4,6 @@ use warnings;
 
 1;
 
-
 __END__
 
 =pod
@@ -12,6 +11,11 @@ __END__
 =head1 NAME
 
 Fennec::Manual - A more modern testing framework for perl
+
+=head1 *** DATED ***
+
+This needs to be updated. Confirm with Exodist when manual and code seem in
+conflict.
 
 =head1 DESCRIPTION
 

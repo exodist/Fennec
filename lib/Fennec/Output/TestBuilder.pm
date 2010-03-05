@@ -39,3 +39,20 @@ sub finish {
 
 __END__
 
+=head1 NAME
+
+Fennec::Output::TestBuilder - If you really want to output to test builder.
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

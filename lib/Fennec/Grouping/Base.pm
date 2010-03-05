@@ -6,13 +6,16 @@ use Carp;
 our @CARP_NOT = ( __PACKAGE__, qw/Fennec::Grouping Fennec Fennec::Plugin/ );
 use Scalar::Util qw/blessed/;
 use Sub::Information as => 'inspect';
+use Fennec::Util qw/add_accessors/;
+
+add_accessors(qw/todo skip test filename line name method/);
 
 sub new {
     my $class = shift;
     my ( $name, %proto ) = @_;
 
+    my $info;
     if ( $class->needs_method ) {
-        my $info;
         my $method = $proto{method};
         my $ref = ref( $method ) ? $method
                                  : $proto{test}->can( $method );
@@ -46,36 +49,6 @@ sub partition {
     return [ "" ] unless $data;
     return [ $data ] unless ref $data eq 'ARRAY';
     return $data;
-}
-
-sub todo {
-    my $self = shift;
-    return $self->{ todo };
-}
-
-sub test {
-    my $self = shift;
-    return $self->{ test };
-}
-
-sub filename {
-    my $self = shift;
-    return $self->{ filename };
-}
-
-sub line {
-    my $self = shift;
-    return $self->{ line };
-}
-
-sub name {
-    my $self = shift;
-    return $self->{ name };
-}
-
-sub method {
-    my $self = shift;
-    return $self->{ method };
 }
 
 sub run {

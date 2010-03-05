@@ -4,6 +4,8 @@ use warnings;
 use Fennec::Tester;
 use Fennec::TestBuilderImposter;
 
+#XXX TODO With the addition of output plugins this can probably be greatly reduced. This should probably boil donw to real_tests() and leave the rest to an output plugin like Output::Test.
+
 our @EXPORT = qw/results diags real_tests push_diag/;
 use base 'Exporter';
 

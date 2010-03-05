@@ -9,20 +9,16 @@ use Fennec::TestHelper;
 my $CLASS = 'Fennec::Tester';
 
 real_tests {
-    use_ok( $CLASS );
-    can_ok( $CLASS, qw/no_load bad_files ignore inline case set _config/);
+    use_ok( $CLASS  );
+    can_ok( $CLASS, qw/no_load bad_files ignore inline case set /);
 
-    my $one = $CLASS->new( files => [], _config => 1 );
+    my $one = $CLASS->new( files => [], output => [], root => 't/fakeroots/config/' );
     isa_ok( $one, $CLASS );
 
     ok( !$one->no_load, "accessor not set" );
     ok( $one->no_load(1), "setting accessor" );
     is( $one->no_load(), 1, "accessor was set" );
 
-    delete $one->{ _config };
-    $one->{ root } = 't/fakeroots/config/';
-    ok( !$one->{ a }, "a not true" );
-    $one->_load_config;
     is( $one->{a}, 'a', "a was set" );
     is( $one->{b}, 'b', "b was set" );
 

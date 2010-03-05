@@ -2,7 +2,11 @@ package Fennec::Grouping::Set;
 use strict;
 use warnings;
 
-#{{{ POD
+use base 'Fennec::Grouping::Base';
+
+sub type { 'Set' }
+
+1;
 
 =pod
 
@@ -20,16 +24,6 @@ This is VERY early version. Fennec does not run yet.
 
 Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
-
-=cut
-
-#}}}
-
-use base 'Fennec::Grouping::Base';
-
-sub type { 'Set' }
-
-1;
 
 =head1 AUTHORS
 

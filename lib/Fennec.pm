@@ -15,6 +15,12 @@ sub import {
     my %options = @_;
     my ( $package, $filename ) = caller();
 
+    croak( "You must put your tests into a package, not main" )
+        if $package eq 'main';
+    croak( "$package is already a test class" )
+        if Fennec::Tester->get->get_test( $package );
+
+    # If a testing class is specified then load it and run import
     if ( my $get_from = $options{ testing }) {
         eval "require $get_from" || croak( $@ );
 
@@ -23,7 +29,7 @@ sub import {
 
         my @args = @{ $options{ import_args } || []};
 
-        # Sub::Uplevel was being wacky, this is easier
+        # Sub::Uplevel was being wacky, this works fine.
         eval "
             package $package;
             use strict;
@@ -32,11 +38,13 @@ sub import {
         ";
     }
 
+    # Test files automatically become objects.
     {
         no strict 'refs';
         push @{ $package . '::ISA' } => 'Fennec::Test';
     }
 
+    # Export functions from plugins, and for grouping
     $class->_export_plugins( $package, $options{ plugins } );
     Fennec::Grouping->export_to( $package );
 
@@ -45,26 +53,13 @@ sub import {
     return $test;
 }
 
-sub _get_import {
-    my $class = shift;
-    my ($get_from, $send_to) = @_;
-    my $import = $get_from->can( 'import' );
-    return unless $import;
-
-    return ( 1, $import, $get_from )
-        unless $get_from->isa( 'Exporter' );
-
-    return ( 1, $import, $get_from )
-        if $import != Exporter->can( 'import' );
-
-    return ( 0, $get_from->can('export_to_level'), $get_from, 1, $send_to );
-}
-
 sub _export_plugins {
     my $class = shift;
     my ( $package, $specs ) = @_;
     my @plugins = @DEFAULT_PLUGINS;
 
+    # They may be requesting extra plugins, or requesting the removal of
+    # default ones.
     if ( $specs ) {
         my %remove;
         for ( @$specs ) {
@@ -104,12 +99,12 @@ Please see L<Fennec::Specification> for more details.
 Fennec is intended to do for perl testing what L<Moose> does for OOP. It makes
 all tests classes, and defining test cases and test sets within that class is
 simple. In traditional perl testing you would have to manually loop if you
-wanted to runa set of tests multiple times in different cases, it is difficult
+wanted to run a set of tests multiple times in different cases, it is difficult
 to make forking tests, and you have limited options for more advanced test
 frameworks.
 
 Fennec runs around taking care of the details for you. You simply need to
-specify your sets, your cases, and weither or not you want the sets and cases
+specify your sets, your cases, and weather or not you want the sets and cases
 to fork, run in parrallel or in sequence. Test sets and cases are run in random
 order by default. Forking should just plain work without worrying about the
 details.
@@ -182,11 +177,10 @@ Define a test set. Every set defined will be run under each test case.
 
 Fennec is the only module someone using Fennec should have to 'use'.
 The parameters provided to import() on use do a significant portion of the test
-setup. When Fennec is used it will instantate a singleton of the calling
+setup. When Fennec is used it will instantate a singleton of your test
 class and store it as a test to be run.
 
-Using Fennec also automatically adds 'Fennec::Test' to the
-calling classes @ISA.
+Using Fennec also automatically adds 'Fennec::Test' to your classes @ISA.
 
 =head1 IMPORT OPTIONS
 

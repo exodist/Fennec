@@ -10,6 +10,11 @@ use warnings;
 
 Fennec::Specification - Specification for Fennec
 
+=head1 *** DATED ***
+
+This needs to be updated. Confirm with Exodist when spec and code seem in
+conflict.
+
 =head1 DESCRIPTION
 
 Fennec is a test module that addresses several complains I have heard, or
