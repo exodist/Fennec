@@ -9,6 +9,7 @@ use Scalar::Util qw/blessed/;
 use Fennec::Grouping::Case;
 use Fennec::Grouping::Set;
 use Time::HiRes;
+use Benchmark qw/timeit/;
 use Fennec::Util qw/add_accessors get_all_subs/;
 
 our %SINGLETONS;
@@ -134,29 +135,30 @@ sub _run_case {
 
     Fennec::Tester->get->diag( "Running case: " . $case->name );
     $self->case( $case );
-    my $time = time();
+    my ( $cr, @cd );
+    my $benchmark = timeit( 1, sub {
+        ( $cr, @cd ) = $case->skip
+            ? ( 1, $case->skip )
+            : try {
+                $case->run( $self );
+                my $failures = 0;
 
-    my ( $cr, @cd ) = $case->skip
-        ? ( 1, $case->skip )
-        : try {
-            $case->run( $self );
-            my $failures = 0;
+                @sets = shuffle( @sets ) if $self->random;
+                for my $set ( @sets ) {
+                    next if $set_name and $set_name ne $set->name;
+                    # TODO: If parallel then fork before running the set
+                    #       See rules for CASE above.
+                    $self->_run_set( $set ) || $failures++;
+                }
 
-            @sets = shuffle( @sets ) if $self->random;
-            for my $set ( @sets ) {
-                next if $set_name and $set_name ne $set->name;
-                # TODO: If parallel then fork before running the set
-                #       See rules for CASE above.
-                $self->_run_set( $set ) || $failures++;
+                return $failures
+                    ? ( 0, "One or more sets had a failure." )
+                    : ( 1 );
             }
+            catch { return ( 0, $_ )};
+    });
 
-            return $failures
-                ? ( 0, "One or more sets had a failure." )
-                : ( 1 );
-        }
-        catch { return ( 0, $_ )};
-
-    $self->_result( $cr, "End of case - " . $case->name, ( time() - $time ), \@cd );
+    $self->_result( $cr, "End of case - " . $case->name, $benchmark, \@cd );
     $self->case( undef );
 }
 
@@ -168,16 +170,17 @@ sub _run_set {
 
     Fennec::Tester->get->diag( "Running set: " . $set->name );
     $self->set( $set );
-    my $time = time;
+    my ( $sr, @sd );
+    my $benchmark = timeit( 1, sub {
+        ( $sr, @sd ) = $set->skip
+            ? ( 1, $set->skip )
+            : try {
+                my $out = $set->run( $self );
+                return $out ? ($out) : (0, "One or more tests failed.");
+            } catch { return (0, $_ )};
+    });
 
-    my ( $sr, @sd ) = $set->skip
-        ? ( 1, $set->skip )
-        : try {
-            my $out = $set->run( $self );
-            return $out ? ($out) : (0, "One or more tests failed.");
-        } catch { return (0, $_ )};
-
-    $self->_result( $sr, "End of set - " . $set->name, (time() - $time), \@sd );
+    $self->_result( $sr, "End of set - " . $set->name, $benchmark, \@sd );
     $self->set( undef );
     return 1 if $set->todo;
     return $sr;
@@ -185,7 +188,7 @@ sub _run_set {
 
 sub _result {
     my $self = shift;
-    my ( $ok, $name, $time, $diag ) = @_;
+    my ( $ok, $name, $benchmark, $diag ) = @_;
 
     my $case = $self->case || undef;
     my $set = $self->set || undef;
@@ -194,11 +197,11 @@ sub _result {
         result => $ok,
         name   => $name,
         diag   => $diag,
-        time   => $time,
         case   => $case,
         set    => $set,
         line   => $case ? $set ? $set->line : $case->line : undef,
         file   => $case ? $set ? $set->filename : $case->filename : $self->filename,
+        benchmark   => $benchmark,
     );
     Fennec::Tester->get->result( $result );
 }

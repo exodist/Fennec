@@ -2,6 +2,7 @@ package Fennec::Plugin;
 use strict;
 use warnings;
 use Time::HiRes qw/time/;
+use Benchmark qw/timeit/;
 use Carp;
 use Scalar::Util 'blessed';
 our @CARP_NOT = ( __PACKAGE__, 'Fennec::TestHelper' );
@@ -109,7 +110,7 @@ sub _util_args {
 }
 
 sub _result {
-    my ( $ok, $name, $time, @diag ) = @_;
+    my ( $ok, $name, $benchmark, @diag ) = @_;
 
     # Get the first caller outside of the plugin(s)
     my ( $package, $filename, $line ) = _first_non_plugin_caller();
@@ -122,12 +123,12 @@ sub _result {
         result => $ok || 0,
         name   => $name,
         diag   => \@diag,
-        time   => $time,
         case   => $case,
         set    => $set,
         line   => $line     || ($case ? $set ? $set->line : $case->line : undef),
         file   => $filename || ($case ? $set ? $set->filename : $case->filename : undef),
         $TODO ? ( todo => $TODO ) : (),
+        benchmark   => $benchmark,
     );
     Fennec::Tester->get->result( $result );
 }
@@ -137,7 +138,8 @@ sub _wrap_tester {
     my $prototype = prototype( $code );
 
     my $run = sub {
-        my $count = @_;
+        my @args = @_;
+        my $count = @args;
         if ( my $max = $proto->{ max_args }) {
             croak( "Too many arguments for "  . $proto->{ name } . "() takes no more than $max, you gave $count" )
                 unless @_ <= $max;
@@ -150,9 +152,11 @@ sub _wrap_tester {
 
         _check_args( \@_, $proto->{ checks }) if $proto->{ checks };
 
-        my $start = time();
+        my ( $result, $name, @debug );
         local $TB_USED = 0;
-        my ( $result, $name, @debug ) = $code->( @_ );
+
+        my $benchmark = timeit( 1, sub { ( $result, $name, @debug ) = $code->( @args ) });
+
         {
             no warnings 'numeric';
             return 1 if $result and $result == $NO_TEST;
@@ -161,7 +165,8 @@ sub _wrap_tester {
             ( $result, $name ) = @$Test::Builder::TBI_RESULT;
             @debug =  @Test::Builder::TBI_DIAGS;
         }
-        _result( $result, $name, (time() - $start), @debug);
+
+        _result( $result, $name, $benchmark, @debug);
         return $result;
     };
 

@@ -24,7 +24,11 @@ BEGIN {
 
         tester deep_test => sub {
             my ( $num, $line, @extra ) = @_;
-            ( my $p, my $f, $$line ) = caller(1);
+            my ( $p, $f );
+            my $i = 1;
+            do {
+                ( $p, $f, $$line ) = caller($i++);
+            } until $p eq 'main::2';
             my @out = _recurse( $num, @extra );
             return (@out);
         };
@@ -105,7 +109,7 @@ real_tests {
                 name => "caller at 10",
                 file => __FILE__,
                 line => $lines[0],
-                time => results()->[0]->{ 'time' },
+                benchmark => results()->[0]->{ 'benchmark' },
                 diag => [],
                 case => results()->[0]->case,
                 set  => results()->[0]->set,
@@ -116,7 +120,7 @@ real_tests {
                 name => "caller at 5",
                 file => __FILE__,
                 line => $lines[1],
-                time => results()->[1]->{ 'time' },
+                benchmark => results()->[1]->{ 'benchmark' },
                 diag => [ "Got 0 not 1", "More debug" ],
                 case => results()->[1]->case,
                 set  => results()->[1]->set,
@@ -127,7 +131,7 @@ real_tests {
                 name => "caller at 16",
                 file => __FILE__,
                 line => $lines[2],
-                time => results()->[2]->{ 'time' },
+                benchmark => results()->[2]->{ 'benchmark' },
                 diag => [],
                 case => results()->[2]->case,
                 set  => results()->[2]->set,
@@ -145,7 +149,7 @@ real_tests {
             name => "finished",
             file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
-            time => results()->[-1]->{ 'time' }, #Test this later
+            benchmark => results()->[-1]->{ 'benchmark' }, #Test this later
             diag => [],
             case => results()->[-1]->case,
             set  => results()->[-1]->set,
@@ -153,8 +157,8 @@ real_tests {
         },
         "New result"
     );
-    ok( results()->[-1]->{ 'time' } > 1, "took at least 1 second" );
-    ok( results()->[-1]->{ 'time' } < 4, "took less than 4 seconds" );
+    ok( results()->[-1]->{ 'benchmark' }->[0] > 1, "took at least 1 second" );
+    ok( results()->[-1]->{ 'benchmark' }->[0] < 4, "took less than 4 seconds" );
 
     ok(( do_sub { 1 } "Name" ), "proto worked" );
     is_deeply(
@@ -164,7 +168,7 @@ real_tests {
             name => "Name",
             file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
-            time => results()->[-1]->{ 'time' }, #Test this later
+            benchmark => results()->[-1]->{ 'benchmark' }, #Test this later
             diag => [],
             case => results()->[-1]->case,
             set  => results()->[-1]->set,
@@ -180,7 +184,7 @@ real_tests {
             name => "Name",
             file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
-            time => results()->[-1]->{ 'time' }, #Test this later
+            benchmark => results()->[-1]->{ 'benchmark' }, #Test this later
             diag => [],
             case => results()->[-1]->case,
             set  => results()->[-1]->set,
@@ -196,7 +200,7 @@ real_tests {
             name => "Name",
             file => __FILE__,
             line => results()->[-1]->{ 'line' }, #Tested elsware
-            time => results()->[-1]->{ 'time' }, #Test this later
+            benchmark => results()->[-1]->{ 'benchmark' }, #Test this later
             diag => [],
             case => results()->[-1]->case,
             set  => results()->[-1]->set,

@@ -67,7 +67,7 @@ real_tests {
             qr/
                 code \s died \s as \s expected, \s however \s the \s error \s is \s
                 masked\. \s This \s can \s occur \s when \s an \s object's \s
-                DESTROY\(\) \s method \s calls \s eval \s at \s .*$0
+                DESTROY\(\) \s method \s calls \s eval \s at \s .*
             /sx,
             "Warn of edge case"
         );
@@ -93,7 +93,7 @@ real_tests {
             qr/
                 code \s died \s as \s expected, \s however \s the \s error \s is \s
                 masked\. \s This \s can \s occur \s when \s an \s object's \s
-                DESTROY\(\) \s method \s calls \s eval \s at \s .*$0
+                DESTROY\(\) \s method \s calls \s eval \s at \s .*
             /sx,
             "Warn of edge case"
         );

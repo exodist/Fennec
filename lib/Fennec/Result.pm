@@ -3,12 +3,12 @@ use strict;
 use warnings;
 use Carp;
 
-our @REQUIRED = qw/result name time case set file line/;
+our @REQUIRED = qw/result name benchmark case set file line/;
 our @ALT_REQUIRED = qw/diag/;
 our @CARP_NOT = qw/Fennec::Tester/;
 use Fennec::Util qw/add_accessors/;
 
-add_accessors qw/result name case set time diag is_diag file line/;
+add_accessors qw/result name case set diag is_diag file line benchmark/;
 
 sub new {
     my $class = shift;

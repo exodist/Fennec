@@ -20,7 +20,7 @@ re-write of L<Test::Exception>
 use Fennec::Plugin;
 use Carp;
 
-our @CARP_NOT = ( __PACKAGE__, 'Fennec::Plugin' );
+our @CARP_NOT = ( __PACKAGE__, 'Fennec::Plugin', 'Benchmark' );
 
 =head1 TEST FUNCTIONS
 

@@ -1,5 +1,5 @@
 NAME
-    Fennec::Manual - A more modern testing framework for perl
+    Fennec - A more modern testing framework for perl
 
 DESCRIPTION
     Fennec is a test framework that addresses several complains I have
@@ -12,12 +12,12 @@ WHY FENNEC
     Fennec is intended to do for perl testing what Moose does for OOP. It
     makes all tests classes, and defining test cases and test sets within
     that class is simple. In traditional perl testing you would have to
-    manually loop if you wanted to runa set of tests multiple times in
+    manually loop if you wanted to run a set of tests multiple times in
     different cases, it is difficult to make forking tests, and you have
     limited options for more advanced test frameworks.
 
     Fennec runs around taking care of the details for you. You simply need
-    to specify your sets, your cases, and weither or not you want the sets
+    to specify your sets, your cases, and weather or not you want the sets
     and cases to fork, run in parrallel or in sequence. Test sets and cases
     are run in random order by default. Forking should just plain work
     without worrying about the details.
@@ -33,146 +33,97 @@ EARLY VERSION WARNING
     Please go to <http://github.com/exodist/Fennec> to see the latest and
     greatest.
 
+MANUAL
+    Fennec::Manual - More detailed usage
+
 SYNOPSYS
-    Lets assume you have a module My::Module, to write a test object for it
-    you can create lib/My/TEST/Module.pm or ts/My/Module.pm. If in the ts/
-    directory you should prefix the package name with TEST::
-
-        package TEST::My::Module;
-
-    Both package names are listed:
-
-        package My::TEST::Module;
+        package TEST::MyThing;
         use strict;
         use warnings;
 
-        use Fennec testing => 'My::Module',
-                        random => 1; #Randomize tests (on by default)
+        use fennec testing => 'MyThing';
 
-        our $GLOBAL;
+        my $one;
 
-        # You can also call it initialize if you prefer long names.
-        # This will only be run once, prior to the first test case.
-        sub init {
-            my $self = shift;
-            $self->do_stuff;
-        }
-
-        # Define a test case
-        test_case ALL_PASS => sub {
-            my $self = shift;
-            $GLOBAL = 1;
+        test_case a => sub {
+            $one = MyThing->new( 'a' );
         };
 
-        # Define another test case just as a sub.
-        sub case_MORE_PASS {
-            my $self = shift;
-            $GLOBAL = 1;
-        }
-
-        test_case advanced => (
-            method => \&_do_advanced,
-            todo => "These will all fail because GLOBAL is 0",
-            ...
-        );
-
-        sub _do_advanced { $GLOBAL = 0 }
-
-        # Define a test set, this will be run once per case
-        test_set SET_A => sub {
-            my $self = shift;
-            ok( $GLOBAL, "Testing GLOBAL" );
-            is( $GLOBAL, 1, "Testing GLOBAL again" );
+        test_case b => sub {
+            $one = MyThing->new( 'b' );
         };
 
-        # Define another set
-        set_SET_B => sub {
-            my $self = shift;
-            ok( $GLOBAL > 0, "Global is positive" );
-            ok( $GLOBAL != 0, "Global is not zero" );
+        test_set first => sub {
+            isa_ok( $one, 'MyThing' );
         };
 
-        test_set advanced => (
-            method => sub { $GLOBAL = 0 },
-            todo => 'global is 0, these fail.',
-            ...
-        );
-
-        1;
-
-TOOLS
-    $ prove_fennec
-        Command line to to run the test suite.
-
-        *** This utility is not yet complete ***
-
-PLUGINS
-    Plugins are used to provide new functionality for the test writer. For
-    instance all the functionality of Test::More,
-    Test::Exception::LessClever, Test::Warn and Test::Simple are provided by
-    plugins. If you want to add new tester or utility functions for use in
-    test modules you may do so in a plugin.
-
-    To create a plugin create a module directly under the Fennec::Plugin
-    namespace. Define testers and utilies.
-
-        package Fennec::Plugin::MyPlugin;
-        use strict;
-        use references;
-        use Fennec::Plugin;
-
-        # define a util function
-        util my_diag => sub { Fennec->diag( @_ ) };
-
-        # define a tester
-        tester my_ok => (
-            min_args => 1,
-            max_args => 2,
-            code => sub {
-                my ( $result, $name ) = @_;
-                return ( $result ? 1 : 0, $name );
-            },
-        );
-
-        # Define one with a prototype
-        tester my_dies_ok => sub(&;$) {
-            eval $_[0]->() || return ( 1, $_[1]);
-            Fennec->diag( "Test did not die as expected" );
-            return ( 0, $_[1] );
+        test_set first => sub {
+            ok( $one->do_thing, "Thing was done" );
         };
 
         1;
 
-    Look at Fennec::TestHelper and Fennec::Plugin for information on testing
-    plugins.
+EXPORTS
+    There are two functions exported by Fennec.
 
-WRAPPER PLUGINS
-    Plugins can be made to wrap around existing Test::Builder based testing
-    utilities. This is how Test::More and Test::Warn functionality is
-    provided. Here is the Test::More wrapper plugin as an example.
+    test_case name => sub { ... }
+    test_case( $name, $code );
+        Define a test case. Every set defined will be run under each test
+        case.
 
-        package Fennec::Plugin::More;
-        use strict;
-        use warnings;
+    test_set name => sub { ... };
+    test_set( $name, $code );
+        Define a test set. Every set defined will be run under each test
+        case.
 
-        use Fennec::Plugin;
+IMPORT
+    Fennec is the only module someone using Fennec should have to 'use'. The
+    parameters provided to import() on use do a significant portion of the
+    test setup. When Fennec is used it will instantate a singleton of your
+    test class and store it as a test to be run.
 
-        our @SUBS;
-        BEGIN {
-            @SUBS = qw/ is isnt like unlike cmp_ok is_deeply can_ok isa_ok /;
-        }
+    Using Fennec also automatically adds 'Fennec::Test' to your classes
+    @ISA.
 
-        use Test::More import => \@SUBS;
+IMPORT OPTIONS
+        use Fennec %OPTIONS;
 
-        tester $_ => $_ for @SUBS;
-        util diag => sub { Fennec->diag( @_ ) };
-        util todo => sub(&$) {
-            my ( $code, $todo ) = @_;
-            local $Fennec::Plugin::TODO = $todo;
-            $code->();
-        };
+    These are the options supported, all are optional.
 
-        1;
+    testing => 'My::Module'
+        Used to specify the module to be tested by this test class. This
+        module will be loaded, and it's import will be run with the test
+        class as caller. This is a lot like use_ok(), the difference is that
+        'use' forces a BEGIN{} block.
+
+        Anything exported by the tested module will be loaded before the
+        rest of the test class is compiled. This allows the use of exported
+        functions with prototypes and the use of constants within the test
+        class.
+
+            use Fennec testing => 'My::Module';
+
+    import_args => [ @ARGS ]
+        Specify the arguments to provide the import() method of the module
+        specified by 'testing => ...'.
+
+            use Fennec testing     => 'My::Module',
+                            import_args => [ 'a', 'b' ];
+
+    plugins => [ 'want', 'another', '-do_not_want', '-this_either' ]
+        Specify which plugins to load or prevent loading. By default 'More',
+        'Simple', 'Exception', and 'Warn' plugins are loaded. You may
+        specify any additional plugins. You may also prevent the loadign of
+        a default plugin by listing it prefixed by a '-'.
+
+        See Fennec::Plugin for more information about plugins.
+
+        See Also Fennec::Plugin::Simple, Fennec::Plugin::More,
+        Fennec::Plugin::Exception, Fennec::Plugin::Warn
+
+    all others
+        All other arguments will be passed into the constructor for your
+        test class, which is defined in Fennec::Test.
 
 AUTHORS
     Chad Granum exodist7@gmail.com

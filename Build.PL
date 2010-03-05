@@ -9,6 +9,7 @@ my $build = Module::Build->new(
     dist_author => 'Chad Granum <exodist7@gmail.com>',
     create_readme => 1,
     requires => {
+        'Benchmark'         => 0,
         'Cwd'               => 0,
         'File::Find'        => 0,
         'File::Temp'        => 0.20,
