@@ -47,7 +47,7 @@ sub needs_method { 1 }
 sub partition {
     my $self = shift;
     my $data = $self->{ partition };
-    return [ "" ] unless $data;
+    return [ "DEFAULT" ] unless $data;
     return [ $data ] unless ref $data eq 'ARRAY';
     return $data;
 }
