@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
-use Carp;
+use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
 our @CARP_NOT = ( __PACKAGE__, 'Fennec::TestHelper' );
 
@@ -63,8 +63,6 @@ sub export_to {
     for my $name ( keys %$subs ) {
         my $newname = $prefix ? "$prefix$name" : $name;
         no strict 'refs';
-        use Data::Dumper;
-        print Dumper( $package . '::' . $newname, $subs->{ $name }, \$TODO ) if $name eq 'TODO';
         *{ $package . '::' . $newname } = $subs->{ $name };
     }
 }

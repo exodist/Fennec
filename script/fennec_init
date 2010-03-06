@@ -1,0 +1,67 @@
+#!/usr/bin/perl;
+use strict;
+use warnings;
+use File::Find qw/find/;
+use Cwd qw/cwd/;
+use File::Path qw/make_path/;
+
+eval {
+    mkdir( 'ts' );
+    mkdir( 't' );
+};
+
+unless( -e 't/fennec.t' ) {
+    open( my $fennect, '>', 't/fennec.t' ) || die( "Cannot create t/fennec.t: $!" );
+    print $fennect <<EOT;
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Fennec::Tester;
+Fennec::Tester->new->run;
+EOT
+    close( $fennect );
+}
+
+exit unless grep {$_ eq '--capture'} @ARGV;
+
+my $cwd = cwd;
+my $lib = "$cwd/lib";
+my $ts = "$cwd/ts";
+my @files;
+my $wanted = sub {
+    no warnings 'once';
+    my $file = $File::Find::name;
+    return unless $file =~ m/\.pm$/;
+    $file =~ s,^$lib,,;
+    push @files => $file;
+};
+find( $wanted, $lib );
+
+for my $file ( @files ) {
+    my $module = $file;
+    $module =~ s,^/,,;
+    $module =~ s,\.pm$,,;
+    $module =~ s,/,::,g;
+    my $file = "$ts/$file";
+    $file =~ s,//+,/,g;
+    my $dir = $file;
+    $dir =~ s,^(.*)/[^/]*$,$1,g;
+    make_path( "$dir" );
+    next if -e $file;
+    open( my $test, '>', $file ) || die ( "Unable to create test:\n\t$file\n\t$!" );
+    print $test <<EOT;
+package TEST::$module;
+use strict;
+use warnings;
+
+use Fennec testing => '$module';
+
+test_set default => sub {
+    ok( 0, '$module tested' );
+};
+
+1;
+EOT
+    close( $test );
+}

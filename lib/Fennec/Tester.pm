@@ -18,14 +18,6 @@ our $SINGLETON;
 
 add_accessors qw/no_load bad_files ignore inline case set test random/;
 
-sub import {
-    my $class = shift;
-    my %proto = @_;
-
-    return unless $proto{ run };
-    $class->new(%proto)->run;
-}
-
 sub get { goto &new };
 
 # XXX This could stand some cleanup.
@@ -286,8 +278,7 @@ sub _socket {
 sub _load_files {
     my $self = shift;
     for my $file ( @{ $self->files }) {
-        eval { require $file }
-            || push @{ $self->bad_files } => [ $file, $@ ];
+        eval { require $file } || push @{ $self->bad_files } => [ $file, $@ ];
     }
 }
 

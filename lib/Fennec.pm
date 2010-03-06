@@ -21,12 +21,9 @@ sub import {
         if Fennec::Tester->get->get_test( $package );
 
     # If a testing class is specified then load it and run import
-    if ( my $get_from = $options{ testing }) {
-        eval "require $get_from" || croak( $@ );
-
-        my $sub = $get_from->can('import');
-        next unless $sub;
-
+    my $get_from = $options{ testing };
+    eval "require $get_from" || croak( $@ );
+    if ( $get_from && !$get_from->isa(__PACKAGE__) &&  my $sub = $get_from->can( 'import' )) {
         my @args = @{ $options{ import_args } || []};
 
         # Sub::Uplevel was being wacky, this works fine.
