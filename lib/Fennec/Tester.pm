@@ -3,76 +3,46 @@ use strict;
 use warnings;
 
 use Fennec::TestBuilderImposter;
-use IO::Socket::UNIX;
 use Fennec::Result;
+use Fennec::Tester::Root;
 use Fennec::Util qw/add_accessors/;
-use Cwd          qw/cwd/;
-use File::Temp   qw/tempfile/;
 use Scalar::Util qw/blessed/;
 use List::Util   qw/shuffle/;
-use File::Find   qw/find/;
 use Carp         qw/croak confess/;
 
 our @CARP_NOT = qw/Fennec::Test Fennec::TestHelper Fennec::Plugin/;
 our $SINGLETON;
+our $SOCKET_TIMEOUT = 30;
 
-add_accessors qw/no_load bad_files ignore inline case set test random/;
+
+add_accessors qw/no_load ignore inline case set test random files
+                 _is_subprocess socket_file root/;
 
 sub get { goto &new };
 
-# XXX This could stand some cleanup.
 sub new {
     my $class = shift;
-    return $SINGLETON if $SINGLETON;
-
     my %proto = @_;
 
-    # TODO put this into a method?
-    # Create socket
-    my ( $fh, $socket_file ) = tempfile( cwd() . "/.test-suite.$$.XXXX", UNLINK => 1 );
-    require IO::Socket::UNIX;
-    close( $fh ) || die( $! );
-    unlink( $socket_file );
-    my $socket = IO::Socket::UNIX->new(
-        Listen => 1,
-        Local => $socket_file,
-    ) || die( $! );
+    unless( $SINGLETON ) {
 
-    # This was pulld out of an object method,
-    # but it probably does belong in one.
-    my $config;
-    my $root = $proto{ root } ||$class->root;
-    my $conf_file = $root . "/.fennec";
-    if ( -f $conf_file ) {
-        $config = eval { require $conf_file }
-            || croak( "Error loading config file: $@" );
-        croak( "config file did not return a hashref" )
-            unless ref( $config ) eq 'HASH';
+        my $self = bless(
+            {
+                parent_pid => $$,
+                pid => $$,
+                tests => {},
+                failures => [],
+                random => 1,
+                %proto,
+                root => Fennec::Tester::Root->new( $proto{ root })
+            },
+            $class
+        );
+        $SINGLETON = $self;
+
+        $self->_load_config;
+        $self->_init_output;
     }
-
-    $SINGLETON = bless(
-        {
-            ignore => [],
-            bad_files => [],
-            parent_pid => $$,
-            pid => $$,
-            socket => $socket,
-            _socket_file => $socket_file,
-            tests => {},
-            failures => [],
-            root => $root,
-            random => 1,
-            # proto takes priority over config
-            $config ? (%$config) : (),
-            %proto,
-        },
-        $class
-    );
-
-    $SINGLETON->_init_output;
-
-    $SINGLETON->find_files
-        unless $SINGLETON->files;
 
     return $SINGLETON;
 }
@@ -82,45 +52,6 @@ sub failures {
     my $self = $class->get;
     push @{ $self->{ failures }} => @_ if @_;
     return @{ $self->{ failures }};
-}
-
-sub root {
-    my $class = shift;
-    my $self = $class if blessed( $class );
-
-    return $self->{ root } if $self and $self->{ root };
-
-    my $cd = cwd();
-    my $root;
-    do {
-        $root = $cd if $class->_looks_like_root( $cd );
-    } while !$root && $cd =~ s,/[^/]*$,,g && $cd;
-
-    $self->{ root } = $root if $self;
-    return $root;
-}
-
-sub files {
-    my $self = shift;
-
-    unless ( $self->{ files }) {
-        my $root = $self->root;
-        my @files;
-        my $wanted = sub {
-            no warnings 'once';
-            my $file = $File::Find::name;
-            return unless $file =~ m/\.pm$/;
-            return if grep { $file =~ $_ } @{ $self->ignore };
-            push @files => $file;
-        };
-        my @paths;
-        push @paths => "$root/ts" if -e "$root/ts";
-        push @paths => "$root/lib" if $self->inline && -e "$root/lib";
-        find( $wanted, @paths ) if @paths;
-        $self->{ files } = \@files;
-    }
-
-    return $self->{ files };
 }
 
 sub add_test {
@@ -145,21 +76,6 @@ sub tests {
     return $self->{ tests };
 }
 
-sub pid {
-    my $self = shift;
-    return $$;
-}
-
-sub parent_pid {
-    my $self = shift;
-    return $self->{ parent_pid };
-}
-
-sub is_parent {
-    my $self = shift;
-    return ( $self->pid == $self->parent_pid ) ? 1 : 0;
-}
-
 sub is_running {
     my $self = shift;
     ($self->{ is_running }) = @_ if @_;
@@ -174,7 +90,20 @@ sub output_handlers {
 
 sub result {
     my $self = shift;
+    $self->direct_result( @_ );
+    $self->listener->iteration if $self->is_parent;
+}
+
+sub diag {
+    my $self = shift;
+    $self->direct_result( @_ );
+    $self->listener->iteration if $self->is_parent;
+}
+
+sub direct_result {
+    my $self = shift;
     my ($result) = @_;
+    $self->_sub_process_refactor;
 
     croak( "Testing has not been started" )
         unless $self->is_running;
@@ -184,19 +113,31 @@ sub result {
            and blessed( $result )
            and $result->isa( 'Fennec::Result' );
 
-    return $self->_handle_result( $result )
-        if $self->is_parent;
+    $_->result( $result ) for $class->get->output_handlers;
 
-    confess( "This should not happen...", $self );
-
-    $self->_send_result( $result );
+    # Add failures to the list of failures.
+    $class->get->failures($result) unless $result->result;
 }
 
-sub diag {
+sub direct_diag {
     my $self = shift;
-    for my $plugin ( $self->output_handlers ) {
-        $plugin->diag( @_ );
+    my @messages = @_;
+    $self->_sub_process_refactor;
+
+    $_->diag( @messages ) for $self->output_handlers;
+}
+
+sub listener {
+    my $self = shift;
+
+    unless ( $self->{ listener }) {
+        require Fennec::Tester::listener;
+        my $listener = Fennec::Tester::listener->new;
+        $self->socket_file( $listener->file );
+        $self->{ listener } = $listener;
     }
+
+    return $self->{ listener };
 }
 
 sub run {
@@ -206,21 +147,70 @@ sub run {
     croak "run() may only be run from the parent process."
         unless $self->is_parent;
 
-    $self->_load_files unless $self->no_load;
-
     $self->is_running( 1 );
-    my $listen = $self->_socket;
 
-    for my $test ( shuffle values %{ $self->tests }) {
+    $self->listener->start;
+    $self->_run_tests;
+    $self->listener->finish if $self->is_parent;
+    $_->finish for $self->output_handlers;
+
+    exit if $self->is_subprocess;
+    return 0 if (@{ $self->bad_files });
+    return !$self->failures;
+}
+
+sub _run_tests {
+    my $self = shift;
+    $self->_sub_process_refactor;
+    my @tests = values %{ $self->tests };
+    @tests = shuffle @tests if $self->random;
+    for my $test ( @tests ) {
         $self->test( $test );
         $self->diag( "Running test class " . ref($test) );
         $test->run( $self->case, $self->set );
         $self->test( undef );
+        $self->listener->iteration if $self->is_parent;
     }
+}
 
-    $_->finish for $self->output_handlers;
-    return 0 if (@{ $self->bad_files });
-    return !$self->failures;
+sub _sub_process_refactor {
+    my $self = shift;
+    return if $self->is_output || $self->is_parent;
+    return unless $self->pid_changed;
+
+    $self->{ pid } = $$;
+
+    require Fennec::Output::SubProcess;
+    $self->{ output_handlers } = [ Fennec::Output::SubProcess->new ];
+    $self->{ output_handlers } = [ Fennec::Output::SubProcess->new ];
+}
+
+sub pid_changed {
+    my $self = shift;
+    my $pid = $$;
+    return 0 if $self->pid == $pid;
+    return $pid;
+}
+
+sub pid {
+    my $self = shift;
+    return $self->{ pid };
+}
+
+sub parent_pid {
+    my $self = shift;
+    return $self->{ parent_pid };
+}
+
+sub is_parent {
+    my $self = shift;
+    return if $self->pid_changed;
+    return ( $self->pid == $self->parent_pid ) ? 1 : 0;
+}
+
+sub is_subprocess {
+    my $self = shift;
+    return !$self->is_parent;
 }
 
 sub _init_output {
@@ -234,75 +224,6 @@ sub _init_output {
         push @loaded => $pclass->new;
     }
     $self->{ output_handlers } = \@loaded;
-}
-
-sub _handle_result {
-    my $class = shift;
-    my ($result) = @_;
-    confess( "No result provided" )
-        unless $result;
-    confess( "Invalid result" )
-        unless blessed($result) and $result->isa('Fennec::Result');
-
-    $_->result( $result ) for $class->get->output_handlers;
-
-    # Add failures to the list of failures.
-    $class->get->failures($result) unless $result->result;
-}
-
-sub _send_result {
-    # This will be used to serialize and send all results to the main process.
-    confess( "Forking not yet implemented" );
-}
-
-sub _socket_file {
-    my $self = shift;
-    return $self->{ _socket_file },
-}
-
-sub _socket {
-    my $self = shift;
-    return $self->{ socket } if $$ == $self->parent_pid;
-
-    # If we are in a new child clear existing sockets and make new ones
-    unless ( $$ == $self->pid ) {
-        delete $self->{ socket };
-        delete $self->{ client_socket };
-        $self->pid( 1 ); #Set pid.
-    }
-
-    $self->{ client_socket } ||= IO::Socket::UNIX->new(
-        Peer => $self->_socket_file,
-    );
-
-    return $self->{ client_socket };
-}
-
-sub _load_files {
-    my $self = shift;
-    for my $file ( @{ $self->files }) {
-        eval { require $file } || push @{ $self->bad_files } => [ $file, $@ ];
-    }
-}
-
-sub _looks_like_root {
-    my $class = shift;
-    my ( $dir ) = @_;
-    return unless $dir;
-    return 1 if -e "$dir/.fennec";
-    return 1 if -d "$dir/ts";
-    return 1 if -d "$dir/t" && -d "$dir/lib";
-    return 1 if -e "$dir/Build.PL";
-    return 1 if -e "$dir/Makefile.PL";
-    return 1 if -e "$dir/test.pl";
-    return 0;
-}
-
-sub DESTROY {
-    my $self = shift;
-    my $socket = $self->_socket;
-    close( $socket ) if $socket;
-    unlink( $self->_socket_file ) if $self->is_parent;
 }
 
 1;
