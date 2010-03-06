@@ -113,7 +113,10 @@ sub files {
             return if grep { $file =~ $_ } @{ $self->ignore };
             push @files => $file;
         };
-        find( $wanted, "$root/ts", $self->inline ? ( "$root/lib" ) : () );
+        my @paths;
+        push @paths => "$root/ts" if -e "$root/ts";
+        push @paths => "$root/lib" if $self->inline && -e "$root/lib";
+        find( $wanted, @paths ) if @paths;
         $self->{ files } = \@files;
     }
 
