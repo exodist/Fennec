@@ -1,18 +1,22 @@
-package Fennec::Plugin::Simple;
+package Fennec::Group::Case;
 use strict;
 use warnings;
 
-#{{{ POD
+use base 'Fennec::Group';
+
+sub type { 'Case' }
+
+1;
 
 =pod
 
 =head1 NAME
 
-Fennec::Plugin::Simple - L<Test::Simple> functionality.
+Fennec::Group::Case - Test case class
 
 =head1 DESCRIPTION
 
-This provides the ok() function.
+A test case.
 
 =head1 EARLY VERSION WARNING
 
@@ -20,35 +24,6 @@ This is VERY early version. Fennec does not run yet.
 
 Please go to L<http://github.com/exodist/Fennec> to see the latest and
 greatest.
-
-=head1 TESTER FUNCTIONS
-
-=over 4
-
-=item ok( $result )
-
-=item ok( $result, $name )
-
-Test passes if $result is true, otherwise it fails.
-
-=cut
-
-#}}}
-
-use Fennec::Plugin;
-
-tester ok => (
-    min_args => 1,
-    max_args => 2,
-    code => sub {
-        my ( $result, $name ) = @_;
-        return ( $result ? 1 : 0, $name );
-    },
-);
-
-1;
-
-=back
 
 =head1 AUTHORS
 

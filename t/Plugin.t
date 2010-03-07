@@ -8,15 +8,15 @@ use Fennec::TestHelper;
 my $CLASS;
 
 BEGIN {
-    $CLASS = 'Fennec::Plugin';
+    $CLASS = 'Fennec::Producer';
     real_tests { use_ok( $CLASS, 'no_import' ) };
 
     {
-        package Fennec::Plugin::A;
+        package Fennec::Producer::A;
         use strict;
         use warnings;
 
-        use Fennec::Plugin;
+        use Fennec::Producer;
 
         tester a => sub { 'a' };
 
@@ -78,7 +78,7 @@ BEGIN {
 
 real_tests {
     ok( !MyPackage->can($_), "MyPackage cannot $_" ) for qw/a _a/;
-    Fennec::Plugin::A->export_to( 'MyPackage' );
+    Fennec::Producer::A->export_to( 'MyPackage' );
     ok( !MyPackage->can($_), "MyPackage still cannot $_" ) for qw/_a/;
     can_ok( 'MyPackage', 'a' );
     is( MyPackage->a, 'a', "Correct result" );
@@ -93,7 +93,7 @@ real_tests {
     use Fennec::TestHelper;
 
     BEGIN {
-        Fennec::Plugin::A->export_to( __PACKAGE__ );
+        Fennec::Producer::A->export_to( __PACKAGE__ );
     }
 
     results( 1 );

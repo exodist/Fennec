@@ -1,9 +1,9 @@
-package Fennec::Grouping::Base;
+package Fennec::Group;
 use strict;
 use warnings;
 
 use Carp;
-our @CARP_NOT = ( __PACKAGE__, qw/Fennec::Grouping Fennec Fennec::Plugin/ );
+our @CARP_NOT = ( __PACKAGE__, qw/Fennec Fennec::Consumer Fennec::Test::Functions/ );
 use Scalar::Util qw/blessed/;
 use Sub::Information as => 'inspect';
 use Fennec::Util qw/add_accessors/;
@@ -61,7 +61,7 @@ sub run {
 sub random {
     my $self = shift;
     return 0 unless $self->{ random };
-    return 0 unless Fennec::Tester->get->get_test($self->test)->random;
+    return 0 unless Fennec::Runner->get->get_test($self->test)->random;
     return 1;
 }
 
@@ -71,7 +71,7 @@ sub random {
 
 =head1 NAME
 
-Fennec::Grouping::Base - Base class for grouping classes
+Fennec::Group - Base class for group classes
 
 =head1 DESCRIPTION
 

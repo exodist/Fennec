@@ -5,7 +5,6 @@ use Carp;
 
 our @REQUIRED = qw/result name benchmark case set file line test/;
 our @ALT_REQUIRED = qw/diag/;
-our @CARP_NOT = qw/Fennec::Tester/;
 use Fennec::Util qw/add_accessors/;
 use Scalar::Util qw/blessed/;
 
@@ -41,7 +40,7 @@ sub deserialize {
     chomp( $data );
     my $VAR1;
     my $proto = eval $data || die( "Deserialization error $@" );
-    $proto->{ test } = Fennec::Tester->get->get_test( delete $proto->{ test_class });
+    $proto->{ test } = Fennec::Runner->get->get_test( delete $proto->{ test_class });
     $proto->{ case } = $proto->{ test }->_cases->{ delete $proto->{ case_name }};
     $proto->{ set } = $proto->{ test }->_sets->{ delete $proto->{ set_name }};
     return $class->new( $proto );

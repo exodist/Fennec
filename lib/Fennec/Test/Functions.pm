@@ -1,4 +1,4 @@
-package Fennec::Grouping;
+package Fennec::Test::Functions;
 use strict;
 use warnings;
 use Carp;
@@ -48,7 +48,7 @@ sub test_case {
 
 =head1 NAME
 
-Fennec::Grouping - Functions for creating/manipulating cases and sets.
+Fennec::Test::Functions - Functions for creating/manipulating cases and sets.
 
 =head1 DESCRIPTION
 

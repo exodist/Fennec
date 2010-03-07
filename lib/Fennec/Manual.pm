@@ -23,7 +23,7 @@ Fennec is a test framework that addresses several complains I have heard,
 or have myself issued forth about perl testing. It is still based off
 L<Test::Builder> and uses a lot of existing test tools.
 
-Please see L<Fennec::Specification> for more details.
+Please see L<Fennec::Manual::Specification> for more details.
 
 =head1 WHY FENNEC
 
@@ -140,16 +140,16 @@ L<Test::Warn> and L<Test::Simple> are provided by plugins. If you want to add
 new tester or utility functions for use in test modules you may do so in a
 plugin.
 
-To create a plugin create a module directly under the L<Fennec::Plugin>
+To create a plugin create a module directly under the L<Fennec::Producer>
 namespace. Define testers and utilies.
 
-    package Fennec::Plugin::MyPlugin;
+    package Fennec::Producer::MyPlugin;
     use strict;
     use references;
-    use Fennec::Plugin;
+    use Fennec::Producer;
 
     # define a util function
-    util my_diag => sub { Fennec::Tester->diag( @_ ) };
+    util my_diag => sub { Fennec::Runner->diag( @_ ) };
 
     # define a tester
     tester my_ok => (
@@ -164,13 +164,13 @@ namespace. Define testers and utilies.
     # Define one with a prototype
     tester my_dies_ok => sub(&;$) {
         eval $_[0]->() || return ( 1, $_[1]);
-        Fennec::Tester->diag( "Test did not die as expected" );
+        Fennec::Runner->diag( "Test did not die as expected" );
         return ( 0, $_[1] );
     };
 
     1;
 
-Look at L<Fennec::TestHelper> and L<Fennec::Plugin> for information
+Look at L<Fennec::TestHelper> and L<Fennec::Producer> for information
 on testing plugins.
 
 =head1 WRAPPER PLUGINS
@@ -179,11 +179,11 @@ Plugins can be made to wrap around existing L<Test::Builder> based testing
 utilities. This is how L<Test::More> and L<Test::Warn> functionality is
 provided. Here is the Test::More wrapper plugin as an example.
 
-    package Fennec::Plugin::More;
+    package Fennec::Producer::More;
     use strict;
     use warnings;
 
-    use Fennec::Plugin;
+    use Fennec::Producer;
 
     our @SUBS;
     BEGIN {
@@ -193,10 +193,10 @@ provided. Here is the Test::More wrapper plugin as an example.
     use Test::More import => \@SUBS;
 
     tester $_ => $_ for @SUBS;
-    util diag => sub { Fennec::Tester->diag( @_ ) };
+    util diag => sub { Fennec::Runner->diag( @_ ) };
     util todo => sub(&$) {
         my ( $code, $todo ) = @_;
-        local $Fennec::Plugin::TODO = $todo;
+        local $Fennec::Producer::TODO = $todo;
         $code->();
     };
 

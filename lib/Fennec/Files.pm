@@ -1,4 +1,4 @@
-package Fennec::Tester::Files;
+package Fennec::Files;
 use strict;
 use warnings;
 
@@ -11,15 +11,15 @@ sub files {
     my $self = shift;
 
     unless ( $self->{ files }) {
-        my $root = Fennec::Tester->get->root->path;
+        my $root = Fennec::Runner->get->root->path;
         my @files;
         my $wanted = sub {
             no warnings 'once';
             my $file = $File::Find::name;
             return unless $file =~ m/\.pm$/;
-            return if grep { $file =~ $_ } @{ Fennec::Tester->get->ignore };
+            return if grep { $file =~ $_ } @{ Fennec::Runner->get->ignore };
             # Do not load actual libraries unless inline is specified
-            return if !Fennec::Tester->get->inline
+            return if !Fennec::Runner->get->inline
                    && $file =~ m,$root/lib,
                    && !$file =~ m,/TEST/,;
             push @files => $file;

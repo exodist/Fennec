@@ -1,4 +1,4 @@
-package Fennec::Tester::Threader;
+package Fennec::Runner::Threader;
 use strict;
 use warnings;
 use Fennec::Util qw/add_accessors/;
@@ -55,7 +55,7 @@ sub _fork {
 
     $code->( @$args );
     $self->cleanup;
-    Fennec::Tester->get->_sub_process_exit;
+    Fennec::Runner->get->_sub_process_exit;
 }
 
 sub get_tid {

@@ -1,10 +1,10 @@
-package Fennec::Tester::Listener;
+package Fennec::Runner::Listener;
 use strict;
 use warnings;
 
 use IO::Socket::UNIX;
 use File::Temp qw/tempfile/;
-use Fennec::Tester::Root;
+use Fennec::Runner::Root;
 use Fennec::Util qw/add_accessors/;
 use Carp;
 
@@ -68,15 +68,17 @@ sub process {
     my $self = shift;
     my ( $msg ) = @_;
     my $item = eval $msg;
-    return Fennec::Tester->get->direct_diag( $msg )
+    return Fennec::Runner->get->direct_diag( $msg )
         unless ref( $msg );
-    return Fennec::Tester->get->direct_result( $msg )
+    return Fennec::Runner->get->direct_result( $msg )
         if ( $item->isa( 'Fennec::Result' ));
     croak( "Unhandled message $msg" );
 }
 
 sub DESTROY {
     my $self = shift;
+    return unless Fennec::Runner->get;
+    return unless Fennec::Runner->get->is_parent;
     # Close sockets and unlink file.
     for my $child ( @{ $self->connections }) {
         close( $child );

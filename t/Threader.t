@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use Test::Exception::LessClever;
 
-my $CLASS = 'Fennec::Tester::Threader';
+my $CLASS = 'Fennec::Runner::Threader';
 use_ok( $CLASS );
 
 can_ok( $CLASS, qw/pid max_files max_partitions max_cases max_sets files partitions cases sets/);
@@ -13,8 +13,8 @@ can_ok( $CLASS, qw/pid max_files max_partitions max_cases max_sets files partiti
 ok( my $one = $CLASS->new( max_sets => 1 ), "Created one" );
 isa_ok( $one, $CLASS );
 
-sub Fennec::Tester::_sub_process_exit { exit };
-sub Fennec::Tester::get { return $_[0] };
+sub Fennec::Runner::_sub_process_exit { exit };
+sub Fennec::Runner::get { return $_[0] };
 
 is( $one->pid, $$, "Stored pid" );
 is_deeply(

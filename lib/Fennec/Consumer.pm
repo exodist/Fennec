@@ -1,4 +1,4 @@
-package Fennec::Output;
+package Fennec::Consumer;
 use strict;
 use warnings;
 
@@ -26,7 +26,7 @@ sub finish {1}
 
 =head1 NAME
 
-Fennec::Output - Base class for output plugins
+Fennec::Consumer - Base class for output plugins
 
 =head1 DESCRIPTION
 

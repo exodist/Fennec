@@ -1,3 +1,7 @@
+package Fennec::Consumer::SubProcess;
+use strict;
+use warnings;
+
 sub _send_result {
     # This will be used to serialize and send all results to the main process.
     confess( "Forking not yet implemented" );
@@ -8,4 +12,4 @@ sub _send_result {
         Peer => $self->_socket_file,
     );
 
-
+1;

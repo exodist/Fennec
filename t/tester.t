@@ -6,7 +6,7 @@ use Test::Exception::LessClever;
 use Test::Builder::Tester;
 use Fennec::TestHelper;
 
-my $CLASS = 'Fennec::Tester';
+my $CLASS = 'Fennec::Runner';
 
 real_tests {
     use_ok( $CLASS  );
@@ -28,7 +28,7 @@ real_tests {
     {
         my $CWD;
         no warnings qw/redefine once/;
-        local *Fennec::Tester::cwd = sub { my $out = $CWD; undef( $CWD ); return $out };
+        local *Fennec::Runner::cwd = sub { my $out = $CWD; undef( $CWD ); return $out };
         for (map { "t/fakeroots/$_" } qw{build config install t_lib testpl with_ts }) {
             $CWD = $_;
             delete $one->{ root };
@@ -78,8 +78,8 @@ real_tests {
         my $load;
         my @errors;
         no warnings qw{once redefine};
-        *Fennec::Tester::failures = sub { @errors };
-        *Fennec::Tester::_load_files = sub { $load++ };
+        *Fennec::Runner::failures = sub { @errors };
+        *Fennec::Runner::_load_files = sub { $load++ };
 
         $one = $CLASS->get;
         $one->is_running(undef);
@@ -106,10 +106,10 @@ real_tests {
     my @results;
     {
         no warnings 'redefine';
-        *Fennec::Tester::_handle_result = sub { shift and push @results => @_ };
+        *Fennec::Runner::_handle_result = sub { shift and push @results => @_ };
     }
 
-    Fennec::Tester->_handle_result( { a => 'a' } );
+    Fennec::Runner->_handle_result( { a => 'a' } );
     is_deeply( \@results, [ { a => 'a' } ], "Saving results" );
     @results = ();
 

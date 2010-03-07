@@ -1,11 +1,11 @@
-package Fennec::Plugin;
+package Fennec::Producer;
 use strict;
 use warnings;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
-our @CARP_NOT = ( __PACKAGE__, 'Fennec::TestHelper' );
+our @CARP_NOT = ( __PACKAGE__, 'Fennec::Tester' );
 
 #{{{ TYPES
 our %TYPES = (
@@ -47,7 +47,6 @@ sub import {
     my ( $package ) = caller;
 
     no strict 'refs';
-    push @{ $package . '::ISA' } => $class;
     *{ $package . '::' . $_ } = \&{ $_ } for @EXPORT;
 }
 
@@ -113,7 +112,7 @@ sub _result {
     # Get the first caller outside of the plugin(s)
     my ( $package, $filename, $line ) = _first_non_plugin_caller();
 
-    my $test = Fennec::Tester->get->test;
+    my $test = Fennec::Runner->get->test;
     my $case = $test ? $test->case : undef;
     my $set = $test ? $test->set : undef;
 
@@ -128,7 +127,7 @@ sub _result {
         $TODO ? ( todo => $TODO ) : (),
         benchmark   => $benchmark,
     );
-    Fennec::Tester->get->result( $result );
+    Fennec::Runner->get->result( $result );
 }
 
 sub _wrap_tester {
@@ -261,7 +260,7 @@ __END__
 
 =head1 NAME
 
-Fennec::Plugin - Used by plugins to turn them into plugins.
+Fennec::Producer - Used by plugins to turn them into plugins.
 
 =head1 DESCRIPTION
 
@@ -276,16 +275,16 @@ greatest.
 
 =head1 SYNOPSYS
 
-To create a plugin create a module directly under the L<Fennec::Plugin>
+To create a plugin create a module directly under the L<Fennec::Producer>
 namespace. Define testers and utilies.
 
-    package Fennec::Plugin::MyPlugin;
+    package Fennec::Producer::MyPlugin;
     use strict;
     use references;
-    use Fennec::Plugin;
+    use Fennec::Producer;
 
     # define a util function
-    util my_diag => sub { Fennec::Tester->diag( @_ ) };
+    util my_diag => sub { Fennec::Runner->diag( @_ ) };
 
     # define a tester
     tester my_ok => (
@@ -300,7 +299,7 @@ namespace. Define testers and utilies.
     # Define one with a prototype
     tester my_dies_ok => sub(&;$) {
         eval $_[0]->() || return ( 1, $_[1]);
-        Fennec::Tester->diag( "Test did not die as expected" );
+        Fennec::Runner->diag( "Test did not die as expected" );
         return ( 0, $_[1] );
     };
 
@@ -312,11 +311,11 @@ Plugins can be made to wrap around existing L<Test::Builder> based testing
 utilities. This is how L<Test::More> and L<Test::Warn> functionality is
 provided. Here is the Test::More wrapper plugin as an example.
 
-    package Fennec::Plugin::More;
+    package Fennec::Producer::More;
     use strict;
     use warnings;
 
-    use Fennec::Plugin;
+    use Fennec::Producer;
 
     our @SUBS;
     BEGIN {
@@ -326,10 +325,10 @@ provided. Here is the Test::More wrapper plugin as an example.
     use Test::More import => \@SUBS;
 
     tester $_ => $_ for @SUBS;
-    util diag => sub { Fennec::Tester->diag( @_ ) };
+    util diag => sub { Fennec::Runner->diag( @_ ) };
     util todo => sub(&$) {
         my ( $code, $todo ) = @_;
-        local $Fennec::Plugin::TODO = $todo;
+        local $Fennec::Producer::TODO = $todo;
         $code->();
     };
 

@@ -1,4 +1,4 @@
-package Fennec::Tester::Root;
+package Fennec::Runner::Root;
 use strict;
 use warnings;
 

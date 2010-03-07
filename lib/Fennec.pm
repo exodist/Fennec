@@ -2,23 +2,24 @@ package Fennec;
 use strict;
 use warnings;
 
-use Fennec::Tester;
-use Fennec::Grouping;
 use Fennec::Test;
+use Fennec::Test::Functions;
 use Carp;
 
 our $VERSION = "0.005";
-our @DEFAULT_PLUGINS = qw/Warn Exception More Simple/;
+our @DEFAULT_PRODUCERS = qw/Warn Exception More Simple/;
 
 sub import {
     my $class = shift;
     my %options = @_;
     my ( $package, $filename ) = caller();
 
+    croak( "Fennec runner has not yet been initialized" )
+        unless $Fennec::Runner::SINGLETON;
     croak( "You must put your tests into a package, not main" )
         if $package eq 'main';
     croak( "$package is already a test class" )
-        if Fennec::Tester->get->get_test( $package );
+        if Fennec::Runner->get->get_test( $package );
 
     # If a testing class is specified then load it and run import
     my $get_from = $options{ testing };
@@ -41,35 +42,35 @@ sub import {
         push @{ $package . '::ISA' } => 'Fennec::Test';
     }
 
-    # Export functions from plugins, and for grouping
-    $class->_export_plugins( $package, $options{ plugins } );
-    Fennec::Grouping->export_to( $package );
+    # Export functions from producers, and for grouping
+    $class->_export_producers( $package, $options{ producers } );
+    Fennec::Test::Functions->export_to( $package );
 
     my $test = $package->new( %options, filename => $filename );
-    Fennec::Tester->get->add_test( $test );
+    Fennec::Runner->get->add_test( $test );
     return $test;
 }
 
-sub _export_plugins {
+sub _export_producers {
     my $class = shift;
     my ( $package, $specs ) = @_;
-    my @plugins = @DEFAULT_PLUGINS;
+    my @producers = @DEFAULT_PRODUCERS;
 
-    # They may be requesting extra plugins, or requesting the removal of
+    # They may be requesting extra producers, or requesting the removal of
     # default ones.
     if ( $specs ) {
         my %remove;
         for ( @$specs ) {
             m/^-(.*)$/ ? ($remove{$1}++)
-                       : (push @plugins => $_);
+                       : (push @producers => $_);
         }
 
         my %seen;
-        @plugins = grep { !($seen{$_}++ || $remove{$_}) } @plugins;
+        @producers = grep { !($seen{$_}++ || $remove{$_}) } @producers;
     }
 
-    for my $plugin ( @plugins ) {
-        my $name = "Fennec\::Plugin\::$plugin";
+    for my $producer ( @producers ) {
+        my $name = "Fennec\::Producer\::$producer";
         eval "require $name" || die( $@ );
         $name->export_to( $package );
     }
@@ -204,20 +205,20 @@ prototypes and the use of constants within the test class.
 Specify the arguments to provide the import() method of the module specified by
 'testing => ...'.
 
-    use Fennec testing     => 'My::Module',
-                    import_args => [ 'a', 'b' ];
+    use Fennec testing => 'My::Module',
+           import_args => [ 'a', 'b' ];
 
-=item plugins => [ 'want', 'another', '-do_not_want', '-this_either' ]
+=item producers => [ 'want', 'another', '-do_not_want', '-this_either' ]
 
-Specify which plugins to load or prevent loading. By default 'More', 'Simple',
-'Exception', and 'Warn' plugins are loaded. You may specify any additional
-plugins. You may also prevent the loadign of a default plugin by listing it
+Specify which producers to load or prevent loading. By default 'More', 'Simple',
+'Exception', and 'Warn' producers are loaded. You may specify any additional
+producers. You may also prevent the loadign of a default producer by listing it
 prefixed by a '-'.
 
-See L<Fennec::Plugin> for more information about plugins.
+See L<Fennec::Producer> for more information about producers.
 
-See Also L<Fennec::Plugin::Simple>, L<Fennec::Plugin::More>,
-L<Fennec::Plugin::Exception>, L<Fennec::Plugin::Warn>
+See Also L<Fennec::Producer::Simple>, L<Fennec::Producer::More>,
+L<Fennec::Producer::Exception>, L<Fennec::Producer::Warn>
 
 =item all others
 

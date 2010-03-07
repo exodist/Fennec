@@ -6,8 +6,8 @@ use Carp;
 use Try::Tiny;
 use List::Util qw/shuffle sum/;
 use Scalar::Util qw/blessed/;
-use Fennec::Grouping::Case;
-use Fennec::Grouping::Set;
+use Fennec::Group::Case;
+use Fennec::Group::Set;
 use Time::HiRes;
 use Benchmark qw/timeit :hireswallclock/;
 use Fennec::Util qw/add_accessors get_all_subs/;
@@ -41,7 +41,7 @@ sub new {
 sub random {
     my $self = shift;
     return 0 unless $self->{ random };
-    return 0 unless Fennec::Tester->get->random;
+    return 0 unless Fennec::Runner->get->random;
     return 1;
 }
 
@@ -50,7 +50,7 @@ sub add_case {
     my ( $name, %proto ) = @_;
     croak( "Case with name $name already exists" )
         if $self->_cases->{ $name };
-    $self->_cases->{ $name } = Fennec::Grouping::Case->new( $name, test => $self, %{ $self->case_defaults }, %proto );
+    $self->_cases->{ $name } = Fennec::Group::Case->new( $name, test => $self, %{ $self->case_defaults }, %proto );
 }
 
 sub add_set {
@@ -58,7 +58,7 @@ sub add_set {
     my ( $name, %proto ) = @_;
     croak( "Set with name $name already exists" )
         if $self->_sets->{ $name };
-    $self->_sets->{ $name } = Fennec::Grouping::Set->new( $name, test => $self, %{ $self->case_defaults }, %proto );
+    $self->_sets->{ $name } = Fennec::Group::Set->new( $name, test => $self, %{ $self->case_defaults }, %proto );
 }
 
 sub cases {
@@ -68,7 +68,7 @@ sub cases {
     my @list = values %$cases;
 
     # 'DEFAULT' case
-    push @list => Fennec::Grouping::Case->new( 'DEFAULT', test => $self, %{ $self->case_defaults }, method => sub {1} )
+    push @list => Fennec::Group::Case->new( 'DEFAULT', test => $self, %{ $self->case_defaults }, method => sub {1} )
         unless @list;
     return @list;
 }
@@ -92,13 +92,13 @@ sub run {
     @partitions = shuffle( @partitions ) if $self->random;
 
     for my $partition ( @partitions ) {
-        Fennec::Tester->threader->thread( 'partition', sub {
+        Fennec::Runner->threader->thread( 'partition', sub {
             my @cases = @{ $partition->{ cases }};
             my @sets = @{ $partition->{ sets }};
             @cases = shuffle( @cases ) if $self->random;
             for my $case ( @cases ) {
                 next if $case_name and $case_name ne $case->name;
-                Fennec::Tester->threader->thread( 'case', sub {
+                Fennec::Runner->threader->thread( 'case', sub {
                     $self->_run_case( $case, $set_name, @sets );
                 });
             }
@@ -140,7 +140,7 @@ sub _run_case {
     croak( "Already running a case" )
         if $self->case;
 
-    Fennec::Tester->get->diag( "Running case: " . $case->name );
+    Fennec::Runner->get->diag( "Running case: " . $case->name );
     $self->case( $case );
     my ( $cr, @cd );
     my $benchmark = timeit( 1, sub {
@@ -152,7 +152,7 @@ sub _run_case {
                 @sets = shuffle( @sets ) if $case->random;
                 for my $set ( @sets ) {
                     next if $set_name and $set_name ne $set->name;
-                    Fennec::Tester->threader->thread( 'set', sub {
+                    Fennec::Runner->threader->thread( 'set', sub {
                         $self->_run_set( $set );
                     });
                 }
@@ -172,7 +172,7 @@ sub _run_set {
     croak( "Already running a set" )
         if $self->set;
 
-    Fennec::Tester->get->diag( "Running set: " . $set->name );
+    Fennec::Runner->get->diag( "Running set: " . $set->name );
     $self->set( $set );
     my ( $sr, @sd );
     my $benchmark = timeit( 1, sub {
@@ -207,7 +207,7 @@ sub _result {
         file   => $case ? $set ? $set->filename : $case->filename : $self->filename,
         benchmark   => $benchmark,
     );
-    Fennec::Tester->get->result( $result );
+    Fennec::Runner->get->result( $result );
 }
 
 sub _get_self(\@) {

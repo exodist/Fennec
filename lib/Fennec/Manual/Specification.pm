@@ -1,4 +1,4 @@
-package Fennec::Specification;
+package Fennec::Manual::Specification;
 use strict;
 use warnings;
 
@@ -8,7 +8,7 @@ use warnings;
 
 =head1 NAME
 
-Fennec::Specification - Specification for Fennec
+Fennec::Manual::Specification - Specification for Fennec
 
 =head1 *** DATED ***
 
@@ -32,7 +32,7 @@ have myself issued forth about perl testing.
 
 Command line tool to run specified tests.
 
-=item Fennec::Tester->run( @PARAMS )
+=item Fennec::Runner->run( @PARAMS )
 
 Used to run L<Fennec> tests from a test script.
 

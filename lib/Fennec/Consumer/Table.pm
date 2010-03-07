@@ -1,29 +1,12 @@
-package Fennec::Grouping::Set;
+package Fennec::Consumer::Table;
 use strict;
 use warnings;
 
-use base 'Fennec::Grouping::Base';
-
-sub type { 'Set' }
-
 1;
-
-=pod
 
 =head1 NAME
 
-Fennec::Grouping::Set - A test set
-
-=head1 DESCRIPTION
-
-A test set class.
-
-=head1 EARLY VERSION WARNING
-
-This is VERY early version. Fennec does not run yet.
-
-Please go to L<http://github.com/exodist/Fennec> to see the latest and
-greatest.
+Fennec::Ouptut::Table - Output a nice table like in the spec or manual
 
 =head1 AUTHORS
 

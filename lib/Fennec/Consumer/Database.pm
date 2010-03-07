@@ -1,8 +1,8 @@
-package Fennec::Output::Database;
+package Fennec::Consumer::Database;
 use strict;
 use warnings;
 
-use base 'Fennec::Output';
+use base 'Fennec::Consumer';
 
 sub init {
     my $self = shift;

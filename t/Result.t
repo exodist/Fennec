@@ -47,7 +47,7 @@ is_deeply(
     "serialized"
 );
 
-sub Fennec::Tester::get {
+sub Fennec::Runner::get {
     obj(
         get_test => method {
             obj(

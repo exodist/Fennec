@@ -1,3 +1,7 @@
+package Fennec::Config;
+use strict;
+use warnings;
+
     my $conf_file = $root . "/.fennec";
     if ( -f $conf_file ) {
         $config = eval { require $conf_file }
@@ -6,3 +10,4 @@
             unless ref( $config ) eq 'HASH';
     }
 
+1;

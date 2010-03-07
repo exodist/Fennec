@@ -1,10 +1,10 @@
-package Fennec::Output::TestBuilder;
+package Fennec::Consumer::TestBuilder;
 use strict;
 use warnings;
 use Test::Builder;
-use Fennec::TestBuilderImposter;
+use Fennec::Interceptor;
 
-use base 'Fennec::Output';
+use base 'Fennec::Consumer';
 
 sub tb {
     my $self = shift;
@@ -41,7 +41,7 @@ __END__
 
 =head1 NAME
 
-Fennec::Output::TestBuilder - If you really want to output to test builder.
+Fennec::Consumer::TestBuilder - If you really want to output to test builder.
 
 =head1 AUTHORS
 

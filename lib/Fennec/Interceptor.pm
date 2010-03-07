@@ -1,4 +1,4 @@
-package Fennec::TestBuilderImposter;
+package Fennec::Interceptor;
 use strict;
 use warnings;
 
@@ -8,7 +8,7 @@ use warnings;
 
 =head1 NAME
 
-Fennec::TestBuilderImposter - Override parts of Test::Builder.
+Fennec::Interceptor - Override parts of Test::Builder.
 
 =head1 DESCRIPTION
 
@@ -41,12 +41,12 @@ our %OVERRIDE = (
     ok => sub {
         shift;
         my ( $ok, $name ) = @_;
-        $Fennec::Plugin::TB_USED++;
+        $Fennec::Producer::TB_USED++;
         $TBI_RESULT = [ $ok, $name ];
     },
     diag => sub {
         shift;
-        $Fennec::Plugin::TB_USED++;
+        $Fennec::Producer::TB_USED++;
         push @TBI_DIAGS => @_;
     },
 );
