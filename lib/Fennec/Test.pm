@@ -50,7 +50,7 @@ sub add_case {
     my ( $name, %proto ) = @_;
     croak( "Case with name $name already exists" )
         if $self->_cases->{ $name };
-    $self->_cases->{ $name } = Fennec::Grouping::Case->new( $name, %{ $self->case_defaults }, %proto );
+    $self->_cases->{ $name } = Fennec::Grouping::Case->new( $name, test => $self, %{ $self->case_defaults }, %proto );
 }
 
 sub add_set {
@@ -58,7 +58,7 @@ sub add_set {
     my ( $name, %proto ) = @_;
     croak( "Set with name $name already exists" )
         if $self->_sets->{ $name };
-    $self->_sets->{ $name } = Fennec::Grouping::Set->new( $name, %{ $self->case_defaults }, %proto );
+    $self->_sets->{ $name } = Fennec::Grouping::Set->new( $name, test => $self, %{ $self->case_defaults }, %proto );
 }
 
 sub cases {
@@ -68,7 +68,7 @@ sub cases {
     my @list = values %$cases;
 
     # 'DEFAULT' case
-    push @list => Fennec::Grouping::Case->new( 'DEFAULT', %{ $self->case_defaults }, method => sub {1} )
+    push @list => Fennec::Grouping::Case->new( 'DEFAULT', test => $self, %{ $self->case_defaults }, method => sub {1} )
         unless @list;
     return @list;
 }
