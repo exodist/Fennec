@@ -2,18 +2,26 @@ package Fennec::Tester::Threader;
 use strict;
 use warnings;
 use Fennec::Util qw/add_accessors/;
+use POSIX ();
+use base 'Exporter';
 
-add_accessors qw/pid max_files max_partitionss max_cases max_sets files partitions cases sets/;
+add_accessors qw/pid max_files max_partitions max_cases max_sets files partitions cases sets/;
 
 sub new {
     my $class = shift;
     my %proto = @_;
     $proto{ pid } = $$;
 
-    # if we got numbers for any 1 or more types use them, with 1 for others
-    # If we got a maximum only, then divide it into the 4 types.
-
-    return bless( \%proto, $class );
+    return bless(
+        {
+            files => [],
+            partitions => [],
+            cases => [],
+            sets => [],
+            %proto,
+        },
+        $class
+    );
 }
 
 sub thread {
@@ -21,8 +29,8 @@ sub thread {
     my ( $type, $code, @args ) = @_;
     $type .= 's';
     my $msub = "max_$type";
-    my $max = $self->$msub || 1;
-    return $self->_fork( $type, $max, $code, \@args ) if $max > 1 || $type = 'forks';
+    my $max = $self->$msub || 1 unless $type eq 'forks';
+    return $self->_fork( $type, $max, $code, \@args ) if $type eq 'forks' || $max > 1;
     return $code->( @args );
 }
 
@@ -31,28 +39,65 @@ sub _fork {
     my ( $type, $max, $code, $args ) = @_;
 
     # This will block if necessary
-    my $tid = $self_->get_tid;
+    my $tid = $self->get_tid( $type, $max )
+        unless $type eq 'forks';
 
     my $pid = fork();
-    return $self->tid_pid( $tid, $pid ) if $pid;
+    if ( $pid ) {
+        return $self->tid_pid( $type, $tid, $pid )
+            unless ( $type eq 'forks' );
+
+        return waitpid( $pid, 0 );
+    }
+
+    # Make sure this new process does not wait on the previous process's children.
+    $self->{$_} = [] for qw/files partitions cases sets/;
+
     $code->( @$args );
-    # This needs to take care of cleanup of this processes children as well as
-    # the output plugin stuff.
     $self->cleanup;
-    Fennec::Tester->_subprocess_exit;
+    Fennec::Tester->get->_sub_process_exit;
 }
 
 sub get_tid {
     my $self = shift;
-
-
-    # WHEN BLOCKING ON PARENT WE MUST RUN THE LISTENER ITERATE METHOD AT A
-    # REGULAR INTERVAL OR NO PROCESSES WILL EVER RETURN.
+    my ( $type, $max ) = @_;
+    my $existing = $self->$type;
+    while ( 1 ) {
+        for my $i ( 1 .. $max ) {
+            if ( my $pid = $existing->[$i] ) {
+                my $out = waitpid( $pid, &POSIX::WNOHANG );
+                $existing->[$i] = undef
+                    if ( $pid == $out || $out < 0 );
+            }
+            return $i unless $existing->[$i];
+        }
+        sleep 1;
+    }
 }
 
 # Get or set the pid for a tid.
 sub tid_pid {
+    my $self = shift;
+    my ( $type, $tid, $pid ) = @_;
+    $self->$type->[$tid] = $pid if $pid;
+    return $self->$type->[$tid];
+}
 
+sub pids {
+    my $self = shift;
+    return grep { $_ } map {(@{ $self->$_ })} qw/files partitions cases sets/;
+}
+
+sub cleanup {
+    my $self = shift;
+    for my $pid ( $self->pids ) {
+        waitpid( $pid, 0 );
+    }
+}
+
+sub DESTROY {
+    my $self = shift;
+    return $self->cleanup;
 }
 
 1;

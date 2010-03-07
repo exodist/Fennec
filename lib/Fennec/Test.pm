@@ -92,18 +92,17 @@ sub run {
     @partitions = shuffle( @partitions ) if $self->random;
 
     for my $partition ( @partitions ) {
-        my @cases = @{ $partition->{ cases }};
-        my @sets = @{ $partition->{ sets }};
-        @cases = shuffle( @cases ) if $self->random;
-        for my $case ( @cases ) {
-            next if $case_name and $case_name ne $case->name;
-
-            # TODO: If parallel then fork before running the case
-            #       If force_fork then fork but wait before continuing (unless parallel)
-            #       If no_fork, but in parallel, then store case/set pair for later.
-
-            $self->_run_case( $case, $set_name, @sets );
-        }
+        Fennec::Tester->threader->thread( 'partition', sub {
+            my @cases = @{ $partition->{ cases }};
+            my @sets = @{ $partition->{ sets }};
+            @cases = shuffle( @cases ) if $self->random;
+            for my $case ( @cases ) {
+                next if $case_name and $case_name ne $case->name;
+                Fennec::Tester->threader->thread( 'case', sub {
+                    $self->_run_case( $case, $set_name, @sets );
+                });
+            }
+        });
     }
 }
 
@@ -149,19 +148,16 @@ sub _run_case {
             ? ( 1, $case->skip )
             : try {
                 $case->run( $self );
-                my $failures = 0;
 
                 @sets = shuffle( @sets ) if $case->random;
                 for my $set ( @sets ) {
                     next if $set_name and $set_name ne $set->name;
-                    # TODO: If parallel then fork before running the set
-                    #       See rules for CASE above.
-                    $self->_run_set( $set ) || $failures++;
+                    Fennec::Tester->threader->thread( 'set', sub {
+                        $self->_run_set( $set );
+                    });
                 }
 
-                return $failures
-                    ? ( 0, "One or more sets had a failure." )
-                    : ( 1 );
+                return ( 1, "Did not die" );
             }
             catch { return ( 0, $_ )};
     });

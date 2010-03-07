@@ -5,6 +5,7 @@ use warnings;
 use Fennec::TestBuilderImposter;
 use Fennec::Result;
 use Fennec::Tester::Root;
+use Fennec::Tester::Threader;
 use Fennec::Util qw/add_accessors/;
 use Scalar::Util qw/blessed/;
 use List::Util   qw/shuffle/;
@@ -12,11 +13,9 @@ use Carp         qw/croak confess/;
 
 our @CARP_NOT = qw/Fennec::Test Fennec::TestHelper Fennec::Plugin/;
 our $SINGLETON;
-our $SOCKET_TIMEOUT = 30;
-
 
 add_accessors qw/no_load ignore inline case set test random files
-                 _is_subprocess socket_file root/;
+                 _is_subprocess socket_file root threader/;
 
 sub get { goto &new };
 
@@ -34,7 +33,8 @@ sub new {
                 failures => [],
                 random => 1,
                 %proto,
-                root => Fennec::Tester::Root->new( $proto{ root })
+                root => Fennec::Tester::Root->new( $proto{ root }),
+                threader => Fennec::Tester::Threader->new;
             },
             $class
         );
@@ -129,6 +129,7 @@ sub direct_diag {
 
 sub listener {
     my $self = shift;
+    return unless $self->is_parent;
 
     unless ( $self->{ listener }) {
         require Fennec::Tester::listener;
@@ -167,7 +168,7 @@ sub _run_tests {
     for my $test ( @tests ) {
         $self->test( $test );
         $self->diag( "Running test class " . ref($test) );
-        $test->run( $self->case, $self->set );
+        $self->threader( 'file', sub { $test->run( $self->case, $self->set )});
         $self->test( undef );
         $self->listener->iteration if $self->is_parent;
     }
@@ -183,6 +184,11 @@ sub _sub_process_refactor {
     require Fennec::Output::SubProcess;
     $self->{ output_handlers } = [ Fennec::Output::SubProcess->new ];
     $self->{ output_handlers } = [ Fennec::Output::SubProcess->new ];
+}
+
+sub _sub_process_exit {
+    my $self = shift;
+    $_->finish for $self->output_handlers;
 }
 
 sub pid_changed {
