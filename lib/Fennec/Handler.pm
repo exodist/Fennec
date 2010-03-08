@@ -26,11 +26,11 @@ sub finish {1}
 
 =head1 NAME
 
-Fennec::Handler - Base class for output plugins
+Fennec::Handler - Base class for result handlers
 
 =head1 DESCRIPTION
 
-Output plugins should inherit and override this class.
+Result handlers should subclass this module.
 
 =head1 AUTHORS
 

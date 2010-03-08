@@ -305,7 +305,7 @@ namespace. Define testers and utilies.
 
     1;
 
-=head1 WRAPPER PLUGINS
+=head1 WRAPPERS AROUND EXISTING TESTERS
 
 Plugins can be made to wrap around existing L<Test::Builder> based testing
 utilities. This is how L<Test::More> and L<Test::Warn> functionality is

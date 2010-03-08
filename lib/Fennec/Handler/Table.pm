@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-Fennec::Ouptut::Table - Output a nice table like in the spec or manual
+Fennec::Handler::Table - Output a nice table like in the spec or manual
 
 =head1 AUTHORS
 

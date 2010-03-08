@@ -7,7 +7,7 @@ use Fennec::Test::Functions;
 use Carp;
 
 our $VERSION = "0.005";
-our @DEFAULT_PRODUCERS = qw/Warn Exception More Simple/;
+our @DEFAULT_TESTERS = qw/Warn Exception More Simple/;
 
 sub import {
     my $class = shift;
@@ -42,8 +42,8 @@ sub import {
         push @{ $package . '::ISA' } => 'Fennec::Test';
     }
 
-    # Export functions from producers, and for grouping
-    $class->_export_producers( $package, $options{ producers } );
+    # Export functions from testers, and for grouping
+    $class->_export_testers( $package, $options{ testers } );
     Fennec::Test::Functions->export_to( $package );
 
     my $test = $package->new( %options, filename => $filename );
@@ -51,26 +51,26 @@ sub import {
     return $test;
 }
 
-sub _export_producers {
+sub _export_testers {
     my $class = shift;
     my ( $package, $specs ) = @_;
-    my @producers = @DEFAULT_PRODUCERS;
+    my @testers = @DEFAULT_TESTERS;
 
-    # They may be requesting extra producers, or requesting the removal of
+    # They may be requesting extra testers, or requesting the removal of
     # default ones.
     if ( $specs ) {
         my %remove;
         for ( @$specs ) {
             m/^-(.*)$/ ? ($remove{$1}++)
-                       : (push @producers => $_);
+                       : (push @testers => $_);
         }
 
         my %seen;
-        @producers = grep { !($seen{$_}++ || $remove{$_}) } @producers;
+        @testers = grep { !($seen{$_}++ || $remove{$_}) } @testers;
     }
 
-    for my $producer ( @producers ) {
-        my $name = "Fennec\::Producer\::$producer";
+    for my $tester ( @testers ) {
+        my $name = "Fennec\::Tester\::$tester";
         eval "require $name" || die( $@ );
         $name->export_to( $package );
     }
@@ -208,14 +208,14 @@ Specify the arguments to provide the import() method of the module specified by
     use Fennec testing => 'My::Module',
            import_args => [ 'a', 'b' ];
 
-=item producers => [ 'want', 'another', '-do_not_want', '-this_either' ]
+=item testers => [ 'want', 'another', '-do_not_want', '-this_either' ]
 
-Specify which producers to load or prevent loading. By default 'More', 'Simple',
-'Exception', and 'Warn' producers are loaded. You may specify any additional
-producers. You may also prevent the loadign of a default producer by listing it
+Specify which testers to load or prevent loading. By default 'More', 'Simple',
+'Exception', and 'Warn' testers are loaded. You may specify any additional
+testers. You may also prevent the loadign of a default tester by listing it
 prefixed by a '-'.
 
-See L<Fennec::Tester> for more information about producers.
+See L<Fennec::Tester> for more information about testers.
 
 See Also L<Fennec::Tester::Simple>, L<Fennec::Tester::More>,
 L<Fennec::Tester::Exception>, L<Fennec::Tester::Warn>
