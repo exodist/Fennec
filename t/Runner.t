@@ -10,7 +10,7 @@ my $CLASS = 'Fennec::Runner';
 
 real_tests {
     use_ok( $CLASS  );
-    can_ok( $CLASS, qw/no_load bad_files ignore inline case set /);
+    can_ok( $CLASS /);
 
     my $one = $CLASS->new( files => [], output => [], root => 't/fakeroots/example' );
     isa_ok( $one, $CLASS );

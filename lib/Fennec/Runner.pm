@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Fennec::Interceptor;
+use Fennec::Files;
 use Fennec::Result;
 use Fennec::Runner::Root;
 use Fennec::Runner::Threader;
@@ -14,7 +15,7 @@ use Carp         qw/croak confess/;
 our $SINGLETON;
 
 add_accessors qw/no_load ignore inline case set test random files
-                 _is_subprocess socket_file root threader/;
+                 _is_subprocess socket_file threader is_running/;
 
 sub get { goto &new };
 
@@ -24,6 +25,9 @@ sub new {
 
     unless( $SINGLETON ) {
 
+        my $file_types = delete $proto{ file_types };
+        $file_types = [ $file_types ? $file_types : () ] unless ref $file_types eq 'ARRAY';
+
         my $self = bless(
             {
                 parent_pid => $$,
@@ -32,27 +36,67 @@ sub new {
                 failures => [],
                 random => 1,
                 %proto,
-                root => Fennec::Runner::Root->new( $proto{ root }),
+                files => Fennec::Files->new( @$file_types )
                 threader => Fennec::Runner::Threader->new;
             },
             $class
         );
         $SINGLETON = $self;
 
-        $self->_load_config;
         $self->_init_output;
     }
 
     return $SINGLETON;
 }
 
+#{{{ Result related methods
 sub failures {
-    my $class = shift;
-    my $self = $class->get;
+    my $self = shift;
     push @{ $self->{ failures }} => @_ if @_;
     return @{ $self->{ failures }};
 }
 
+sub result {
+    my $self = shift;
+    $self->direct_result( @_ );
+    $self->listener->iteration if $self->is_parent;
+}
+
+sub diag {
+    my $self = shift;
+    $self->direct_diag( @_ );
+    $self->listener->iteration if $self->is_parent;
+}
+
+sub direct_result {
+    my $self = shift;
+    my ($result) = @_;
+    $self->_sub_process_refactor;
+
+    croak( "Testing has not been started" )
+        unless $self->is_running;
+
+    croak( "result() takes a Fennec::Result object" )
+        unless $result
+           and blessed( $result )
+           and $result->isa( 'Fennec::Result' );
+
+    $_->result( $result ) for $self->result_handlers;
+
+    # Add failures to the list of failures.
+    $self->failures($result) unless $result->result;
+}
+
+sub direct_diag {
+    my $self = shift;
+    my @messages = @_;
+    $self->_sub_process_refactor;
+
+    $_->diag( @messages ) for $self->result_handlers;
+}
+#}}}
+
+#{{{ Test related methods
 sub add_test {
     my $self = shift;
     my ( $test ) = @_;
@@ -74,121 +118,9 @@ sub tests {
     my $self = shift;
     return $self->{ tests };
 }
+#}}}
 
-sub is_running {
-    my $self = shift;
-    ($self->{ is_running }) = @_ if @_;
-    return $self->{ is_running };
-}
-
-sub output_handlers {
-    my $self = shift;
-    push @{ $self->{ output_handlers }} => @_ if @_;
-    return @{ $self->{ output_handlers }};
-}
-
-sub result {
-    my $self = shift;
-    $self->direct_result( @_ );
-    $self->listener->iteration if $self->is_parent;
-}
-
-sub diag {
-    my $self = shift;
-    $self->direct_result( @_ );
-    $self->listener->iteration if $self->is_parent;
-}
-
-sub direct_result {
-    my $self = shift;
-    my ($result) = @_;
-    $self->_sub_process_refactor;
-
-    croak( "Testing has not been started" )
-        unless $self->is_running;
-
-    croak( "result() takes a Fennec::Result object" )
-        unless $result
-           and blessed( $result )
-           and $result->isa( 'Fennec::Result' );
-
-    $_->result( $result ) for $class->get->output_handlers;
-
-    # Add failures to the list of failures.
-    $class->get->failures($result) unless $result->result;
-}
-
-sub direct_diag {
-    my $self = shift;
-    my @messages = @_;
-    $self->_sub_process_refactor;
-
-    $_->diag( @messages ) for $self->output_handlers;
-}
-
-sub listener {
-    my $self = shift;
-    return unless $self->is_parent;
-
-    unless ( $self->{ listener }) {
-        require Fennec::Runner::Listener;
-        my $listener = Fennec::Runner::Listener->new;
-        $self->socket_file( $listener->file );
-        $self->{ listener } = $listener;
-    }
-
-    return $self->{ listener };
-}
-
-sub run {
-    my $self = shift;
-    croak "Already running"
-        if $self->is_running;
-    croak "run() may only be run from the parent process."
-        unless $self->is_parent;
-
-    $self->is_running( 1 );
-
-    $self->listener->start;
-    $self->_run_tests;
-    $self->listener->finish if $self->is_parent;
-    $_->finish for $self->output_handlers;
-
-    exit if $self->is_subprocess;
-    return 0 if (@{ $self->bad_files });
-    return !$self->failures;
-}
-
-sub _run_tests {
-    my $self = shift;
-    $self->_sub_process_refactor;
-    my @tests = values %{ $self->tests };
-    @tests = shuffle @tests if $self->random;
-    for my $test ( @tests ) {
-        $self->test( $test );
-        $self->diag( "Running test class " . ref($test) );
-        $self->threader( 'file', sub { $test->run( $self->case, $self->set )});
-        $self->test( undef );
-        $self->listener->iteration if $self->is_parent;
-    }
-}
-
-sub _sub_process_refactor {
-    my $self = shift;
-    return if $self->is_output || $self->is_parent;
-    return unless $self->pid_changed;
-
-    $self->{ pid } = $$;
-
-    require Fennec::Handler::SubProcess;
-    $self->{ output_handlers } = [ Fennec::Handler::SubProcess->new ];
-}
-
-sub _sub_process_exit {
-    my $self = shift;
-    $_->finish for $self->output_handlers;
-}
-
+#{{{ Process related methods
 sub pid_changed {
     my $self = shift;
     my $pid = $$;
@@ -217,6 +149,77 @@ sub is_subprocess {
     return !$self->is_parent;
 }
 
+sub _sub_process_refactor {
+    my $self = shift;
+    return if $self->is_parent;
+    return unless $self->pid_changed;
+
+    $self->{ pid } = $$;
+
+    require Fennec::Handler::SubProcess;
+    $self->{ result_handlers } = [ Fennec::Handler::SubProcess->new ];
+}
+
+sub _sub_process_exit {
+    my $self = shift;
+    $_->finish for $self->result_handlers;
+    exit;
+}
+#}}}
+
+sub result_handlers {
+    my $self = shift;
+    push @{ $self->{ result_handlers }} => @_ if @_;
+    return @{ $self->{ result_handlers }};
+}
+
+sub listener {
+    my $self = shift;
+    return unless $self->is_parent;
+
+    unless ( $self->{ listener }) {
+        require Fennec::Runner::Listener;
+        my $listener = Fennec::Runner::Listener->new;
+        $self->socket_file( $listener->file );
+        $self->{ listener } = $listener;
+    }
+
+    return $self->{ listener };
+}
+
+sub run {
+    my $self = shift;
+    croak "Already running"
+        if $self->is_running;
+    croak "run() may only be run from the parent process."
+        unless $self->is_parent;
+
+    $self->is_running( 1 );
+
+    $self->listener->start;
+    $self->_run_tests;
+    $self->listener->finish if $self->is_parent;
+    $_->finish for $self->result_handlers;
+
+    exit if $self->is_subprocess;
+    return 0 if (@{ $self->bad_files });
+    return !$self->failures;
+}
+
+sub _run_tests {
+    my $self = shift;
+    $self->_sub_process_refactor;
+    my @tests = values %{ $self->tests };
+    @tests = shuffle @tests if $self->random;
+    for my $test ( @tests ) {
+        $self->test( $test );
+        $self->diag( "Running test class " . ref($test) );
+        $self->threader( 'file', sub { $test->run( $self->case, $self->set )});
+        $self->test( undef );
+        $self->listener->iteration if $self->is_parent;
+    }
+}
+
 sub _init_output {
     my $self = shift;
     my $plugins = delete $self->{ output } || [ 'TAP', 'Database' ];
@@ -227,7 +230,7 @@ sub _init_output {
         eval "require $pclass" || die( $@ );
         push @loaded => $pclass->new;
     }
-    $self->{ output_handlers } = \@loaded;
+    $self->{ result_handlers } = \@loaded;
 }
 
 1;
@@ -265,14 +268,6 @@ Do not load the test files.
 
 When searching for files skip any that match any of these expressions.
 
-=item inline => BOOL
-
-Look for inline tests (see L<Fennec::Inline>)
-
-=item files => [ './test1.pm', './test2.pm', ... ]
-
-Specify test files to use.
-
 =item case => NAME
 
 Only run the specified case in each test file.
@@ -286,19 +281,6 @@ Only runt he specified set in each case.
 =head1 CLASS METHODS
 
 =over 4
-
-=item $class->import()
-
-=item $class->import( 'run' )
-
-=item $class->import( 'run', 'inline' )
-
-Called automatically when you do:
-
-    use Fennec::Runner @ARGS;
-
-If 'run' is the first argument tests will automatically be found and run. If
-the second argument is true inline tests will also be found.
 
 =item $singleton = $class->new( %params )
 
@@ -329,10 +311,6 @@ Simple accessor to construction arg.
 
 Simple accessor to construction arg.
 
-=item $obj->inline()
-
-Simple accessor to construction arg.
-
 =item $obj->case()
 
 Simple accessor to construction arg.
@@ -340,11 +318,6 @@ Simple accessor to construction arg.
 =item $obj->set()
 
 Simple accessor to construction arg.
-
-=item $obj->bad_files()
-
-Returns an arrayref of files that died during require. Each item is an arrayref
-with the filename and error returned.
 
 =item @failures = $obj->failures( @add_failures )
 
@@ -357,10 +330,6 @@ Add or retrieve failures. Failures should be L<Fennec::Result> objects.
 These are methods that are mroe than simple accessors.
 
 =over 4
-
-=item $dir = $obj->root()
-
-Find and retun the path to the project root directory.
 
 =item $list = $obj->files()
 
