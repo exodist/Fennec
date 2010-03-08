@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Carp;
-our @CARP_NOT = ( __PACKAGE__, qw/Fennec Fennec::Consumer Fennec::Test::Functions/ );
+our @CARP_NOT = ( __PACKAGE__, qw/Fennec Fennec::Handler Fennec::Test::Functions/ );
 use Scalar::Util qw/blessed/;
 use Sub::Information as => 'inspect';
 use Fennec::Util qw/add_accessors/;

@@ -1,4 +1,4 @@
-package Fennec::Consumer::SubProcess;
+package Fennec::Handler::SubProcess;
 use strict;
 use warnings;
 

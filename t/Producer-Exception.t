@@ -8,10 +8,10 @@ use Object::Quick qw/obj method/;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Fennec::Producer::Exception';
+    $CLASS = 'Fennec::Tester::Exception';
     real_tests { use_ok( $CLASS ) };
     $CLASS->export_to( __PACKAGE__ );
-    *live_or_die = \&Fennec::Producer::Exception::live_or_die;
+    *live_or_die = \&Fennec::Tester::Exception::live_or_die;
 }
 
 # Exception is not a wrapper around a TB based implementation, all tests are

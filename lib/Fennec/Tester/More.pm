@@ -1,8 +1,8 @@
-package Fennec::Producer::More;
+package Fennec::Tester::More;
 use strict;
 use warnings;
 
-use Fennec::Producer;
+use Fennec::Tester;
 
 our @SUBS;
 BEGIN {
@@ -17,7 +17,7 @@ util diag => sub { Fennec::Runner->diag( @_ ) };
 
 util todo => sub(&$) {
     my ( $code, $todo ) = @_;
-    local $Fennec::Producer::TODO = $todo;
+    local $Fennec::Tester::TODO = $todo;
     $code->();
 };
 
@@ -27,7 +27,7 @@ util todo => sub(&$) {
 
 =head1 NAME
 
-Fennec::Producer::More - Wrapper around L<Test::More> for Fennec
+Fennec::Tester::More - Wrapper around L<Test::More> for Fennec
 
 =head1 DESCRIPTION
 

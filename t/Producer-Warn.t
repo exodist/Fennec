@@ -7,12 +7,12 @@ use Test::More;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Fennec::Producer::Warn';
+    $CLASS = 'Fennec::Tester::Warn';
     use_ok( $CLASS );
     $CLASS->export_to( __PACKAGE__ );
 }
 
-can_ok( __PACKAGE__, @Fennec::Producer::Warn::SUBS );
+can_ok( __PACKAGE__, @Fennec::Tester::Warn::SUBS );
 
 warning_is { warn 'a' } "a", "got warning";
 real_tests {

@@ -140,13 +140,13 @@ L<Test::Warn> and L<Test::Simple> are provided by plugins. If you want to add
 new tester or utility functions for use in test modules you may do so in a
 plugin.
 
-To create a plugin create a module directly under the L<Fennec::Producer>
+To create a plugin create a module directly under the L<Fennec::Tester>
 namespace. Define testers and utilies.
 
-    package Fennec::Producer::MyPlugin;
+    package Fennec::Tester::MyPlugin;
     use strict;
     use references;
-    use Fennec::Producer;
+    use Fennec::Tester;
 
     # define a util function
     util my_diag => sub { Fennec::Runner->diag( @_ ) };
@@ -170,7 +170,7 @@ namespace. Define testers and utilies.
 
     1;
 
-Look at L<Fennec::TestHelper> and L<Fennec::Producer> for information
+Look at L<Fennec::TestHelper> and L<Fennec::Tester> for information
 on testing plugins.
 
 =head1 WRAPPER PLUGINS
@@ -179,11 +179,11 @@ Plugins can be made to wrap around existing L<Test::Builder> based testing
 utilities. This is how L<Test::More> and L<Test::Warn> functionality is
 provided. Here is the Test::More wrapper plugin as an example.
 
-    package Fennec::Producer::More;
+    package Fennec::Tester::More;
     use strict;
     use warnings;
 
-    use Fennec::Producer;
+    use Fennec::Tester;
 
     our @SUBS;
     BEGIN {
@@ -196,7 +196,7 @@ provided. Here is the Test::More wrapper plugin as an example.
     util diag => sub { Fennec::Runner->diag( @_ ) };
     util todo => sub(&$) {
         my ( $code, $todo ) = @_;
-        local $Fennec::Producer::TODO = $todo;
+        local $Fennec::Tester::TODO = $todo;
         $code->();
     };
 

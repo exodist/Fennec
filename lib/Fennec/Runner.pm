@@ -180,8 +180,8 @@ sub _sub_process_refactor {
 
     $self->{ pid } = $$;
 
-    require Fennec::Consumer::SubProcess;
-    $self->{ output_handlers } = [ Fennec::Consumer::SubProcess->new ];
+    require Fennec::Handler::SubProcess;
+    $self->{ output_handlers } = [ Fennec::Handler::SubProcess->new ];
 }
 
 sub _sub_process_exit {
@@ -223,7 +223,7 @@ sub _init_output {
     $plugins = [ $plugins ] unless ref $plugins eq 'ARRAY';
     my @loaded;
     for my $plugin ( @$plugins ) {
-        my $pclass = 'Fennec::Consumer::' . $plugin;
+        my $pclass = 'Fennec::Handler::' . $plugin;
         eval "require $pclass" || die( $@ );
         push @loaded => $pclass->new;
     }
@@ -399,7 +399,7 @@ Check if the tests are currently running.
 =item $obj->result({ result => $BOOL, name => 'My Test', ... })
 
 Issue a test result for output. You almost certainly do not want to call this
-directly. If you are witing a plugin please see L<Fennec::Producer> or the
+directly. If you are witing a plugin please see L<Fennec::Tester> or the
 PLUGINS section of L<Fennec::Manual>.
 
 =item $obj->diag( "message 1", "message 2", ... )

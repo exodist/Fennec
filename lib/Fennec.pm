@@ -215,10 +215,10 @@ Specify which producers to load or prevent loading. By default 'More', 'Simple',
 producers. You may also prevent the loadign of a default producer by listing it
 prefixed by a '-'.
 
-See L<Fennec::Producer> for more information about producers.
+See L<Fennec::Tester> for more information about producers.
 
-See Also L<Fennec::Producer::Simple>, L<Fennec::Producer::More>,
-L<Fennec::Producer::Exception>, L<Fennec::Producer::Warn>
+See Also L<Fennec::Tester::Simple>, L<Fennec::Tester::More>,
+L<Fennec::Tester::Exception>, L<Fennec::Tester::Warn>
 
 =item all others
 

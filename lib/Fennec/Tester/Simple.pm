@@ -1,4 +1,4 @@
-package Fennec::Producer::Warn;
+package Fennec::Tester::Simple;
 use strict;
 use warnings;
 
@@ -8,11 +8,11 @@ use warnings;
 
 =head1 NAME
 
-Fennec::Producer::Warn - L<Test::Warn> functionality.
+Fennec::Tester::Simple - L<Test::Simple> functionality.
 
 =head1 DESCRIPTION
 
-Wraps the methods from L<Test::Warn> for use in L<Fennec>.
+This provides the ok() function.
 
 =head1 EARLY VERSION WARNING
 
@@ -23,37 +23,28 @@ greatest.
 
 =head1 TESTER FUNCTIONS
 
-See L<Test::Warn> for more details on any of these.
-
 =over 4
 
-=item warning_is()
+=item ok( $result )
 
-=item warnings_are()
+=item ok( $result, $name )
 
-=item warning_like()
-
-=item warnings_like()
-
-=item warnings_exist()
+Test passes if $result is true, otherwise it fails.
 
 =cut
 
 #}}}
 
-use Fennec::Producer;
-use Fennec::TestBuilderImposter;
-use Test::Builder;
-use Carp;
+use Fennec::Tester;
 
-our @SUBS;
-BEGIN {
-    @SUBS = qw/warning_is warnings_are warning_like warnings_like warnings_exist/;
-}
-
-use Test::Warn @SUBS;
-
-tester $_ => $_ for @SUBS;
+tester ok => (
+    min_args => 1,
+    max_args => 2,
+    code => sub {
+        my ( $result, $name ) = @_;
+        return ( $result ? 1 : 0, $name );
+    },
+);
 
 1;
 

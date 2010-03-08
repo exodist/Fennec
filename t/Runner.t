@@ -12,7 +12,7 @@ real_tests {
     use_ok( $CLASS  );
     can_ok( $CLASS, qw/no_load bad_files ignore inline case set /);
 
-    my $one = $CLASS->new( files => [], output => [], root => 't/fakeroots/config/' );
+    my $one = $CLASS->new( files => [], output => [], root => 't/fakeroots/example' );
     isa_ok( $one, $CLASS );
 
     ok( !$one->no_load, "accessor not set" );
@@ -22,26 +22,6 @@ real_tests {
     is( $one->{a}, 'a', "a was set" );
     is( $one->{b}, 'b', "b was set" );
 
-    ok( !$one->_looks_like_root( 't/fakeroots/not' ), "doesn't look like root" );
-    ok( !$one->_looks_like_root( 't/fakeroots/no_exist' ), "doesn't look like root (doesn't exist)" );
-
-    {
-        my $CWD;
-        no warnings qw/redefine once/;
-        local *Fennec::Runner::cwd = sub { my $out = $CWD; undef( $CWD ); return $out };
-        for (map { "t/fakeroots/$_" } qw{build config install t_lib testpl with_ts }) {
-            $CWD = $_;
-            delete $one->{ root };
-            is( $one->root, $_, "Found proper root." );
-        }
-        $CWD = "t/fakeroots/config/depth";
-        delete $one->{ root };
-        is( $one->root, "t/fakeroots/config", "Root from depth" );
-        $CWD = undef;
-        is( $one->root, "t/fakeroots/config", 'cached root' );
-    }
-
-    $one->{ root } = 't/fakeroots/example';
     $one->{ ignore } = [ qr/Ignore/i ];
     delete $one->{ files };
     is_deeply(

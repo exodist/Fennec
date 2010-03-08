@@ -41,12 +41,12 @@ our %OVERRIDE = (
     ok => sub {
         shift;
         my ( $ok, $name ) = @_;
-        $Fennec::Producer::TB_USED++;
+        $Fennec::Tester::TB_USED++;
         $TBI_RESULT = [ $ok, $name ];
     },
     diag => sub {
         shift;
-        $Fennec::Producer::TB_USED++;
+        $Fennec::Tester::TB_USED++;
         push @TBI_DIAGS => @_;
     },
 );

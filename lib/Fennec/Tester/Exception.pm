@@ -1,4 +1,4 @@
-package Fennec::Producer::Exception;
+package Fennec::Tester::Exception;
 use strict;
 use warnings;
 
@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-Fennec::Producer::Exception - Test::Exception functionality for L<Fennec>
+Fennec::Tester::Exception - Test::Exception functionality for L<Fennec>
 
 =head1 CREDITS
 
@@ -17,10 +17,10 @@ re-write of L<Test::Exception>
 
 #}}}
 
-use Fennec::Producer;
+use Fennec::Tester;
 use Carp;
 
-our @CARP_NOT = ( __PACKAGE__, 'Fennec::Producer', 'Benchmark' );
+our @CARP_NOT = ( __PACKAGE__, 'Fennec::Tester', 'Benchmark' );
 
 =head1 TEST FUNCTIONS
 

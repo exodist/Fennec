@@ -1,4 +1,4 @@
-package Fennec::Consumer::Table;
+package Fennec::Handler::Table;
 use strict;
 use warnings;
 

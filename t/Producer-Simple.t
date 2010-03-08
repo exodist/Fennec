@@ -7,7 +7,7 @@ use Test::More;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Fennec::Producer::Simple';
+    $CLASS = 'Fennec::Tester::Simple';
     real_tests { use_ok( $CLASS )};
     $CLASS->export_to( __PACKAGE__, 'my_' );
 }

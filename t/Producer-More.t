@@ -7,12 +7,12 @@ use Test::More;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Fennec::Producer::More';
+    $CLASS = 'Fennec::Tester::More';
     use_ok( $CLASS );
     $CLASS->export_to( __PACKAGE__, 'my_' );
 }
 
-can_ok( __PACKAGE__, @Fennec::Producer::More::SUBS );
+can_ok( __PACKAGE__, @Fennec::Tester::More::SUBS );
 
 my_is_deeply( { a => 'a' }, { 'a' => 'a' }, "My is_deeply()" );
 real_tests {

@@ -1,8 +1,8 @@
-package Fennec::Consumer::TAP;
+package Fennec::Handler::TAP;
 use strict;
 use warnings;
 
-use base 'Fennec::Consumer';
+use base 'Fennec::Handler';
 
 sub init {
     my $self = shift;

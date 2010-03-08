@@ -22,7 +22,7 @@ sub path {
         $root =~ s,/+$,,g;
         $$self = $root;
     }
-    return $root;
+    return $$self;
 }
 
 sub _looks_like_root {

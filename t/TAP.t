@@ -7,7 +7,7 @@ use Object::Quick qw/obj method/;
 
 my @output;
 
-my $CLASS = 'Fennec::Consumer::TAP';
+my $CLASS = 'Fennec::Handler::TAP';
 use_ok( $CLASS );
 ok( my $one = $CLASS->new( output => sub { push @output => @_ }), "Created" );
 isa_ok( $one, $CLASS );
