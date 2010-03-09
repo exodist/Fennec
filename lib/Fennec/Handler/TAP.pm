@@ -1,6 +1,7 @@
 package Fennec::Handler::TAP;
 use strict;
 use warnings;
+use Carp qw/confess/;
 
 use base 'Fennec::Handler';
 

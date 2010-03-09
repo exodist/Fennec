@@ -59,16 +59,18 @@ sub failures {
 
 sub result {
     my $self = shift;
-    $self->direct_result( @_ );
+    confess 'this is an object method, not a class method'
+        unless blessed( $self );
     $self->listener->iteration if $self->is_parent;
+    $self->direct_result( @_ );
 }
 
 sub diag {
     my $self = shift;
     confess 'this is an object method, not a class method'
         unless blessed( $self );
-    $self->direct_diag( @_ );
     $self->listener->iteration if $self->is_parent;
+    $self->direct_diag( @_ );
 }
 
 sub direct_result {
@@ -116,6 +118,7 @@ sub add_test {
 sub get_test {
     my $self = shift;
     my ( $package ) = @_;
+    return unless $package;
     return $self->tests->{ $package };
 }
 
@@ -204,6 +207,13 @@ sub run {
         unless $self->is_parent;
 
     $self->is_running( 1 );
+
+    croak("No listener")
+        unless $self->listener;
+    croak("No listener_file")
+           unless $self->listener->file;
+    croak("No listener socket")
+           unless $self->listener->socket;
 
     $self->files->load;
     $self->_run_tests;

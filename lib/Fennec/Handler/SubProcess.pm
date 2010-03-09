@@ -2,14 +2,47 @@ package Fennec::Handler::SubProcess;
 use strict;
 use warnings;
 
-sub _send_result {
-    # This will be used to serialize and send all results to the main process.
-    confess( "Forking not yet implemented" );
+use Fennec::Util qw/add_accessors/;
+use base 'Fennec::Handler';
+
+add_accessors qw/socket/;
+
+sub init {
+    my $self = shift;
+    $self->socket(
+        IO::Socket::UNIX->new(
+            Peer => Fennec::Runner->get->socket_file,
+        )
+    );
+    die( "Error connecting to master process $!" )
+        unless $self->socket && $self->socket->connected;
 }
 
+sub result {
+    my $self = shift;
+    my ( $result ) = @_;
+    my $socket = $self->socket;
+    print $socket $result->serialize . "\n";
+}
 
-    $self->{ client_socket } ||= IO::Socket::UNIX->new(
-        Peer => $self->_socket_file,
-    );
+sub diag {
+    my $self = shift;
+    $self->result( Fennec::Result->new(
+        diag => [@_]
+    ));
+}
+
+sub finish {
+    my $self = shift;
+    my $socket = $self->socket;
+    return unless $socket and $socket->connected;
+    print $socket "shutdown\n";
+    close( $socket );
+}
+
+sub DESTROY {
+    my $self = shift;
+    $self->finish;
+}
 
 1;

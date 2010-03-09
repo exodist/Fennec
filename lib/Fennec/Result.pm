@@ -39,18 +39,27 @@ sub deserialize {
     chomp( $data );
     my $VAR1;
     my $proto = eval $data || die( "Deserialization error $@" );
-    $proto->{ test } = Fennec::Runner->get->get_test( delete $proto->{ test_class });
-    $proto->{ case } = $proto->{ test }->_cases->{ delete $proto->{ case_name }};
-    $proto->{ set } = $proto->{ test }->_sets->{ delete $proto->{ set_name }};
+    if ( $proto->{ test } ) {
+        $proto->{ test } = Fennec::Runner->get->get_test( delete $proto->{ test_class }) || undef;
+        $proto->{ case } = $proto->{ test }->_cases->{ delete $proto->{ case_name }} || undef;
+        $proto->{ set } = $proto->{ test }->_sets->{ delete $proto->{ set_name }} || undef;
+    }
+    else {
+        $proto->{ test } = undef;
+        $proto->{ case } = undef;
+        $proto->{ set }  = undef;
+    }
+    delete $proto->{ todo } unless $proto->{ todo };
+    delete $proto->{ skip } unless $proto->{ skip };
     return $class->new( $proto );
 }
 
 sub serialize {
     my $self = shift;
     my $data = { map { $_ => $self->$_ } qw/result name benchmark file line diag is_diag todo skip/};
-    $data->{ test_class } = blessed( $self->test );
-    $data->{ case_name } = $self->case->name;
-    $data->{ set_name } = $self->set->name;
+    $data->{ test_class } = blessed( $self->test ) if $self->test;
+    $data->{ case_name } = $self->case->name if $self->case;
+    $data->{ set_name } = $self->set->name if $self->set;
     local $Data::Dumper::Indent = 0;
     return Dumper( $data );
 }

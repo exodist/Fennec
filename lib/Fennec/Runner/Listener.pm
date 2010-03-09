@@ -13,7 +13,7 @@ add_accessors qw/socket file connections/;
 
 sub new {
     my $class = shift;
-    my ( $fh, $socket_file ) = tempfile( cwd() . "/.test-suite.$$.XXXX"  );
+    my ( $fh, $socket_file ) = tempfile( cwd() . "/.fennec.$$.XXXX"  );
     close( $fh ) || die( $! );
     unlink( $socket_file );
     my $socket = IO::Socket::UNIX->new(
@@ -35,6 +35,8 @@ sub accept_connections {
     my $socket = $self->socket;
     $socket->blocking( 0 );
     while( my $incoming = $socket->accept ) {
+        $incoming->blocking( 0 );
+        $incoming->autoflush( 1 );
         push @{ $self->connections } => $incoming;
     }
 }
@@ -42,20 +44,22 @@ sub accept_connections {
 sub read {
     my $self = shift;
     # Get results/diag from all connections.
-    for my $child ( @{ $self->connections }) {
-        $child->blocking( 0 );
-        $child->autoflush( 1 );
-        eval { print $child "ping\n" };
-        unless ( $child->connected ) {
-            $self->connections([
-                grep { $_ != $child } @{ $self->connections }
-            ]);
-            next;
+    $self->connections([ grep {
+        my $out = 1;
+        while ( my $msg = <$_> ) {
+            chomp( $msg );
+            if ( $msg eq 'shutdown' ) {
+                close( $_ );
+                $out = 0;
+                last;
+            }
+            else {
+                $self->process( $msg );
+                $out = 1;
+            }
         }
-        while ( my $msg = <$child> ) {
-            $self->process( $msg );
-        }
-    }
+        $_->connected && $out;
+    } @{ $self->connections }]);
 }
 
 sub finish {
@@ -69,12 +73,8 @@ sub finish {
 sub process {
     my $self = shift;
     my ( $msg ) = @_;
-    my $item = eval $msg;
-    return Fennec::Runner->get->direct_diag( $msg )
-        unless ref( $msg );
-    return Fennec::Runner->get->direct_result( $msg )
-        if ( $item->isa( 'Fennec::Result' ));
-    croak( "Unhandled message $msg" );
+    my $item = Fennec::Result->deserialize( $msg );
+    return Fennec::Runner->get->direct_result( $item );
 }
 
 sub DESTROY {
@@ -86,7 +86,7 @@ sub DESTROY {
         close( $child );
     }
     my $socket = $self->socket;
-    close( $socket );
+    close( $socket ) if $socket;
     unlink( $self->file );
 }
 

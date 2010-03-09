@@ -18,6 +18,14 @@ test_set a => sub {
 
 sub set_b {
     ok( 1, "set from sub" );
+    ok( Fennec::Runner->get->is_parent, "Still in parent" );
 }
+
+test_set 'fork' => (
+    force_fork => 1,
+    method => sub {
+        ok( !Fennec::Runner->get->is_parent, "we forked" );
+    },
+);
 
 1;

@@ -98,7 +98,7 @@ sub run {
             @cases = shuffle( @cases ) if $self->random;
             for my $case ( @cases ) {
                 next if $case_name and $case_name ne $case->name;
-                Fennec::Runner->get->threader->thread( 'case', sub {
+                Fennec::Runner->get->threader->thread( $case->force_fork ? 'fork' : 'case', sub {
                     $self->_run_case( $case, $set_name, @sets );
                 });
             }
@@ -152,7 +152,7 @@ sub _run_case {
                 @sets = shuffle( @sets ) if $case->random;
                 for my $set ( @sets ) {
                     next if $set_name and $set_name ne $set->name;
-                    Fennec::Runner->get->threader->thread( 'set', sub {
+                    Fennec::Runner->get->threader->thread( $set->force_fork ? 'fork' : 'set', sub {
                         $self->_run_set( $set );
                     });
                 }

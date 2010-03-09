@@ -8,7 +8,7 @@ use Scalar::Util qw/blessed/;
 use Sub::Information as => 'inspect';
 use Fennec::Util qw/add_accessors/;
 
-add_accessors(qw/todo skip test filename line name method/);
+add_accessors(qw/todo skip test filename line name method force_fork/);
 
 sub new {
     my $class = shift;
