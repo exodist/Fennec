@@ -15,6 +15,7 @@ my $build = Module::Build->new(
         'File::Temp'        => 0.20,
         'IO'                => 1.2301,
         'List::Util'        => 0,
+        'Module::Pluggable' => 3,
         'Scalar::Util'      => 0,
         'Sub::Information'  => 0,
         'Sub::Uplevel'      => 0.20,

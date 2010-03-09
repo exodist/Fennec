@@ -35,6 +35,7 @@ sub new {
                 tests => {},
                 failures => [],
                 random => 1,
+                ignore => [],
                 %proto,
                 files => Fennec::Files->new( @$file_types ),
                 threader => Fennec::Runner::Threader->new,
@@ -204,6 +205,7 @@ sub run {
 
     $self->is_running( 1 );
 
+    $self->files->load;
     $self->_run_tests;
     $self->listener->finish if $self->is_parent;
     $_->finish for $self->result_handlers;
@@ -218,6 +220,7 @@ sub _run_tests {
     $self->_sub_process_refactor;
     my @tests = values %{ $self->tests };
     @tests = shuffle @tests if $self->random;
+
     for my $test ( @tests ) {
         $self->test( $test );
         $self->diag( "Running test class " . ref($test) );

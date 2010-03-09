@@ -30,6 +30,11 @@ sub add_to_wanted {
 
 sub new {
     my $class = shift;
+    unless( $class->can( 'plugins' )) {
+        require Module::Pluggable;
+        Module::Pluggable->import( require => 1, search_path => [ 'Fennec::Files' ]);
+        $class->plugins;
+    }
     my @types = @_ ? @_ : keys %WANTED;
     my $self = bless({ types => \@types, bad_files => [] }, $class );
     return $self;
@@ -60,13 +65,34 @@ sub _find {
 sub load {
     my $self = shift;
     for my $item ( $self->list ) {
+        my %existing = map { $_ => 1 } keys %{ Fennec::Runner->get->tests };
         try {
             $WANTED{ $item->[0] }->[1]->( $item->[1] ) || die( "Loader did not return true" );
         }
         catch {
             push @{ $self->bad_files } => [ $item->[1], $_ ];
+
+            # If loading the file added any tests remove them, they cannot be
+            # trusted after a load failure.
+            delete Fennec::Runner->get->tests->{ $_ }
+                for grep { !$existing{$_} }
+                    keys %{ Fennec::Runner->get->tests };
+
+            # Immedietly report the error as a test failure
+            Fennec::Runner->get->direct_result( Fennec::Result->new(
+                result => 0,
+                name   => $item->[1],
+                diag   => [ "Failure loading file", $_ ],
+                case   => undef,
+                set    => undef,
+                test   => undef,
+                line   => "N/A",
+                file   => $item->[1],
+                benchmark   => undef,
+            ));
         };
     }
 }
+
 
 1;

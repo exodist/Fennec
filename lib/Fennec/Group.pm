@@ -60,7 +60,7 @@ sub partition {
 sub run {
     my $self = shift;
     my $method = $self->method;
-    $self->test->$method();
+    Fennec::Runner->get->get_test($self->test)->$method();
     1;
 }
 
