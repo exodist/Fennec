@@ -26,12 +26,15 @@ sub result {
     my $self = shift;
     my ( $result ) = @_;
     return unless $result;
+
     my $out = ($result->result || $result->skip ? 'ok ' : 'not ok ' ) . $self->count . " -";
     $out .= $result->benchmark ? sprintf( " [%7.2f]", $result->benchmark->[0])
                                : " [  N/A  ]";
     $out .= " " . $result->name if $result->name;
     if ( my $todo = $result->todo ) {
         $out .= " # TODO $todo";
+        use Data::Dumper;
+        print STDERR Dumper( $result );
     }
     elsif ( my $skip = $result->skip ) {
         $out .= " # SKIP $skip";

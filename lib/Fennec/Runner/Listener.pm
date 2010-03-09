@@ -74,6 +74,8 @@ sub process {
     my $self = shift;
     my ( $msg ) = @_;
     my $item = Fennec::Result->deserialize( $msg );
+    return Fennec::Runner->get->direct_diag( @{ $item->diag })
+        if $item->is_diag;
     return Fennec::Runner->get->direct_result( $item );
 }
 

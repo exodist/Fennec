@@ -28,7 +28,7 @@ sub result {
 sub diag {
     my $self = shift;
     $self->result( Fennec::Result->new(
-        diag => [@_]
+        diag => [@_],
     ));
 }
 

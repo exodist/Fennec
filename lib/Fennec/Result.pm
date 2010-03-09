@@ -15,7 +15,7 @@ sub new {
     my $class = shift;
     my $proto = @_ > 1 ? {@_} : $_[0];
 
-    my $is_diag = ( exists $proto->{ diag } && !exists $proto->{ result }) ? 1 : 0;
+    my $is_diag = $proto->{ is_diag } || ( exists $proto->{ diag } && !exists $proto->{ result }) ? 1 : 0;
     my @need = grep { !exists $proto->{$_} } @REQUIRED unless $is_diag;
 
     confess(
