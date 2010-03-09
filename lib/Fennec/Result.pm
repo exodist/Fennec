@@ -4,7 +4,6 @@ use warnings;
 use Carp;
 
 our @REQUIRED = qw/result name benchmark case set file line test/;
-our @ALT_REQUIRED = qw/diag/;
 use Fennec::Util qw/add_accessors/;
 use Scalar::Util qw/blessed/;
 
