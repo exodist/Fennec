@@ -6,6 +6,7 @@ use IO::Socket::UNIX;
 use File::Temp qw/tempfile/;
 use Fennec::Runner::Root;
 use Fennec::Util qw/add_accessors/;
+use Cwd qw/cwd/;
 use Carp;
 
 add_accessors qw/socket file connections/;
@@ -19,10 +20,10 @@ sub new {
         Listen => 1,
         Local => $socket_file,
     ) || die( $! );
-    return bless({ socket => $socket, file => $file, connections => [] }, $class);
+    return bless({ socket => $socket, file => $socket_file, connections => [] }, $class);
 }
 
-sub interation {
+sub iteration {
     my $self = shift;
     $self->accept_connections;
     $self->read;
@@ -34,11 +35,12 @@ sub accept_connections {
     my $socket = $self->socket;
     $socket->blocking( 0 );
     while( my $incoming = $socket->accept ) {
-        push @{ $self->connections } => $incomming;
+        push @{ $self->connections } => $incoming;
     }
 }
 
 sub read {
+    my $self = shift;
     # Get results/diag from all connections.
     for my $child ( @{ $self->connections }) {
         $child->blocking( 0 );

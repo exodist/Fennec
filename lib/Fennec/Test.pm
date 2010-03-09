@@ -92,13 +92,13 @@ sub run {
     @partitions = shuffle( @partitions ) if $self->random;
 
     for my $partition ( @partitions ) {
-        Fennec::Runner->threader->thread( 'partition', sub {
+        Fennec::Runner->get->threader->thread( 'partition', sub {
             my @cases = @{ $partition->{ cases }};
             my @sets = @{ $partition->{ sets }};
             @cases = shuffle( @cases ) if $self->random;
             for my $case ( @cases ) {
                 next if $case_name and $case_name ne $case->name;
-                Fennec::Runner->threader->thread( 'case', sub {
+                Fennec::Runner->get->threader->thread( 'case', sub {
                     $self->_run_case( $case, $set_name, @sets );
                 });
             }
@@ -152,12 +152,12 @@ sub _run_case {
                 @sets = shuffle( @sets ) if $case->random;
                 for my $set ( @sets ) {
                     next if $set_name and $set_name ne $set->name;
-                    Fennec::Runner->threader->thread( 'set', sub {
+                    Fennec::Runner->get->threader->thread( 'set', sub {
                         $self->_run_set( $set );
                     });
                 }
 
-                return ( 1, "Did not die" );
+                return ( 1 );
             }
             catch { return ( 0, $_ )};
     });
@@ -203,6 +203,7 @@ sub _result {
         diag   => $diag,
         case   => $case,
         set    => $set,
+        test   => $self,
         line   => $case ? $set ? $set->line : $case->line : undef,
         file   => $case ? $set ? $set->filename : $case->filename : $self->filename,
         benchmark   => $benchmark,

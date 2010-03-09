@@ -36,8 +36,8 @@ sub new {
                 failures => [],
                 random => 1,
                 %proto,
-                files => Fennec::Files->new( @$file_types )
-                threader => Fennec::Runner::Threader->new;
+                files => Fennec::Files->new( @$file_types ),
+                threader => Fennec::Runner::Threader->new,
             },
             $class
         );
@@ -64,6 +64,8 @@ sub result {
 
 sub diag {
     my $self = shift;
+    confess 'this is an object method, not a class method'
+        unless blessed( $self );
     $self->direct_diag( @_ );
     $self->listener->iteration if $self->is_parent;
 }
@@ -89,6 +91,8 @@ sub direct_result {
 
 sub direct_diag {
     my $self = shift;
+    confess 'this is an object method, not a class method'
+        unless blessed( $self );
     my @messages = @_;
     $self->_sub_process_refactor;
 
@@ -140,6 +144,8 @@ sub parent_pid {
 
 sub is_parent {
     my $self = shift;
+    confess 'this is an object method, not a class method'
+        unless blessed( $self );
     return if $self->pid_changed;
     return ( $self->pid == $self->parent_pid ) ? 1 : 0;
 }
@@ -151,6 +157,8 @@ sub is_subprocess {
 
 sub _sub_process_refactor {
     my $self = shift;
+    confess 'this is an object method, not a class method'
+        unless blessed( $self );
     return if $self->is_parent;
     return unless $self->pid_changed;
 
@@ -196,13 +204,12 @@ sub run {
 
     $self->is_running( 1 );
 
-    $self->listener->start;
     $self->_run_tests;
     $self->listener->finish if $self->is_parent;
     $_->finish for $self->result_handlers;
 
     exit if $self->is_subprocess;
-    return 0 if (@{ $self->bad_files });
+    return 0 if (@{ $self->files->bad_files });
     return !$self->failures;
 }
 
@@ -214,7 +221,7 @@ sub _run_tests {
     for my $test ( @tests ) {
         $self->test( $test );
         $self->diag( "Running test class " . ref($test) );
-        $self->threader( 'file', sub { $test->run( $self->case, $self->set )});
+        $self->threader->thread( 'file', sub { $test->run( $self->case, $self->set )});
         $self->test( undef );
         $self->listener->iteration if $self->is_parent;
     }

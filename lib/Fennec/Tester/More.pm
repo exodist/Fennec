@@ -13,7 +13,7 @@ use Test::More import => \@SUBS;
 
 tester $_ => $_ for @SUBS;
 
-util diag => sub { Fennec::Runner->diag( @_ ) };
+util diag => sub { Fennec::Runner->get->diag( @_ ) };
 
 util todo => sub(&$) {
     my ( $code, $todo ) = @_;

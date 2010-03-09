@@ -42,7 +42,7 @@ See L<Test::Warn> for more details on any of these.
 #}}}
 
 use Fennec::Tester;
-use Fennec::TestBuilderImposter;
+use Fennec::Interceptor;
 use Test::Builder;
 use Carp;
 

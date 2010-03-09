@@ -122,6 +122,7 @@ sub _result {
         diag   => \@diag,
         case   => $case,
         set    => $set,
+        test   => $test,
         line   => $line     || ($case ? $set ? $set->line : $case->line : undef),
         file   => $filename || ($case ? $set ? $set->filename : $case->filename : undef),
         $TODO ? ( todo => $TODO ) : (),

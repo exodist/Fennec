@@ -28,6 +28,11 @@ sub new {
         $info = inspect( $ref );
     }
 
+    croak( "No test class provided." )
+        unless $proto{ test };
+    $proto{ test } = blessed( $proto{ test })
+        if ref $proto{ test };
+
     return bless(
         {
             filename => $info ? $info->file : undef,
@@ -56,12 +61,14 @@ sub run {
     my $self = shift;
     my $method = $self->method;
     $self->test->$method();
+    1;
 }
 
 sub random {
     my $self = shift;
     return 0 unless $self->{ random };
     return 0 unless Fennec::Runner->get->get_test($self->test)->random;
+    return 0 unless Fennec::Runner->get->random;
     return 1;
 }
 

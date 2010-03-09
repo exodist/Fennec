@@ -59,7 +59,7 @@ sub _capture_tests(&;@) {
         _failures(1);
     }
 
-    _init_handler unless @HANDLERS;
+    _init_handler() unless @HANDLERS;
 
     # If we are in a sub-process refactor first. We want the results to go to
     # whatever process we are currently in when capture_tests is called. Then
@@ -123,33 +123,33 @@ sub _result_ratio($$;$) {
     return( $ok, $name, $ok ? () : ( "Expected PASS:FAIL ratio '$pass/$fail', got '$real_pass/$real_fail'" ));
 };
 
-sub result_count_from(&$;$) {
+sub _result_count_from(&$;$) {
     my ( $sub, $count, $name ) = @_;
     local @RESULTS;
     local @DIAG;
     local @FAILURES;
 
-    _capture_tests( $sub );
+    _capture_tests( \&$sub );
     return _result_count_is( $count, $name );
 }
 
-sub diag_count_from(&$;$) {
+sub _diag_count_from(&$;$) {
     my ( $sub, $count, $name ) = @_;
     local @RESULTS;
     local @DIAG;
     local @FAILURES;
 
-    _capture_tests( $sub );
+    _capture_tests( \&$sub );
     return _diag_count_is( $count, $name );
 }
 
-sub result_ratio_from(&$$;$) {
-    my ( $code, $pass, $fail, $name ) = @_;
+sub _result_ratio_from(&$$;$) {
+    my ( $sub, $pass, $fail, $name ) = @_;
     local @RESULTS;
     local @DIAG;
     local @FAILURES;
 
-    _capture_tests( $sub );
+    _capture_tests( \&$sub );
     return _result_ratio( $pass, $fail, $name );
 };
 
@@ -192,26 +192,26 @@ sub _diag_is($;$) {
 }
 
 sub _produces(&$$$;$) {
-    my ( $code, $results, $diag, $name ) = @_;
+    my ( $sub, $results, $diag, $name ) = @_;
     $diag = [ $diag ] unless ref $diag eq 'ARRAY';
 
     local @RESULTS;
     local @DIAG;
     local @FAILURES;
 
-    _capture_tests( $sub );
+    _capture_tests( \&$sub );
     my ( $ok, undef, @diag ) = _results_are( $results, $name );
     my ( $ok2, undef, @diag2 ) = _diag_is( $diag, $name );
     return (( $ok && $ok2 ? 1 : 0 ), $name, @diag, @diag2 );
 }
 
 sub _produces_like(&$$$;$) {
-    my ( $code, $pass, $fail, $diag, $name ) = @_;
+    my ( $sub, $pass, $fail, $diag, $name ) = @_;
     local @RESULTS;
     local @DIAG;
     local @FAILURES;
 
-    _capture_tests( $sub );
+    _capture_tests( \&$sub );
     my ( $ok, undef, @diag ) = _result_ratio( $pass, $fail, $name );
     my ( $ok2, undef, @diag2 ) = _diag_like( $diag, $name );
     return (( $ok && $ok2 ? 1 : 0 ), $name, @diag, @diag2 );
