@@ -39,7 +39,7 @@ sub deserialize {
     chomp( $data );
     my $VAR1;
     my $proto = eval $data || die( "Deserialization error $@" );
-    if ( $proto->{ test } ) {
+    if ( $proto->{ test_class } ) {
         $proto->{ test } = Fennec::Runner->get->get_test( delete $proto->{ test_class }) || undef;
         $proto->{ case } = $proto->{ test }->_cases->{ delete $proto->{ case_name }} || undef;
         $proto->{ set } = $proto->{ test }->_sets->{ delete $proto->{ set_name }} || undef;

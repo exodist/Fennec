@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Fennec::Util qw/add_accessors/;
 use POSIX ();
+use Time::HiRes;
 use base 'Exporter';
 
 add_accessors qw/pid max_files max_partitions max_cases max_sets files partitions cases sets/;
@@ -47,7 +48,11 @@ sub _fork {
         return $self->tid_pid( $type, $tid, $pid )
             unless ( $type eq 'forks' );
 
-        return waitpid( $pid, 0 );
+        until ( waitpid( $pid, &POSIX::WNOHANG )) {
+            Fennec::Runner->get->listener->iteration;
+            sleep(0.10);
+        }
+        return;
     }
 
     # Make sure this new process does not wait on the previous process's children.

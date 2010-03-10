@@ -33,8 +33,6 @@ sub result {
     $out .= " " . $result->name if $result->name;
     if ( my $todo = $result->todo ) {
         $out .= " # TODO $todo";
-        use Data::Dumper;
-        print STDERR Dumper( $result );
     }
     elsif ( my $skip = $result->skip ) {
         $out .= " # SKIP $skip";

@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib 'lib';
+
+use Fennec::Runner::Root;
+use Fennec::Prover;
+
+my $root = Fennec::Runner::Root->new->path;
+
+require "$root/t/Fennec.t";

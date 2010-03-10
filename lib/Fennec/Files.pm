@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Fennec::Runner::Root;
+use Fennec::Result;
 use File::Find qw/find/;
 use Fennec::Util qw/add_accessors/;
 use Try::Tiny;

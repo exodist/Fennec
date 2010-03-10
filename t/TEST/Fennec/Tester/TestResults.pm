@@ -1,3 +1,55 @@
+package TEST::Fennec::Tester::TestResults;
+use strict;
+use warnings;
+use Fennec testers => [ 'TestResults' ];
+
+sub init {
+    results( 1 );
+    failures( 1 );
+    diags( 1 );
+}
+
+test_set can_do => sub {
+    can_ok( __PACKAGE__, qw/ results diags failures push_diag push_results push_failures capture_tests /);
+    can_ok(
+        __PACKAGE__,
+        qw/
+            produces_like produces diag_is results_are result_ratio_from
+            diag_count_from result_count_from result_ratio diag_like
+            diag_count_is result_count_is
+        /
+    );
+};
+
+test_set utils => sub {
+    is_deeply( results, [], "No results yet" );
+    is_deeply( diags, [], "No diags yet" );
+    is_deeply( failures, [], "No failures yet" );
+
+    push_results( 'a', 'b', 'c' );
+    push_diag( 'd', 'e', 'f' );
+    push_failures( 'g', 'h', 'i' );
+
+    is_deeply( results, [ 'a' .. 'c' ], "pushed results" );
+    is_deeply( diags, [ 'd' .. 'f' ], "pushed diags" );
+    is_deeply( failures, [ 'g' .. 'i' ], "pushed failures" );
+
+    capture_tests {
+        ok( 1, "one" );
+        diag( "hi" );
+        ok( 0, "fail" );
+    };
+
+    is( @{ results() }, 5, "captured results" );
+    is( @{ diags() }, 4, "captured diags" );
+    is( @{ failures() }, 4, "captured failures" );
+};
+
+1;
+
+__END__
+
+
 package Fennec::Tester::TestResults;
 use strict;
 use warnings;
@@ -42,7 +94,7 @@ sub _push_diag {
 }
 
 sub _push_results {
-    push @RESULTS => @_;
+    push @DIAG => @_;
 }
 
 sub _push_failures {

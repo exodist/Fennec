@@ -15,6 +15,9 @@ isa_ok( $one, $CLASS );
 
 sub Fennec::Runner::_sub_process_exit { exit };
 sub Fennec::Runner::get { return $_[0] };
+sub Fennec::Runner::listener { return $_[0] };
+sub Fennec::Runner::iteration { 1 };
+
 
 is( $one->pid, $$, "Stored pid" );
 is_deeply(

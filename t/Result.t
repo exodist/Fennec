@@ -76,8 +76,6 @@ is_deeply(
         ),
         diag       => [ 'a', 'b', 'c' ],
         is_diag    => 0,
-        skip       => 0,
-        todo       => 0,
     },
     "Deserialized"
 );

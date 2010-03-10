@@ -13,13 +13,13 @@ sub result {
     my $self = shift;
     my ( $result ) = @_;
     return unless $result;
-    Fennec::Tester::_push_results( $result );
-    Fennec::Tester::_push_diag( @{ $result->diag });
+    Fennec::Tester::TestResults::_push_results( $result );
+    $self->diag( @{ $result->diag }) if $result->diag;
 }
 
 sub diag {
     my $self = shift;
-    Fennec::Tester::_push_diag( @_ );
+    Fennec::Tester::TestResults::_push_diag( @_ );
 }
 
 sub finish {
