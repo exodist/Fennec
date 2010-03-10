@@ -4,6 +4,28 @@ use warnings;
 
 use Fennec::Runner::Args qw/parse_args/;
 
+if ( grep { m/^-+h(elp)?$/ } @ARGV ) {
+    print <<EOT;
+
+USAGE: $0 [prove_args] [-- fennec_args [files...]]
+
+prove args and fennec args must be seperated by '--'
+
+Fennec args:
+    -c CASE_NAME
+    -d SET_NAME
+
+Will run one of the following in order, placing the fennec arguments in an
+environment variable.
+    \$ prove [args] ./test.pl
+    \$ prove [args] ../test.pl
+    \$ prove [args] `which fennec_run.pl`
+    \$ prove [args] `script/fennec_run.pl`
+
+EOT
+    exit;
+}
+
 my @prove_args;
 my @fennec_args;
 
