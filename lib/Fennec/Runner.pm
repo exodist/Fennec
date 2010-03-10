@@ -14,7 +14,7 @@ use Carp         qw/croak confess/;
 
 our $SINGLETON;
 
-add_accessors qw/no_load ignore inline case set test random files
+add_accessors qw/no_load ignore inline cases sets test random files
                  _is_subprocess socket_file threader is_running/;
 
 sub get { goto &new };
@@ -28,6 +28,8 @@ sub new {
         my $file_types = delete $proto{ file_types };
         $file_types = [ $file_types ? $file_types : () ] unless ref $file_types eq 'ARRAY';
 
+        $proto{files} ||= Fennec::Files->new( @$file_types );
+
         my $self = bless(
             {
                 parent_pid => $$,
@@ -37,7 +39,6 @@ sub new {
                 random => 1,
                 ignore => [],
                 %proto,
-                files => Fennec::Files->new( @$file_types ),
                 threader => Fennec::Runner::Threader->new,
             },
             $class
@@ -234,7 +235,7 @@ sub _run_tests {
     for my $test ( @tests ) {
         $self->test( $test );
         $self->diag( "Running test class " . ref($test) );
-        $self->threader->thread( 'file', sub { $test->run( $self->case, $self->set )});
+        $self->threader->thread( 'file', sub { $test->run( $self->cases, $self->sets )});
         $self->test( undef );
         $self->listener->iteration if $self->is_parent;
     }

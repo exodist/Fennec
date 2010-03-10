@@ -82,7 +82,8 @@ sub sets {
 
 sub run {
     my ( $class, $self ) = _get_self( @_ );
-    my ( $case_name, $set_name ) = @_;
+    my ( $case_names, $set_names ) = @_;
+
     $self->_find_subs;
     my $init = $self->can( 'initialize' ) || $self->can( 'init' );
     $self->$init if $init;
@@ -95,11 +96,22 @@ sub run {
         Fennec::Runner->get->threader->thread( 'partition', sub {
             my @cases = @{ $partition->{ cases }};
             my @sets = @{ $partition->{ sets }};
+
             @cases = shuffle( @cases ) if $self->random;
+
+            @cases = grep {
+                my $name = $_->name;
+                grep { $_ eq $name } @$case_names
+            } @cases if @$case_names;
+
+            @sets = grep {
+                my $name = $_->name;
+                grep { $_ eq $name } @$set_names
+            } @sets if @$set_names;
+
             for my $case ( @cases ) {
-                next if $case_name and $case_name ne $case->name;
                 Fennec::Runner->get->threader->thread( $case->force_fork ? 'fork' : 'case', sub {
-                    $self->_run_case( $case, $set_name, @sets );
+                    $self->_run_case( $case, @sets );
                 });
             }
         });
@@ -136,7 +148,7 @@ sub _organize {
 
 sub _run_case {
     my $self = shift;
-    my ( $case, $set_name, @sets ) = @_;
+    my ( $case, @sets ) = @_;
     croak( "Already running a case" )
         if $self->case;
 
@@ -151,7 +163,6 @@ sub _run_case {
 
                 @sets = shuffle( @sets ) if $case->random;
                 for my $set ( @sets ) {
-                    next if $set_name and $set_name ne $set->name;
                     Fennec::Runner->get->threader->thread( $set->force_fork ? 'fork' : 'set', sub {
                         $self->_run_set( $set );
                     });

@@ -2,6 +2,7 @@ package Fennec::Prover;
 use strict;
 use warnings;
 use Fennec::Runner;
+use Fennec::Files;
 
 my $SINGLETON;
 
@@ -23,9 +24,12 @@ sub cli_options {
     my $self = shift;
     my %args = (
         files => [],
-        cases => [],
-        sets => [],
+        c => [],
+        s => [],
     );
+    $args{ cases } = \@{$args{ c }};
+    $args{ sets } = \@{$args{ s }};
+
     my $flag;
     for my $arg ( @ARGV ) {
         if ( $arg =~ m/^-(.*)$/) {
@@ -45,7 +49,12 @@ sub cli_options {
         }
         push @{ $args{ files }} => $arg;
     }
-    return %args;
+
+    delete $args{ c };
+    delete $args{ s };
+    my $files = Fennec::Files->new_from_list( delete $args{ files } );
+
+    return ( %args, files => $files );
 }
 
 1;

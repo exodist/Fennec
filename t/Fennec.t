@@ -27,3 +27,5 @@ our $RUNNER;
 }
 
 $RUNNER->run;
+
+1;

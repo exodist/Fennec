@@ -21,24 +21,48 @@ sub add_to_wanted {
         unless $name;
     croak( "$name is already defined as a file type" )
         if $WANTED{ $name };
-    croak( "Second argument to 'add_to_wanted()' must be a regex" )
-        unless $match and ref $match eq 'Regexp';
+    croak( "Second argument to 'add_to_wanted()' must be a regex or coderef" )
+        unless $match and (ref $match eq 'Regexp' || ref $match eq 'CODE' );
     croak( "Third argument to 'add_to_wanted()' must be a coderef" )
         unless $loader and ref $loader eq 'CODE';
 
     $WANTED{ $name } = [ $match, $loader ];
 }
 
+sub wanted { \%WANTED }
+
 sub new {
+    my $class = shift;
+    $class->_load_plugins;
+    my @types = @_ ? @_ : keys %WANTED;
+    my $self = bless({ types => \@types, bad_files => [] }, $class );
+    return $self;
+}
+
+sub new_from_list {
+    my $class = shift;
+    my ( $list ) = @_;
+    $class->_load_plugins;
+
+    add_to_wanted(
+        'Perl',
+        qr{\.pm$},
+        sub { my $file = shift; eval "require '$file'" || die( $@ )}
+    );
+
+    my @types = keys %WANTED;
+    my $self = bless({ types => \@types, bad_files => [] }, $class );
+    $self->_find( $list );
+    return $self;
+}
+
+sub _load_plugins {
     my $class = shift;
     unless( $class->can( 'plugins' )) {
         require Module::Pluggable;
         Module::Pluggable->import( require => 1, search_path => [ 'Fennec::Files' ]);
         $class->plugins;
     }
-    my @types = @_ ? @_ : keys %WANTED;
-    my $self = bless({ types => \@types, bad_files => [] }, $class );
-    return $self;
 }
 
 sub list {
@@ -49,17 +73,35 @@ sub list {
 
 sub _find {
     my $self = shift;
-    my $root = Fennec::Runner::Root->new->path;
+    my ( $provided ) = @_;
+
     my @list;
     my $wanted = sub {
         no warnings 'once';
         my $file = $File::Find::name;
-        return if grep { $file =~ $_ } @{ Fennec::Runner->get->ignore };
-        return unless my ($type) = grep { $file =~ $WANTED{ $_ }->[0] } @{ $self->types };
+        return if $Fennec::Runner::SINGLETON
+               && grep { $file =~ $_ } @{ Fennec::Runner->get->ignore };
+        return unless my ($type) = grep {
+            my $check = $WANTED{ $_ }->[0];
+            ref $check eq 'Regexp'
+                ? $file =~ $check
+                : $check->( $file );
+        } @{ $self->types };
         push @list => [ $type, $file ];
     };
-    my @paths = ( "$root/t", "$root/lib" );
-    find( $wanted, @paths ) if @paths;
+
+    if ( $provided ) {
+        for my $file ( @$provided ) {
+            no warnings 'once';
+            local $File::Find::name = $file;
+            $wanted->( $file );
+        }
+    }
+    else {
+        my $root = Fennec::Runner::Root->new->path;
+        my @paths = ( "$root/t", "$root/lib" );
+        find( $wanted, @paths ) if @paths;
+    }
     $self->{ list } = \@list;
 }
 
