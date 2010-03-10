@@ -2,11 +2,38 @@
 use strict;
 use warnings;
 
-use lib 'lib';
+use Fennec::Runner::Args qw/parse_args/;
 
-use Fennec::Runner::Root;
-use Fennec::Prover;
+my @prove_args;
+my @fennec_args;
 
-my $root = Fennec::Runner::Root->new->path;
+my $seperator;
+for my $arg ( @ARGV ) {
+    if ( $arg eq '--' ) {
+        $seperator++;
+    }
+    elsif ($seperator) {
+        push @fennec_args => $arg;
+    }
+    else {
+        push @prove_args => $arg;
+    }
+}
 
-require "$root/t/Fennec.t";
+my $prove = join(" ", @prove_args);
+$prove = "prove $prove ";
+if ( -e './test.pl' ) {
+    $prove .= "./test.pl"
+}
+elsif( -e "../test.pl" ) {
+    $prove .= "../test.pl"
+}
+else {
+    $prove .= `which fennec_run.pl 2>/dev/null` || 'script/fennec_run.pl';
+}
+
+my $fennec = join( " ", @fennec_args );
+
+my $run = "FENNEC_ARGV='$fennec' $prove\n";
+print $run;
+exec $run;

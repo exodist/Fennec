@@ -7,6 +7,7 @@ use Fennec::Files;
 use Fennec::Result;
 use Fennec::Runner::Root;
 use Fennec::Runner::Threader;
+use Fennec::Runner::Args qw/parse_args/;
 use Fennec::Util qw/add_accessors/;
 use Scalar::Util qw/blessed/;
 use List::Util   qw/shuffle/;
@@ -28,6 +29,10 @@ sub new {
         my $file_types = delete $proto{ file_types };
         $file_types = [ $file_types ? $file_types : () ] unless ref $file_types eq 'ARRAY';
 
+        if ( my $args = $proto{ argv } ) {
+            %proto = ( %proto, parse_args(@$args));
+        }
+
         $proto{files} ||= Fennec::Files->new( @$file_types );
 
         my $self = bless(
@@ -38,6 +43,8 @@ sub new {
                 failures => [],
                 random => 1,
                 ignore => [],
+                cases => [],
+                sets => [],
                 %proto,
                 threader => Fennec::Runner::Threader->new,
             },
@@ -50,6 +57,7 @@ sub new {
 
     return $SINGLETON;
 }
+
 
 #{{{ Result related methods
 sub failures {

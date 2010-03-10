@@ -99,6 +99,8 @@ sub run {
 
             @cases = shuffle( @cases ) if $self->random;
 
+            confess 'xxx' unless $case_names;
+
             @cases = grep {
                 my $name = $_->name;
                 grep { $_ eq $name } @$case_names

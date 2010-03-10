@@ -1,37 +1,23 @@
-package Fennec::Prover;
+package Fennec::Runner::Args;
 use strict;
 use warnings;
-use Fennec::Runner;
-use Fennec::Files;
 
-my $SINGLETON;
+our @EXPORT = qw/parse_args/;
+use base 'Exporter';
 
-sub new {
-    my $class = shift;
-    return $SINGLETON if $SINGLETON;
-
-    my %options = @_;
-    my $self = bless( {}, $class );
-    $SINGLETON = $self;
-    %options = ( %options, $self->cli_options );
-    my $runner = Fennec::Runner->new( %options );
-    return $runner;
-}
-
-sub get { goto &new }
-
-sub cli_options {
-    my $self = shift;
+sub parse_args {
+    my @argv = @_;
     my %args = (
         files => [],
         c => [],
         s => [],
+        I => [],
     );
     $args{ cases } = \@{$args{ c }};
     $args{ sets } = \@{$args{ s }};
 
     my $flag;
-    for my $arg ( @ARGV ) {
+    for my $arg ( @argv ) {
         if ( $arg =~ m/^-(.*)$/) {
             $flag = $1;
             next
@@ -52,9 +38,11 @@ sub cli_options {
 
     delete $args{ c };
     delete $args{ s };
-    my $files = Fennec::Files->new_from_list( delete $args{ files } );
+    my $files;
+    if (@{$args{ files }}) {
+        $files = Fennec::Files->new_from_list( delete $args{ files } );
+    }
 
-    return ( %args, files => $files );
+    return ( %args, $files ? (files => $files) : ( files => undef ));
 }
 
-1;
