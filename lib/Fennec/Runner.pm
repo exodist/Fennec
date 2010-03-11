@@ -15,7 +15,7 @@ use Carp         qw/croak confess/;
 
 our $SINGLETON;
 
-add_accessors qw/no_load ignore inline cases sets test random files
+add_accessors qw/no_load ignore inline run_only stack test random files
                  _is_subprocess socket_file threader is_running/;
 
 sub get { goto &new };
@@ -43,8 +43,7 @@ sub new {
                 failures => [],
                 random => 1,
                 ignore => [],
-                cases => [],
-                sets => [],
+                stack => [],
                 %proto,
                 threader => Fennec::Runner::Threader->new,
             },
@@ -58,6 +57,21 @@ sub new {
     return $SINGLETON;
 }
 
+#{{{ stack methods
+
+sub stack_push {
+
+}
+
+sub stack_pop {
+
+}
+
+sub stack_peek {
+
+}
+
+#}}}
 
 #{{{ Result related methods
 sub failures {
@@ -233,6 +247,124 @@ sub run {
     return 0 if (@{ $self->files->bad_files });
     return !$self->failures;
 }
+
+#sub run {
+#    my ( $class, $self ) = _get_self( @_ );
+#
+#    $self->_find_subs;
+#    my $init = $self->can( 'initialize' ) || $self->can( 'init' );
+#    $self->$init if $init;
+#
+#    my $data = $self->scenarios;
+#    my @partitions = values %$data;
+#    @partitions = shuffle( @partitions ) if $self->random;
+#
+#    for my $partition ( @partitions ) {
+#        Fennec::Runner->get->threader->thread( 'partition', sub {
+#            my @cases = @{ $partition->{ cases }};
+#            my @sets = @{ $partition->{ sets }};
+#
+#            @cases = shuffle( @cases ) if $self->random;
+#
+#            confess 'xxx' unless $case_names;
+#
+#            @cases = grep {
+#                my $name = $_->name;
+#                grep { $_ eq $name } @$case_names
+#            } @cases if @$case_names;
+#
+#            @sets = grep {
+#                my $name = $_->name;
+#                grep { $_ eq $name } @$set_names
+#            } @sets if @$set_names;
+#
+#            for my $case ( @cases ) {
+#                Fennec::Runner->get->threader->thread( $case->force_fork ? 'fork' : 'case', sub {
+#                    $self->_run_case( $case, @sets );
+#                });
+#            }
+#        });
+#    }
+#}
+#
+#
+#sub _run_case {
+#    my $self = shift;
+#    my ( $case, @sets ) = @_;
+#    croak( "Already running a case" )
+#        if $self->case;
+#
+#    Fennec::Runner->get->diag( "Running case: " . $case->name );
+#    $self->case( $case );
+#    my ( $cr, @cd );
+#    my $benchmark = timeit( 1, sub {
+#        ( $cr, @cd ) = $case->skip
+#            ? ( 1, $case->skip )
+#            : try {
+#                $case->run( $self );
+#
+#                @sets = shuffle( @sets ) if $case->random;
+#                for my $set ( @sets ) {
+#                    Fennec::Runner->get->threader->thread( $set->force_fork ? 'fork' : 'set', sub {
+#                        $self->_run_set( $set );
+#                    });
+#                }
+#
+#                return ( 1 );
+#            }
+#            catch { return ( 0, $_ )};
+#    });
+#
+#    $self->_result( $cr, "End of case - " . $case->name, $benchmark, \@cd );
+#    $self->case( undef );
+#}
+#
+#sub _run_set {
+#    my $self = shift;
+#    my ( $set ) = @_;
+#    croak( "Already running a set" )
+#        if $self->set;
+#
+#    Fennec::Runner->get->diag( "Running set: " . $set->name );
+#    $self->set( $set );
+#    my ( $sr, @sd );
+#    my $benchmark = timeit( 1, sub {
+#        ( $sr, @sd ) = $set->skip
+#            ? ( 1, $set->skip )
+#            : try {
+#                my $out = $set->run( $self );
+#                return $out ? ($out) : (0, "One or more tests failed.");
+#            } catch { return (0, $_ )};
+#    });
+#
+#    $self->_result( $sr, "End of set - " . $set->name, $benchmark, \@sd );
+#    $self->set( undef );
+#    return 1 if $set->todo;
+#    return $sr;
+#}
+
+sub _result {
+    my $self = shift;
+    my ( $ok, $name, $benchmark, $diag ) = @_;
+
+    my $case = $self->case || undef;
+    my $set = $self->set || undef;
+
+    my $result = Fennec::Result->new(
+        result => $ok,
+        name   => $name,
+        diag   => $diag,
+        case   => $case,
+        set    => $set,
+        test   => $self,
+        line   => $case ? $set ? $set->line : $case->line : undef,
+        file   => $case ? $set ? $set->filename : $case->filename : $self->filename,
+        benchmark   => $benchmark,
+    );
+    Fennec::Runner->get->result( $result );
+}
+
+
 
 sub _run_tests {
     my $self = shift;

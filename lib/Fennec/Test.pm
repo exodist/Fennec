@@ -15,8 +15,10 @@ use Fennec::Util qw/add_accessors get_all_subs/;
 our %SINGLETONS;
 sub _get_self(\@);
 
-add_accessors qw/filename parallel case_defaults set_defaults todo set
-                 case _cases _sets __find_subs/;
+add_accessors qw/filename parallel case_defaults set_defaults todo
+                 _cases _sets _specs __find_subs _spec_stack/;
+
+sub get { goto @new }
 
 sub new {
     my $class = shift;
@@ -29,6 +31,8 @@ sub new {
             set_defaults => {},
             _cases => {},
             _sets => {},
+            _specs => {},
+            _spec_stack => [];
             random => 1,
             %proto,
         },
@@ -38,11 +42,31 @@ sub new {
     return $SINGLETONS{$class};
 }
 
+#{{{ stack methods
+
+sub _stack_push {
+
+}
+
+sub _stack_pop {
+
+}
+
+sub _stack_peek {
+
+}
+
+#}}}
+
 sub random {
-    my $self = shift;
+    my ( $class, $self ) = _get_self( @_ );
     return 0 unless $self->{ random };
     return 0 unless Fennec::Runner->get->random;
     return 1;
+}
+
+sub add_spec {
+
 }
 
 sub add_case {
@@ -61,6 +85,10 @@ sub add_set {
     $self->_sets->{ $name } = Fennec::Group::Set->new( $name, test => $self, %{ $self->case_defaults }, %proto );
 }
 
+sub specs {
+
+}
+
 sub cases {
     my ( $class, $self ) = _get_self( @_ );
     $self->_find_subs;
@@ -69,7 +97,8 @@ sub cases {
 
     # 'DEFAULT' case
     push @list => Fennec::Group::Case->new( 'DEFAULT', test => $self, %{ $self->case_defaults }, method => sub {1} )
-        unless @list;
+        if $self->sets && !@list;
+
     return @list;
 }
 
@@ -80,61 +109,24 @@ sub sets {
     return values %$sets;
 }
 
-sub run {
+sub scenario_map {
     my ( $class, $self ) = _get_self( @_ );
-    my ( $case_names, $set_names ) = @_;
-
-    $self->_find_subs;
-    my $init = $self->can( 'initialize' ) || $self->can( 'init' );
-    $self->$init if $init;
-
-    my $data = $self->_organize;
-    my @partitions = values %$data;
-    @partitions = shuffle( @partitions ) if $self->random;
-
-    for my $partition ( @partitions ) {
-        Fennec::Runner->get->threader->thread( 'partition', sub {
-            my @cases = @{ $partition->{ cases }};
-            my @sets = @{ $partition->{ sets }};
-
-            @cases = shuffle( @cases ) if $self->random;
-
-            confess 'xxx' unless $case_names;
-
-            @cases = grep {
-                my $name = $_->name;
-                grep { $_ eq $name } @$case_names
-            } @cases if @$case_names;
-
-            @sets = grep {
-                my $name = $_->name;
-                grep { $_ eq $name } @$set_names
-            } @sets if @$set_names;
-
-            for my $case ( @cases ) {
-                Fennec::Runner->get->threader->thread( $case->force_fork ? 'fork' : 'case', sub {
-                    $self->_run_case( $case, @sets );
-                });
-            }
-        });
-    }
-}
-
-sub specs {
-    my ( $class, $self ) = _get_self( @_ );
-    my %specs = (
+    my %scen = (
         sets => ($self->sets),
         cases => ($self->cases),
-        partitions => (keys %{$self->_organize}),
+        partitions => (keys %{$self->scenarios}),
+        describes => 0,
+        its => 0,
         # This is how many times this test will run a set
         # p1cases * p1sets + p2cases * p2sets ...
-        runs => sum( map { @{$_->{cases}} * @{$_->{sets}} } values %{$self->_organize}),
+        # Add in it1 * descs_run_under + ...
+        runs => sum( map { @{$_->{cases}} * @{$_->{sets}} } values %{$self->scenarios}),
     );
 }
 
-sub _organize {
+sub scenarios {
     my ( $class, $self ) = _get_self( @_ );
-    unless ( $self->{ _organize }) {
+    unless ( $self->{ scenarios }) {
         my %out;
         for my $item ( sort { $a->name cmp $b->name } $self->cases, $self->sets ) {
             my $type = lc($item->type) . 's';
@@ -143,86 +135,11 @@ sub _organize {
                 push @{ $out{$part}{$type}} => $item;
             }
         }
-        $self->{ _organize } = \%out;
+        $self->{ scenarios } = \%out;
     }
-    $self->{ _organize };
+    $self->{ scenarios };
 }
 
-sub _run_case {
-    my $self = shift;
-    my ( $case, @sets ) = @_;
-    croak( "Already running a case" )
-        if $self->case;
-
-    Fennec::Runner->get->diag( "Running case: " . $case->name );
-    $self->case( $case );
-    my ( $cr, @cd );
-    my $benchmark = timeit( 1, sub {
-        ( $cr, @cd ) = $case->skip
-            ? ( 1, $case->skip )
-            : try {
-                $case->run( $self );
-
-                @sets = shuffle( @sets ) if $case->random;
-                for my $set ( @sets ) {
-                    Fennec::Runner->get->threader->thread( $set->force_fork ? 'fork' : 'set', sub {
-                        $self->_run_set( $set );
-                    });
-                }
-
-                return ( 1 );
-            }
-            catch { return ( 0, $_ )};
-    });
-
-    $self->_result( $cr, "End of case - " . $case->name, $benchmark, \@cd );
-    $self->case( undef );
-}
-
-sub _run_set {
-    my $self = shift;
-    my ( $set ) = @_;
-    croak( "Already running a set" )
-        if $self->set;
-
-    Fennec::Runner->get->diag( "Running set: " . $set->name );
-    $self->set( $set );
-    my ( $sr, @sd );
-    my $benchmark = timeit( 1, sub {
-        ( $sr, @sd ) = $set->skip
-            ? ( 1, $set->skip )
-            : try {
-                my $out = $set->run( $self );
-                return $out ? ($out) : (0, "One or more tests failed.");
-            } catch { return (0, $_ )};
-    });
-
-    $self->_result( $sr, "End of set - " . $set->name, $benchmark, \@sd );
-    $self->set( undef );
-    return 1 if $set->todo;
-    return $sr;
-}
-
-sub _result {
-    my $self = shift;
-    my ( $ok, $name, $benchmark, $diag ) = @_;
-
-    my $case = $self->case || undef;
-    my $set = $self->set || undef;
-
-    my $result = Fennec::Result->new(
-        result => $ok,
-        name   => $name,
-        diag   => $diag,
-        case   => $case,
-        set    => $set,
-        test   => $self,
-        line   => $case ? $set ? $set->line : $case->line : undef,
-        file   => $case ? $set ? $set->filename : $case->filename : $self->filename,
-        benchmark   => $benchmark,
-    );
-    Fennec::Runner->get->result( $result );
-}
 
 sub _get_self(\@) {
     my $in = eval { shift(@{$_[0]}) } || confess($@);

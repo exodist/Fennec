@@ -42,6 +42,59 @@ sub test_case {
     $package->add_case( $name, %proto );
 }
 
+sub describe {
+    my ( $name, $code ) = @_;
+}
+
+sub it {
+    croak( "It does not point to the proper real_it yet" );
+    goto @it_once;
+}
+
+sub it_once {
+    my ( $name, $code ) = @_;
+
+}
+
+sub it_each {
+    my ( $name, $code ) = @_;
+
+}
+
+sub before_each(&) {
+    my ( $code ) = @_;
+
+}
+
+sub after_each(&) {
+    my ( $code ) = @_;
+
+}
+
+sub before_all(&) {
+    my ( $code ) = @_;
+
+}
+
+sub after_all(&) {
+    my ( $code ) = @_;
+
+}
+
+sub setup(&) {
+    my ( $code ) = @_;
+
+}
+
+sub teardown(&) {
+    my ( $code ) = @_;
+
+}
+
+sub bail_out {
+    my ( $reason ) = @_;
+}
+
 1;
 
 =pod

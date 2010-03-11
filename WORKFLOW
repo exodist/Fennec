@@ -1,0 +1,62 @@
+
+Runner
+    push test
+        push case
+            push set
+                save stack as scenario
+            pop set
+            -repeat for sets
+        pop case
+        -repeat for cases
+        push spec
+            push it
+                save stack
+            pop it
+            -repeat for its
+            push subspec
+                push it
+                    save stack
+                pop it
+                --repeat for its
+                push it_each
+                    save stack
+                pop it_each
+                --repeat for it_each
+                push it_each (from parent specs)
+                    save stack
+                pop it_each
+                --repeat for stacked it_each
+                push subspec
+                    ...
+                pop subpsec
+                -repeat for subspecs
+            pop subspec
+            --repeat for subspecs
+        pop spec
+    pop test
+    --repeat for test
+
+    randomize list of stacks.
+
+    set stack
+        run setup once
+        if case
+            run case
+            run set
+        elsif it
+            run before_all bottom->top
+            run before_each bottom->top
+            run it
+            run after_each top->bottom
+            run after_all bottom->top
+        endif
+        run teardown once
+    unset stack
+    --repeat for stacks
+
+exit
+
+In order to run a specific scenario prove the runner a line number. Whenever a
+stack is saved it will be saved under the keys {file}{line} when specific line
+numbers are provided to the fennec runner it will run the test with the
+highest line number at or before the specified one.
