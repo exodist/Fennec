@@ -1,8 +1,8 @@
-package Fennec::Group::Set;
+package Fennec::Groups::Set;
 use strict;
 use warnings;
 
-use base 'Fennec::Group';
+use base 'Fennec::Groups';
 
 1;
 

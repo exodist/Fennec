@@ -1,4 +1,4 @@
-package Fennec::Group;
+package Fennec::Groups;
 use strict;
 use warnings;
 
