@@ -16,7 +16,8 @@ use Carp         qw/croak confess/;
 our $SINGLETON;
 
 add_accessors qw/no_load ignore inline run_only stack test random files
-                 _is_subprocess socket_file threader is_running/;
+                 _is_subprocess socket_file test_threader file_threader
+                 is_running/;
 
 sub get { goto &new };
 
@@ -25,15 +26,20 @@ sub new {
     my %proto = @_;
 
     unless( $SINGLETON ) {
-
-        my $file_types = delete $proto{ file_types };
-        $file_types = [ $file_types ? $file_types : () ] unless ref $file_types eq 'ARRAY';
+        unless ( $proto{ files }) {
+            my $plugins = delete $proto{ file_plugins } || [ 'Module' ];
+            for my $plugin ( @$plugins ) {
+                $plugin = 'Fennec::File' . $plugin;
+                local $@;
+                eval "require $plugin"
+                    || croak "Could not load file plugin $plugin: $@";
+                push @files => $plugin->find;
+            }
+        }
 
         if ( my $args = $proto{ argv } ) {
             %proto = ( %proto, parse_args(@$args));
         }
-
-        $proto{files} ||= Fennec::Files->new( @$file_types );
 
         my $self = bless(
             {
@@ -43,8 +49,13 @@ sub new {
                 failures => [],
                 random => 1,
                 ignore => [],
+                file_threader => Fennec::Runner::Threader->new(
+                    max => $proto{ p_files }
+                ),
+                test_threader => Fennec::Runner::Threader->new(
+                    max => $proto{ p_tests }
+                ),
                 %proto,
-                threader => Fennec::Runner::Threader->new,
             },
             $class
         );
@@ -212,6 +223,7 @@ sub run {
     croak "run() may only be run from the parent process."
         unless $self->is_parent;
 
+    $self->stack = Fennec::Runner::Stack->new();
     $self->is_running( 1 );
 
     croak("No listener")
@@ -221,8 +233,12 @@ sub run {
     croak("No listener socket")
            unless $self->listener->socket;
 
-    $self->files->load;
-    $self->_run_tests;
+    for my $file ( @{ $self->files }) {
+        $self->file_threader->thread(
+            sub { $file->load; $self->stack->run },
+            'force_fork',
+        );
+    }
 
     $self->listener->finish if $self->is_parent;
     $_->finish for $self->result_handlers;

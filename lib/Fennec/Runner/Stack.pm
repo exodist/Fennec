@@ -42,31 +42,46 @@ sub run_node_set {
     my $self = shift;
     my ( $node, @$tests ) = @$set;
 
-    $node->run_before_all;
-    for my $item ( $self->random ? shuffle @$tests : @$tests ) {
-        if ( ref( $item ) eq 'ARRAY' ) {
-            $self->run_set( $item );
+    try {
+        $node->run_before_all;
+        for my $item ( $self->random ? shuffle @$tests : @$tests ) {
+            if ( ref( $item ) eq 'ARRAY' ) {
+                $self->run_set( $item );
+            }
+            else {
+                $node->run_before_each;
+                try {
+                    $item->run;
+                }
+                catch {
+                    $Fennec::Result->fail_item( $node, $item, $_ )
+                }
+                $node->run_after_each;
+            }
         }
-        else {
-            $node->run_before_each;
-            $item->run;
-            $node->run_after_each;
-        }
+        $node->run_after_all;
     }
-    $node->run_after_all;
+    catch {
+        $Fennec::Result->fail_item( $node, undef, $_ );
+    }
 }
 
 sub run_case_set {
     my $self = shift;
     my ( $case, @$tests ) = @$set;
 
-    $case->run;
-    for my $item ( $self->random ? shuffle @$tests : @$tests ) {
-        $self->run_set( $item );
+    try {
+        $case->run;
+        for my $item ( $self->random ? shuffle @$tests : @$tests ) {
+            $self->run_set( $item );
+        }
+    }
+    catch {
+        $Fennec::Result->fail_item( undef, $case, $_ );
     }
 }
 
-sub travserse {
+sub traverse {
     my $self = shift;
     $self->{ all } ||= [ $self->stack->[0]->traverse ];
     return $self->{ all };

@@ -73,13 +73,20 @@ sub _traverse_child_for_group {
     my $self = shift;
     my ( $group ) = @_;
 
+    return $Fennec::Result->skip_item( $group ) if $group->skip;
+
     unless ( $self->group_child_cache->{ $group }) {
         my $child = $class->new( $self->stack, $self, $group );
         push @{ $self->children } => $child;
 
         $self->stack->push( $child );
-        $group->run;
-        my @tests = $child->travserse;
+        my @tests = try {
+            $group->run;
+            return $child->traverse;
+        }
+        catch {
+            $Fennec::Result->fail_item( $group );
+        };
         $self->stack->pop;
 
         $self->group_child_cache->{ $group } = \@tests;
@@ -93,6 +100,7 @@ sub test_sets {
     my @out;
 
     for my $test ( $self->test_once, $self->deep_test_each ) {
+        $Fennec::Result->skip_item( $test ) && next if $test->skip;
         push @out => [ $self, $test ];
     }
 
@@ -120,24 +128,25 @@ sub add_tests {
     push @{ $self->_tests->{ $type }} => $tests;
 }
 
-sub run_before_each {
-    my $self = shift;
-    $_->run for $self->deep_before_each;
-}
+sub run_before_each { shift->_run_setups( 'deep_before_each' )}
+sub run_before_all { shift->_run_setups( 'before_all' )}
+sub run_after_each { shift->_run_setups( 'deep_after_each' )}
+sub run_after_all { shift->_run_setups( 'after_all' )}
 
-sub run_before_all {
+sub _run_setups {
     my $self = shift;
-    $_->run for $self->before_all;
-}
+    my ( $type ) = @_;
+    my @items = $self->$type;
+    return unless @items;
 
-sub run_after_each {
-    my $self = shift;
-    $_->run for $self->deep_after_each;
-}
-
-sub run_after_all {
-    my $self = shift;
-    $_->run for $self->after_all;
+    for my $item ( @items ) {
+        try {
+            $item->run;
+        }
+        catch {
+            $Fennec::Result->fail_item( $item )
+        };
+    }
 }
 
 sub deep {

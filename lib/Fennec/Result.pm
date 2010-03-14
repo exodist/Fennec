@@ -3,13 +3,22 @@ use strict;
 use warnings;
 use Carp;
 
-our @REQUIRED = qw/result name benchmark case set file line test/;
+our @REQUIRED = qw/result name benchmark stacknode file line test group tests/;
 use Fennec::Util qw/add_accessors/;
 use Scalar::Util qw/blessed/;
 
 use Data::Dumper;
 
-add_accessors qw/result name case set diag is_diag file line benchmark test/;
+add_accessors qw/result name stacknode diag is_diag file line benchmark test
+                 group tests/;
+
+sub skip_item {
+
+}
+
+sub fail_item {
+
+}
 
 sub new {
     my $class = shift;
