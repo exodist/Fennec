@@ -4,8 +4,6 @@ use warnings;
 
 use base 'Fennec::Group';
 
-sub type { 'Case' }
-
 1;
 
 =pod

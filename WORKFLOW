@@ -56,7 +56,4 @@ Runner
 
 exit
 
-In order to run a specific scenario prove the runner a line number. Whenever a
-stack is saved it will be saved under the keys {file}{line} when specific line
-numbers are provided to the fennec runner it will run the test with the
-highest line number at or before the specified one.
+Give fennec a line number and it will use an algorithm to find the desired item to run.

@@ -37,7 +37,6 @@ sub new {
         {
             filename => $info ? $info->file : undef,
             line => $info ? $info->line : undef,
-            random => 1,
             %proto,
             name => $name,
         },
@@ -45,7 +44,12 @@ sub new {
     );
 }
 
-sub type { 'Base' }
+sub type {
+    my $class = shift;
+    my $name = blessed( $class ) || $class;
+    $name =~ s/^.*::([^:]+)$/$1/g;
+    return $name || 'Base';
+}
 
 sub needs_method { 1 }
 
@@ -62,14 +66,6 @@ sub run {
     my $method = $self->method;
     Fennec::Runner->get->get_test($self->test)->$method();
     1;
-}
-
-sub random {
-    my $self = shift;
-    return 0 unless $self->{ random };
-    return 0 unless Fennec::Runner->get->get_test($self->test)->random;
-    return 0 unless Fennec::Runner->get->random;
-    return 1;
 }
 
 1;

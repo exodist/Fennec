@@ -6,7 +6,7 @@ use POSIX ();
 use Time::HiRes;
 use base 'Exporter';
 
-add_accessors qw/pid max_files max_partitions max_cases max_sets files partitions cases sets/;
+add_accessors qw/max pids/;
 
 sub new {
     my $class = shift;
@@ -15,10 +15,8 @@ sub new {
 
     return bless(
         {
-            files => [],
-            partitions => [],
-            cases => [],
-            sets => [],
+            pids => [],
+            max => 1,
             %proto,
         },
         $class
@@ -27,26 +25,27 @@ sub new {
 
 sub thread {
     my $self = shift;
-    my ( $type, $code, @args ) = @_;
-    $type .= 's';
-    my $msub = "max_$type";
-    my $max = $self->$msub || 1 unless $type eq 'forks';
-    return $self->_fork( $type, $max, $code, \@args ) if $type eq 'forks' || $max > 1;
+    my ( $code, $force_fork, @args ) = @_;
+    $force_fork = 0 if $self->max > 1;
+
+    return $self->_fork( $code, $force_fork, \@args )
+        if $force_fork || $self->max > 1;
+
     return $code->( @args );
 }
 
 sub _fork {
     my $self = shift;
-    my ( $type, $max, $code, $args ) = @_;
+    my ( $code, $forced, $args ) = @_;
 
     # This will block if necessary
-    my $tid = $self->get_tid( $type, $max )
-        unless $type eq 'forks';
+    my $tid = $self->get_tid
+        unless $forced;
 
     my $pid = fork();
     if ( $pid ) {
-        return $self->tid_pid( $type, $tid, $pid )
-            unless ( $type eq 'forks' );
+        return $self->tid_pid( $tid, $pid )
+            unless $forced;
 
         until ( waitpid( $pid, &POSIX::WNOHANG )) {
             Fennec::Runner->get->listener->iteration;
@@ -56,7 +55,7 @@ sub _fork {
     }
 
     # Make sure this new process does not wait on the previous process's children.
-    $self->{$_} = [] for qw/files partitions cases sets/;
+    $self->{pids} = [];
 
     $code->( @$args );
     $self->cleanup;
@@ -65,10 +64,9 @@ sub _fork {
 
 sub get_tid {
     my $self = shift;
-    my ( $type, $max ) = @_;
-    my $existing = $self->$type;
+    my $existing = $self->pids;
     while ( 1 ) {
-        for my $i ( 1 .. $max ) {
+        for my $i ( 1 .. $self->max ) {
             if ( my $pid = $existing->[$i] ) {
                 my $out = waitpid( $pid, &POSIX::WNOHANG );
                 $existing->[$i] = undef
@@ -83,19 +81,15 @@ sub get_tid {
 # Get or set the pid for a tid.
 sub tid_pid {
     my $self = shift;
-    my ( $type, $tid, $pid ) = @_;
-    $self->$type->[$tid] = $pid if $pid;
-    return $self->$type->[$tid];
-}
-
-sub pids {
-    my $self = shift;
-    return grep { $_ } map {(@{ $self->$_ })} qw/files partitions cases sets/;
+    my ( $tid, $pid ) = @_;
+    $self->pids->[$tid] = $pid if $pid;
+    return $self->pids->[$tid];
 }
 
 sub cleanup {
     my $self = shift;
     for my $pid ( $self->pids ) {
+        next unless $pid;
         waitpid( $pid, 0 );
     }
 }

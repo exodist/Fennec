@@ -1,7 +1,7 @@
 :source share/vim/functions.vim
-augroup type
-  autocmd BufNewFile,BufRead *.pm source share/vim/highlighting.vim
-  autocmd BufNewFile,BufRead *.t source share/vim/highlighting.vim
-  autocmd BufNewFile,BufRead *.pl source share/vim/highlighting.vim
-  autocmd BufNewFile,BufRead *.PL source share/vim/highlighting.vim
-augroup END
+"augroup type
+"  autocmd BufNewFile,BufRead *.pm source share/vim/highlighting.vim
+"  autocmd BufNewFile,BufRead *.t source share/vim/highlighting.vim
+"  autocmd BufNewFile,BufRead *.pl source share/vim/highlighting.vim
+"  autocmd BufNewFile,BufRead *.PL source share/vim/highlighting.vim
+"augroup END

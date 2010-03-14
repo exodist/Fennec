@@ -9,90 +9,121 @@ sub export_to {
     my ( $package ) = @_;
     return 1 unless $package;
 
-    my @subs = get_all_subs($class);
+    my @subs = grep { $_ ne 'export_to' && $_ !~ m/^_/ } get_all_subs($class);
     for my $sub ( @subs ) {
         no strict 'refs';
         *{ $package . '::' . $sub } = \&$sub;
     }
 }
 
-#XXX These 2 functions are almost identical, can we abstract this?
+sub _add_group {
+    my ( $type, $name, @remain ) = @_;
 
-sub test_set {
-    my $name = shift;
-    croak( "You must provide a set name, and it must not be a reference" )
+    croak( "You must provide a $type name, and it must not be a reference" )
         if !$name || ref $name;
 
-    my $code = shift if @_ == 1;
+    my $code = shift if @remain == 1;
     my ( $package, $filename, $line ) = caller;
-    my %proto = ( method => $code, @_, test => $package, filename => $filename, line => $line );
+    my %proto = (
+        method => $code,
+        @remain,
+        test => $package,
+        filename => $filename,
+        line => $line
+    );
 
-    $package->add_set( $name, %proto );
+    $type = 'Fennec::Group::' . $type;
+    my $group = $type->new( $name, %proto );
+    Fennec::Runner->get->stack->add_group( $group );
+}
+
+sub _add_prepare {
+    my ( $type, $code ) = @_;
+
+    my ( $package, $filename, $line ) = caller;
+    my %proto = (
+        method => $code,
+        test => $package,
+        filename => $filename,
+        line => $line
+    );
+
+    $type = 'Fennec::Prepare::' . $type;
+    my $prepare = $type->new( $name, %proto );
+    Fennec::Runner->get->stack->add_prepare( $prepare );
+}
+
+sub _add_tests {
+    my ( $type, $name, @remain ) = @_;
+
+    croak( "You must provide a $type name, and it must not be a reference" )
+        if !$name || ref $name;
+
+    my $code = shift if @remain == 1;
+    my ( $package, $filename, $line ) = caller;
+    my %proto = (
+        method => $code,
+        @remain,
+        test => $package,
+        filename => $filename,
+        line => $line
+    );
+
+    $type = 'Fennec::Test::' . $type;
+    my $group = $type->new( $name, %proto );
+    Fennec::Runner->get->stack->add_tests( $group );
+}
+
+sub test_set {
+    unshift @_ => 'Set';
+    goto &_add_group;
 }
 
 sub test_case {
-    my $name = shift;
-    croak( "You must provide a case name, and it must not be a reference" )
-        if !$name || ref $name;
-
-    my $code = shift if @_ == 1;
-    my ( $package, $filename, $line ) = caller;
-    my %proto = ( method => $code, @_, test => $package, filename => $filename, line => $line );
-
-    $package->add_case( $name, %proto );
+    unshift @_ =>  'Case';
+    goto &_add_group;
 }
-
 sub describe {
-    my ( $name, $code ) = @_;
+    unshift @_ => 'Describe';
+    goto &_add_group;
 }
 
-sub it {
-    croak( "It does not point to the proper real_it yet" );
-    goto @it_once;
-}
+sub tests { goto &it_once }
+sub it { goto &it_once }
 
 sub it_once {
-    my ( $name, $code ) = @_;
-
+    unshift @_ => 'Once';
+    goto &_add_tests;
 }
 
 sub it_each {
-    my ( $name, $code ) = @_;
-
+    unshift @_ => 'Each';
+    goto &_add_tests;
 }
 
 sub before_each(&) {
-    my ( $code ) = @_;
-
+    unshift @_ => 'BeforeEach';
+    goto &_add_prepare;
 }
 
 sub after_each(&) {
-    my ( $code ) = @_;
-
+    unshift @_ => 'AfterEach';
+    goto &_add_prepare;
 }
 
 sub before_all(&) {
-    my ( $code ) = @_;
-
+    unshift @_ => 'BeforeAll';
+    goto &_add_prepare;
 }
 
 sub after_all(&) {
-    my ( $code ) = @_;
-
-}
-
-sub setup(&) {
-    my ( $code ) = @_;
-
-}
-
-sub teardown(&) {
-    my ( $code ) = @_;
-
+    unshift @_ => 'AfterAll';
+    goto &_add_prepare;
 }
 
 sub bail_out {
     my ( $reason ) = @_;
+    Fennec::Runner->get->bail_out( $reason );
 }
 
 1;

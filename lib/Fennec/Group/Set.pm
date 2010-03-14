@@ -4,8 +4,6 @@ use warnings;
 
 use base 'Fennec::Group';
 
-sub type { 'Set' }
-
 1;
 
 =pod
