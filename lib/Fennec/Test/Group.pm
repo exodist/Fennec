@@ -74,7 +74,7 @@ sub run {
 
 =head1 NAME
 
-Fennec::Group - Base class for group classes
+Fennec::Groups - Base class for group classes
 
 =head1 DESCRIPTION
 

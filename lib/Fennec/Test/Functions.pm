@@ -32,7 +32,7 @@ sub _add_group {
         line => $line
     );
 
-    $type = 'Fennec::Group::' . $type;
+    $type = 'Fennec::Groups::' . $type;
     my $group = $type->new( $name, %proto );
     Fennec::Runner->get->stack->add_group( $group );
 }

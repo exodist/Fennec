@@ -1,4 +1,4 @@
-package Fennec::Groups::Set;
+package Fennec::Groups::Case;
 use strict;
 use warnings;
 
@@ -10,11 +10,11 @@ use base 'Fennec::Groups';
 
 =head1 NAME
 
-Fennec::Group::Set - A test set
+Fennec::Groups::Case - Test case class
 
 =head1 DESCRIPTION
 
-A test set class.
+A test case.
 
 =head1 EARLY VERSION WARNING
 

@@ -7,7 +7,7 @@ use Test::Exception::LessClever;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'Fennec::Group';
+    $CLASS = 'Fennec::Groups';
     use_ok( $CLASS );
     $CLASS->export_to( __PACKAGE__ );
 }

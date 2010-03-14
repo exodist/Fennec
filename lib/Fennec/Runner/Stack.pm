@@ -33,7 +33,7 @@ sub run_set {
         if $set->[0]->isa( 'Fennec::Runner::Stack::Node' );
 
     return $self->run_case_set( @$set )
-        if $set->[0]->isa( 'Fennec::Group::Case' );
+        if $set->[0]->isa( 'Fennec::Groups::Case' );
 
     confess ( "Malformed test set" );
 }
