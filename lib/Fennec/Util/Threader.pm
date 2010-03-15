@@ -43,7 +43,7 @@ sub _fork {
             unless $forced;
 
         until ( waitpid( $pid, &POSIX::WNOHANG )) {
-            Fennec::Runner->get->listener->iteration;
+            Runner->listener->iteration;
             sleep(0.10);
         }
         return;
@@ -54,7 +54,7 @@ sub _fork {
 
     $code->( @$args );
     $self->cleanup;
-    Fennec::Runner->_sub_process_exit;
+    Runner->_sub_process_exit;
 }
 
 sub get_tid {
