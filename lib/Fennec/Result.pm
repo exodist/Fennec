@@ -1,102 +1,80 @@
 package Fennec::Result;
 use strict;
 use warnings;
-use Carp;
 
-our @REQUIRED = qw/result name benchmark stacknode file line test group tests/;
-use Fennec::Util qw/add_accessors/;
-use Scalar::Util qw/blessed/;
+use base 'Fennec::Base';
 
-use Data::Dumper;
+use Fennec::Util::Accessors;
+use Fennec::Runner;
 
-add_accessors qw/result name stacknode diag is_diag file line benchmark test
-                 group tests/;
+our @ITEM_ACCESSORS = qw/ name stack node file line /;
+our @SIMPLE_ACCESSORS = qw/pass item diag benchmark/;
+our @PROPERTIES = (
+    @ITEM_ACCESSORS,
+    @SIMPLE_ACCESSORS,
+    qw/ test /,
+);
 
-sub skip_item {
+Accessors @SIMPLE_ACCESSORS;
 
-}
-
-sub fail_item {
-
-}
+sub fail { !$self->pass }
 
 sub new {
     my $class = shift;
-    my $proto = @_ > 1 ? {@_} : $_[0];
-
-    my $is_diag = $proto->{ is_diag } || ( exists $proto->{ diag } && !exists $proto->{ result }) ? 1 : 0;
-    my @need = grep { !exists $proto->{$_} } @REQUIRED unless $is_diag;
-
-    confess(
-        "Result did not have all necessary params, missing: "
-        . join( ", ", @need )
-        . " use undef if param is really unavailable"
-    ) if ( @need && !$is_diag );
-
+    my ( $pass, $item, %proto ) = @_;
     return bless(
         {
-            %$proto,
-            is_diag => $is_diag,
+            %proto,
+            pass => $pass ? 1 : 0,
+            item => $item || undef,
+            test => Runner->current || undef,
         },
         $class
     );
 }
 
-sub deserialize {
+sub fail_item {
     my $class = shift;
-    my ( $data ) = @_;
-    chomp( $data );
-    my $VAR1;
-    my $proto = eval $data || die( "Deserialization error $@" );
-    if ( $proto->{ test_class } ) {
-        $proto->{ test } = Fennec::Runner->get->get_test( delete $proto->{ test_class }) || undef;
-        $proto->{ case } = $proto->{ test }->_cases->{ delete $proto->{ case_name }} || undef;
-        $proto->{ set } = $proto->{ test }->_sets->{ delete $proto->{ set_name }} || undef;
+    my ( $item, @diag ) = @_;
+    Runner->handler->result( $class->new( 0, $item, diag => \@diag ));
+}
+
+sub skip_item {
+    my $class = shift;
+    my ( $item, $reason, @diag ) = @_;
+    $reason ||= $item->skip if $item->can( 'skip' );
+    $reason ||= "no reason";
+    Runner->handler->result( $class->new( 0, $item, skip => $reason, diag => \@diag ));
+}
+
+sub pass_item {
+    my $class = shift;
+    my ( $item, @diag ) = @_;
+    Runner->handler->result( $class->new( 1, $item, diag => \@diag ));
+}
+
+for my $item_accessor ( @ITEM_ACCESSORS ) {
+    no strict 'refs';
+    *$item_accessor = sub {
+        my $self = shift;
+        return $self->{ $item_accessor }
+            if $self->{ $item_accessor };
+
+        return undef
+            unless $self->item->can( $item_accessor );
+
+        return $self->item->$item_accessor;
+    };
+}
+
+sub test {
+    my $self = shift;
+    if ( my $item = $self->item ) {
+        return $item if $item->isa( 'Fennec::Test' );
+        my $test = $item->test if $item->can( 'test' );
+        return $test if $test;
     }
-    else {
-        $proto->{ test } = undef;
-        $proto->{ case } = undef;
-        $proto->{ set }  = undef;
-    }
-    delete $proto->{ todo } unless $proto->{ todo };
-    delete $proto->{ skip } unless $proto->{ skip };
-    return $class->new( $proto );
-}
-
-sub serialize {
-    my $self = shift;
-    my $data = { map { $_ => $self->$_ } qw/result name benchmark file line diag is_diag todo skip/};
-    $data->{ test_class } = blessed( $self->test ) if $self->test;
-    $data->{ case_name } = $self->case->name if $self->case;
-    $data->{ set_name } = $self->set->name if $self->set;
-    local $Data::Dumper::Indent = 0;
-    return Dumper( $data );
-}
-
-sub todo {
-    my $self = shift;
-    return $self->_self_case_or_set( 'todo' );
-}
-
-sub skip {
-    my $self = shift;
-    return $self->_self_case_or_set( 'skip' );
-}
-
-sub _self_case_or_set {
-    my $self = shift;
-    my ($thing) = @_;
-
-    return $self->{ $thing }
-        if $self->{ $thing };
-
-    my $case = $self->case;
-    return unless $case;
-
-    my $set = $self->set;
-    return $case->$thing unless $set;
-
-    return $set->$thing || $case->$thing;
+    return $self->{ test };
 }
 
 1;

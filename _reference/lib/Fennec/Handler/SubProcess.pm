@@ -2,22 +2,18 @@ package Fennec::Handler::SubProcess;
 use strict;
 use warnings;
 
+use Fennec::Util qw/add_accessors/;
 use base 'Fennec::Handler';
 
-use Fennec::Util::Accessors;
-use Fennec::Runner;
-use IO::Socket::UNIX;
-
-Accessors qw/socket/;
+add_accessors qw/socket/;
 
 sub init {
     my $self = shift;
     $self->socket(
         IO::Socket::UNIX->new(
-            Peer => Runner->handler->listener->socket_file,
+            Peer => Fennec::Runner->get->socket_file,
         )
-    )->autoflush( 1 );
-
+    );
     die( "Error connecting to master process $!" )
         unless $self->socket && $self->socket->connected;
 }
@@ -40,7 +36,7 @@ sub finish {
     my $self = shift;
     my $socket = $self->socket;
     return unless $socket and $socket->connected;
-    $socket->flush;
+    print $socket "shutdown\n";
     close( $socket );
 }
 

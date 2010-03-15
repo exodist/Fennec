@@ -60,7 +60,7 @@ sub traverse {
             next if $cp ne $sp;
             push @case_tests => $self->_traverse_child_for_group( $set );
         }
-        push @tests => [ $case, \@case_tests ];
+        push @tests => [ $case, $self, \@case_tests ];
     }
 
     return [ $self, @tests ];
@@ -73,7 +73,7 @@ sub _traverse_child_for_group {
     my $self = shift;
     my ( $group ) = @_;
 
-    return $Fennec::Result->skip_item( $group ) if $group->skip;
+    return $Fennec::Result->skip_item( $group, $self ) if $group->skip;
 
     unless ( $self->group_child_cache->{ $group }) {
         my $child = $class->new( $self->stack, $self, $group );
@@ -85,7 +85,7 @@ sub _traverse_child_for_group {
             return $child->traverse;
         }
         catch {
-            $Fennec::Result->fail_item( $group );
+            $Fennec::Result->fail_item( $group, $self, $_ );
         };
         $self->stack->pop;
 
@@ -100,7 +100,7 @@ sub test_sets {
     my @out;
 
     for my $test ( $self->test_once, $self->deep_test_each ) {
-        $Fennec::Result->skip_item( $test ) && next if $test->skip;
+        $Fennec::Result->skip_item( $test, $self ) && next if $test->skip;
         push @out => [ $self, $test ];
     }
 
@@ -144,7 +144,7 @@ sub _run_setups {
             $item->run;
         }
         catch {
-            $Fennec::Result->fail_item( $item )
+            $Fennec::Result->fail_item( $item, $self, $_ )
         };
     }
 }

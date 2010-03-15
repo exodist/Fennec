@@ -1,6 +1,7 @@
 package Fennec::Handler::TAP;
 use strict;
 use warnings;
+use Carp qw/confess/;
 
 use base 'Fennec::Handler';
 
@@ -26,7 +27,7 @@ sub result {
     my ( $result ) = @_;
     return unless $result;
 
-    my $out = (($result->pass || $result->skip) ? 'ok ' : 'not ok ' ) . $self->count . " -";
+    my $out = ($result->result || $result->skip ? 'ok ' : 'not ok ' ) . $self->count . " -";
     $out .= $result->benchmark ? sprintf( " [%7.2f]", $result->benchmark->[0])
                                : " [  N/A  ]";
     $out .= " " . $result->name if $result->name;
@@ -37,7 +38,7 @@ sub result {
         $out .= " # SKIP $skip";
     }
     $self->output( $out );
-    if ( $result->fail && !$result->todo && !$result->skip ) {
+    if ( !$result->result && !$result->todo && !$result->skip ) {
         my $case = $result->case ? $result->case->name : 'N/A';
         my $set = $result->set ? $result->set->name : 'N/A';
         $self->diag( "Test failure at " . $result->file . " line " . $result->line );

@@ -54,21 +54,18 @@ sub run_node_set {
                     $item->run;
                 }
                 catch {
-                    $Fennec::Result->fail_item( $node, $item, $_ )
+                    $Fennec::Result->fail_item( $item, $node, $_ )
                 }
                 $node->run_after_each;
             }
         }
         $node->run_after_all;
-    }
-    catch {
-        $Fennec::Result->fail_item( $node, undef, $_ );
-    }
+    };
 }
 
 sub run_case_set {
     my $self = shift;
-    my ( $case, @$tests ) = @$set;
+    my ( $case, $node, @$tests ) = @$set;
 
     try {
         $case->run;
@@ -77,7 +74,7 @@ sub run_case_set {
         }
     }
     catch {
-        $Fennec::Result->fail_item( undef, $case, $_ );
+        $Fennec::Result->fail_item( $case, $node, $_ );
     }
 }
 

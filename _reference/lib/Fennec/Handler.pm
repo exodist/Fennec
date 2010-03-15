@@ -21,9 +21,16 @@ sub diag {
 }
 
 sub finish {1}
-sub start {1}
 
 1;
+
+=head1 NAME
+
+Fennec::Handler - Base class for result handlers
+
+=head1 DESCRIPTION
+
+Result handlers should subclass this module.
 
 =head1 AUTHORS
 
