@@ -8,11 +8,12 @@ use Fennec::Test;
 use Fennec::Test::File;
 use Fennec::Util::Accessors;
 use Fennec::Util::Threader;
+use Fennec::Group::Root;
 use Carp;
 use List::Util qw/shuffle/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/handler files p_files p_tests current threader ignore random pid parent_pid/;
+Accessors qw/handler files p_files p_tests threader ignore random pid parent_pid/;
 
 our $SINGLETON;
 
@@ -59,22 +60,17 @@ sub start {
 
     for my $file ( @{ $self->files }) {
         $self->threader->thread( sub {
-            local $self->{ current };
-            my @failures;
-            $self->handler->push_failures_list( \@failures );
             try {
-                $self->current( Test->new_from_file( $file ));
-                $self->current->skip
-                    ? Result->skip_item( $self->current )
-                    : $self->current->run;
-                @failures ? Result->fail_item( $self->current, @failures . " failures" )
-                          : Result->pass_item( $self->current )
+                Fennec::Group::Root->new(
+                    $file->filename,
+                    method => sub { $self->file->load },
+                    file => $file,
+                )->build->run_tests;
             }
             catch {
                 Result->fail_item( $file, $_ );
             }
-            $self->handler->pop_failures_list( \@failures );
-        }, 1 )
+        }, 1 );
     }
 
     $self->handler->finish;

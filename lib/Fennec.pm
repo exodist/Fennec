@@ -9,6 +9,10 @@ use Fennec::Test::Function;
 use Fennec::Generator;
 
 our $VERSION = "0.006";
+our $TEST_CLASS;
+
+sub clear_test_class { $TEST_CLASS = undef }
+sub test_class { $TEST_CLASS }
 
 sub import {
     my $class = shift;
@@ -21,17 +25,11 @@ sub import {
     croak( "You must put your tests into a package, not main" )
         if $caller eq 'main';
 
-    # This will create a new instance of the test and make it the current one
-    # in the runner. By this point Runner->current should be localized.
-    # The object needs to be initialized and current for the functions to know
-    # what stack to put things into.
+    $TEST_CLASS = $caller;
+
     {
         no strict 'refs';
         push @{ $caller . '::ISA' } => Test;
-        my $test = $caller->new( @_ );
-        $test->_init_args([ @_ ]);
-        Test->_new( $test );
-        Runner->current( $test );
     }
 
     $functions ||= [ qw/ Tests Spec Case / ];

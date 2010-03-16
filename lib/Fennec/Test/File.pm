@@ -4,6 +4,8 @@ use warnings;
 
 use Carp;
 use Fennec::Result;
+use Fennec::Util::Abstract;
+require Fennec;
 
 use List::MoreUtils qw/uniq/;
 use Cwd qw/cwd/;
@@ -15,12 +17,7 @@ BEGIN {
 
 our $ROOT;
 
-#####
-# Abstract
-#
-sub valid_file {}
-sub load_file {}
-sub paths {}
+Abstract qw/ valid_file load_file paths /;
 
 sub root {
     my $class = shift;
@@ -119,7 +116,14 @@ sub data {
 sub load {
     my $self = shift;
     return 1 if $self->[1]++;
+    Fennec->clear_test_class;
+
     $self->load_file( $self->[0] );
+
+    my $tclass = Fennec->test_class;
+    croak( "loading '" . $self->[0] . "' did not produce a test class" )
+        unless $tclass;
+    return $tclass;
 }
 
 sub filename {

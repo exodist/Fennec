@@ -15,58 +15,36 @@ use Scalar::Util qw/blessed/;
 
 our $NEW;
 
-Accessors qw/ stack threader todo skip file _init_args /;
-
-sub init { return shift }
-
-sub new_from_file {
-    my $class = shift;
-    my ( $file ) = @_;
-    local $NEW;
-    local Runner->{ current };
-    $file->load;
-    my $self = $class->_new;
-    croak( "File $file->name did not create a new test object." )
-        unless $self;
-    $self->init(@{ $self->_init_args });
-    $self->file( $file );
-    return $self;
-}
-
-sub _new {
-    my $class = shift;
-    ( $NEW ) = @_ if @_;
-    return $NEW;
-}
+Accessors qw/ group threader todo skip file /;
 
 sub new {
     my $class = shift;
     my %proto = @_;
-    my ( $todo, $skip ) = @proto{qw/ todo skip /};
+    my ( $todo, $skip, $group, $file ) = @proto{qw/ todo skip group file /};
 
     my $self = bless(
         {
-            stack       => Stack->new,
+            group       => $group,
+            file        => $file,
             threader    => Threader->new( $proto{ p_tests }),
             skip        => $skip || undef,
-            todo        => $todo || undef
+            todo        => $todo || undef,
         },
         $class
     );
-    $self->init( @_ );
+    $self->init( @_ ) if $class->can( 'init' );
     return $self;
 }
 
 sub random {
     my $self = shift;
+    ( $self->{ random }) = @_ if @_;
     return defined $self->{ random }
         ? $self->{ random }
         : Runner->random;
 }
 
-sub run { shift->stack->run }
-sub filename { shift->file->filename }
-sub name { return blessed( $_[0] )}
+sub name { shift->file->filename }
 
 1;
 
