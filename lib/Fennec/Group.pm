@@ -6,11 +6,9 @@ use base 'Fennec::Base';
 
 use Fennec::Runner;
 use Fennec::Util::Accessors;
-use Fennec::Util::Abstract;
 use Carp;
 
 Accessors qw/ parent children name method file line /;
-Abstract  qw/ tests add_item /;
 
 sub function    {}
 sub depends     {[]}
@@ -25,7 +23,7 @@ sub new {
     confess( "$class must be created with a method" )
         unless $method;
 
-    my $self = bless({ %proto, method => $method }, $class );
+    my $self = bless({ %proto, method => $method, children => [] }, $class );
     my $init = $self->can( 'init' ) || $self->can( 'initialize' );
     $self->$init( $name, @_ ) if $init;
     return $self;
@@ -36,6 +34,24 @@ sub _method_proto {
     return ( $_[0] ) if @_ == 1;
     %proto = @_;
     return ( $proto{ method }, %proto );
+}
+
+sub tests {
+    my $self = shift;
+    return grep { $_->isa('Fennec::Group::Tests') } @{ $self->children };
+}
+
+sub groups {
+    my $self = shift;
+    return grep { !$_->isa('Fennec::Group::Tests') } @{ $self->children };
+}
+
+sub add_item {
+    my $self = shift;
+    my ( $item ) = @_;
+    push @{ $self->children } => $item;
+    $item->parent( $self );
+    return $self;
 }
 
 sub run_method_as_current {

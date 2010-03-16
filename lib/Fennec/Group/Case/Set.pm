@@ -5,14 +5,9 @@ use Carp;
 
 use base 'Fennec::Group::Spec';
 
-sub depends {[ 'Case::Set', 'Fennec::Group::Spec' ]}
-
 sub function { 'test_set' }
 
-sub add_item {
-}
-
-sub tests {
-}
+sub tests {}
+sub _tests {}
 
 1;

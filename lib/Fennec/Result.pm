@@ -7,11 +7,13 @@ use base 'Fennec::Base';
 use Fennec::Util::Accessors;
 use Fennec::Runner;
 
-our @ITEM_ACCESSORS = qw/ name stack node file line /;
+our @ITEM_OR_TEST_ACCESSORS = qw/ skip todo /;
+our @ITEM_ACCESSORS = qw/ name file line /;
 our @SIMPLE_ACCESSORS = qw/pass item diag benchmark/;
 our @PROPERTIES = (
     @ITEM_ACCESSORS,
     @SIMPLE_ACCESSORS,
+    @ITEM_OR_TEST_ACCESSORS,
     qw/ test /,
 );
 
@@ -60,10 +62,25 @@ for my $item_accessor ( @ITEM_ACCESSORS ) {
         return $self->{ $item_accessor }
             if $self->{ $item_accessor };
 
-        return undef
-            unless $self->item->can( $item_accessor );
+        return undef unless $self->item
+                        and $self->item->can( $item_accessor );
 
         return $self->item->$item_accessor;
+    };
+}
+
+for my $any_accessor ( @ITEM_OR_TEST_ACCESSORS ) {
+    no strict 'refs';
+    *$any_accessor = sub {
+        my $self = shift;
+        return $self->{ $any_accessor }
+            if $self->{ $any_accessor };
+
+        return $self->item->$any_accessor
+            if $self->item && $self->item->can( $any_accessor );
+
+        return $self->test->$any_accessor
+            if $self->test && $self->test->can( $any_accessor );
     };
 }
 

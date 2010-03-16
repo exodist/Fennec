@@ -5,7 +5,7 @@ use warnings;
 use Carp;
 use Fennec::Runner;
 use Fennec::Test;
-use Fennec::Test::Function;
+use Fennec::Test::Functions;
 use Fennec::Generator;
 
 our $VERSION = "0.006";
@@ -18,7 +18,7 @@ sub import {
     my $class = shift;
     my %proto = @_;
     my ( $caller, $file, $line ) = caller;
-    my ( $load, $functions, $generators ) = @proto{qw/ load functions generators /}
+    my ( $groups, $generators ) = @proto{qw/ groups generators /}
 
     croak "Test runner not found"
         unless Runner;
@@ -32,14 +32,11 @@ sub import {
         push @{ $caller . '::ISA' } => Test;
     }
 
-    $functions ||= [ qw/ Tests Spec Case / ];
+    $groups ||= [ qw/Spec Case Tests/ ];
+    my $functions = Functions->new( @$groups );
+    $functions->export_to( $caller );
+
     $generators ||= [ qw/ Simple More Warn Exception / ];
-
-    load_to_package( $load, $caller ) if $load;
-
-    export_package_to( 'Fennec::Test::Function::' . $_, $caller )
-        for @$functions;
-
     export_package_to( 'Fennec::Generator::' . $_, $caller )
         for @$generators;
 
@@ -50,26 +47,6 @@ sub export_package_to {
     my ( $from, $to ) = @_;
     eval "require $from; 1" || die( $@ );
     $from->export_to( $to );
-}
-
-sub load_to_package {
-    my ( $load, $package ) = @_;
-    $load = { map { $_ => [] } @$load }
-        if ref( $load ) eq 'ARRAY';
-
-    for my $want ( keys %$load ) {
-        my @args = @{ $load->{ $want }};
-        # Sub::Uplevel was being wacky, this works fine.
-        eval "
-            package $package;
-            use strict;
-            use warnings;
-            require $want;
-            \@args ? $want\->import( \@args );
-                   : $want\->import;
-            1;
-        " || die( $@ );
-    }
 }
 
 1;

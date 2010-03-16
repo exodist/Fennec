@@ -9,6 +9,7 @@ use Fennec::Test::File;
 use Fennec::Util::Accessors;
 use Fennec::Util::Threader;
 use Fennec::Group::Root;
+use Fennec::Result;
 use Carp;
 use List::Util qw/shuffle/;
 use Benchmark qw/timeit :hireswallclock/;
@@ -61,15 +62,27 @@ sub start {
     for my $file ( @{ $self->files }) {
         $self->threader->thread( sub {
             try {
-                Fennec::Group::Root->new(
+                my $group = Fennec::Group::Root->new(
                     $file->filename,
                     method => sub { $self->file->load },
                     file => $file,
-                )->build->run_tests;
+                )->build;
+
+                my $test = $group->test;
+                return Result->skip_item( $test )
+                    if $test->skip;
+
+                try {
+                    $group->build_children;
+                    $group->run_tests;
+                }
+                catch {
+                    Result->fail_item( $test, $_ );
+                };
             }
             catch {
                 Result->fail_item( $file, $_ );
-            }
+            };
         }, 1 );
     }
 
