@@ -12,14 +12,29 @@ __END__
 
 Fennec::Manual::Mission - A modern testing framework for perl
 
-=head1 DESCRIPTION
+=head1 WHY WRITE A NEW TEST FRAMEWORK
 
-Fennec is a modern testing framework for perl. When it comes to making sure
-work is tested perl does a pretty good job. The problem is the with the tools
-available to achieve this testing. Most test tools for perl are under the
-Test:: namespace and rely on L<Test::Builder>.
+When it comes to making sure work is tested perl does a pretty good job. The
+problem is the with the tools available to achieve this testing. Most test
+tools for perl are under the Test:: namespace and rely on L<Test::Builder>.
+
+Fennec is a highly extendable testing framework. Fennec provides all the pieces
+necessary to achieve the same functionality of other modern testing frameworks.
+Fennec has a further goal of simplifying development of better testing
+structures.
+
+Fennec is intended to modernize perl testing, while addressing complaints and
+insufficiencies in current perl testing frameworks. Currently the most used and
+pervasive perl testing framework is L<Test::Builder> as such most of this
+document will make comparisons primarily with that framework.
 
 =head1 LIMITATIONS OF TEST BUILDER
+
+L<Test::Builder> has gotten the job done so far. There is no need to defend
+L<Test::Builder>, it's success speeks for itself. Download almost any cpan
+module and you will likely see L<Test::Builder> in action. The goal here is not
+to bash L<Test::Builder>, but rather to illustrate places where things could be
+better.
 
 =over 4
 
@@ -55,6 +70,13 @@ the harness about tests out of order and duplicate test numbers.
     ok( 1, "another test" );
     ok( 1, "and another test" );
 
+=item No randomization of tests
+
+Test builder results are ordered by nature. TAP itself suggests test numbers.
+making tests run in random order would involve manually wrapping sets of tests
+into subs and creating your own runner to randomize them. Test files are also
+run in a consistant order.
+
 =back
 
 =head1 FEATURES OF FENNEC
@@ -63,7 +85,7 @@ See L<Fennec::Manual::Features> for the complete list.
 
 =over 4
 
-=item Tests are objects
+=item Test files are objects
 
 When you use L<Fennec> the package you are in becomes a L<Fennec::Test> class.
 This class is instantiated and all test groups are run as a method on the
@@ -77,9 +99,15 @@ context information. See L<Fennec::Result> for more information.
 
 =item Extendability
 
-See the EXTENDABILITY OF FENNEC section below.
+Fennec has 4 primary places open to extension. Result handlers (to do something
+with results other than printing TAP). Test Groups which allow for different
+test organization scheme's such as RSPEC. Result generators which fullfill the
+same role as Test::XXX has done in the past; that is providing new test utility
+functions such as dies_ok. And finally Test::File extensions which can be used
+to add new ways of writing tests such as TestML.
 
-See Also: L<Fennec::Handler>, L<Fennec::Group>, L<Fennec::Generator>, and
+See the EXTENDABILITY OF FENNEC section below as well as the documentation for
+L<Fennec::Handler>, L<Fennec::Group>, L<Fennec::Generator>, and
 L<Fennec::Test::File>.
 
 =item Forking just works
@@ -90,17 +118,23 @@ expect it to work.
 
 =item Ships with rspec-like testing
 
-My take on rspec testing. Not a 100% compatible implementation, but the
-extendability of L<Fennec::Group> makes writing a replacement that is 100%
-rspec compatible an easily achievable goal.
+Fennec ships with L<Fennec::Group::Spec> which is an extension to provide a
+variation of spec testing (like Rubies RSPEC). This does nto work exactly the
+same as Rubies RSPEC, but it is close. If you want a perfectl clone of RSPEC
+you can write it fairly easy using L<Fennec::Group> extensions.
 
 =back
 
 =head1 EXTENDABILITY OF FENNEC
 
+Fennec must be extendable above all else. Its one thing to make a test
+framework that is modern right now, it is another thing entirely to make a
+framework that can remain modern in years to come. Currently there are 4 main
+avenues for extending Fennec.
+
 =over 4
 
-=item Result Generator
+=item Result Generators
 
 =item Test Groups
 
@@ -110,14 +144,13 @@ rspec compatible an easily achievable goal.
 
 =back
 
-=head1 EARLY VERSION WARNING
+=head1 THE FUTURE, MAKING FENNEC BETTER
 
-This is VERY early version. Fennec does not run yet.
-
-Please go to L<http://github.com/exodist/Fennec> to see the latest and
-greatest.
-
-=head1 SYNOPSYS
+If you have any ideas on improving fennec, improving testing in general, or
+even simple complaints about how some testing works, please submit them. If you
+need some core changes to be made for an extention or improvement do not
+hesitate to ask. Fennec will not fester in its current limitations if it can
+avoid it.
 
 =head1 AUTHORS
 
