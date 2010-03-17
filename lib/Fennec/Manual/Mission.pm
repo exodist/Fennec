@@ -136,11 +136,30 @@ avenues for extending Fennec.
 
 =item Result Generators
 
+Result generators provide test utility functions, sometimes called asserts.
+This is similar to most of the module in the Test::XXX name space. The
+difference is that these all produce L<Fennec::Result> objects instead of
+issuing results to L<Test::Builder>.
+
 =item Test Groups
+
+Test Groups allow for different test organization scheme's such as RSPEC. You
+can create group objects which are created through utility functions. These
+objects are themselves glorified methods that will be run against your test
+object. Groups can be nested and return a list of test groups to be run. Test
+sets returned by groups may also contain setup and teardown methods.
 
 =item Result Handlers
 
+When reseults are generated Fennec will forward them to all the initialized
+result handlers. Result handlers can do whatever they want with these results.
+The default handler is the TAP handler which will output the results in TAP
+format to STDOUT.
+
 =item Custom test file types
+
+L<Fennec::Test::File> extensions can be used to add new ways of writing tests
+such as writing a TestML extentions.
 
 =back
 

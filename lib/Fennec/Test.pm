@@ -32,7 +32,8 @@ sub new {
         },
         $class
     );
-    $self->init( @_ ) if $class->can( 'init' );
+    my $init = $class->can( 'init' ) || $class->can( 'initialize' );
+    $self->$init( @_ ) if $init;
     return $self;
 }
 

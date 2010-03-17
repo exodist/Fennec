@@ -49,9 +49,19 @@ sub sub_for {
     my $self = shift;
     my ( $gclass ) = @_;
     my ( $function, $specs ) = @{ $self->functions->{ $gclass }};
-    my $sub = sub { Group->add_item( $gclass->new( @_ ))};
+
+    my $sub = sub {
+        my ( $caller, $file, $line ) = caller;
+        Group->add_item( $gclass->new( file => $file, line => $line, @_ ))
+    };
+
     return $sub unless $specs and keys %$specs;
-    return sub(&;@) { $sub->( "anonymous($gclass)", @_ ) } if $specs->{ subproto };
+
+    return sub(&;@) {
+        my ( $caller, $file, $line ) = caller;
+        $sub->( "anonymous($gclass)", file => $file, line => $line, @_ )
+    } if $specs->{ subproto };
+
     croak( "Unknown spec" );
 }
 
