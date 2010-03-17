@@ -37,11 +37,11 @@ sub _looks_like_root {
     my $class = shift;
     my ( $dir ) = @_;
     return unless $dir;
-    return 1 if -e "$dir/.fennec";
     return 1 if -d "$dir/t" && -d "$dir/lib";
     return 1 if -e "$dir/Build.PL";
     return 1 if -e "$dir/Makefile.PL";
     return 1 if -e "$dir/test.pl";
+    return 1 if -e "$dir/t/Fennec.t";
     return 0;
 }
 
@@ -132,3 +132,17 @@ sub filename {
 }
 
 1;
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

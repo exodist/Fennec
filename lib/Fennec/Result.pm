@@ -16,8 +16,15 @@ our @PROPERTIES = (
     @ITEM_OR_TEST_ACCESSORS,
     qw/ test /,
 );
+our $TODO;
 
 Accessors @SIMPLE_ACCESSORS;
+
+sub TODO {
+    my $class = shift;
+    ($TODO) = @_ if @_;
+    return $TODO;
+}
 
 sub fail { !$self->pass }
 
@@ -26,6 +33,7 @@ sub new {
     my ( $pass, $item, %proto ) = @_;
     return bless(
         {
+            $TODO ? ( todo => $TODO ) : (),
             %proto,
             pass => $pass ? 1 : 0,
             item => $item || undef,
@@ -95,3 +103,17 @@ sub test {
 }
 
 1;
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

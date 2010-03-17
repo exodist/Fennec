@@ -1,14 +1,17 @@
-package Fennec::Group::Case::Set;
+package Fennec::Util;
 use strict;
 use warnings;
-use Carp;
 
-use base 'Fennec::Group::Spec';
+use base 'Fennec::Base';
 
-sub function { 'test_set' }
-
-sub tests {}
-sub _tests {}
+sub package_subs {
+    my ( $package, $match ) = @_;
+    $package = $package . '::';
+    no strict 'refs';
+    my @list = grep { defined( *{$package . $_}{CODE} )} keys %$package;
+    return @list unless $match;
+    return grep { $_ =~ $match } @list;
+}
 
 1;
 
