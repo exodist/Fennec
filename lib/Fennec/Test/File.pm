@@ -1,6 +1,8 @@
-package Fennec::File;
+package Fennec::Test::File;
 use strict;
 use warnings;
+
+use base 'Fennec::Base';
 
 use Carp;
 use Fennec::Result;
@@ -12,7 +14,7 @@ use Cwd qw/cwd/;
 use File::Find qw/find/;
 BEGIN {
     *_find = \&find;
-    undef( &find );
+    undef( *Fennec::Test::File::find );
 }
 
 our $ROOT;
@@ -50,9 +52,9 @@ sub find_types {
     my ( $types, $files ) = @_;
     my @paths;
 
-    my @plugins
+    my @plugins;
     for my $type ( @$types ) {
-        my $plugin = "Fennec\::File\::$type";
+        my $plugin = "Fennec\::Test\::File\::$type";
         eval "require $plugin" || die( $@ );
         push @plugins => $plugin;
         push @paths => $plugin->paths;
@@ -102,7 +104,7 @@ sub new {
     croak( "$class\::new() called without a filename" )
         unless $file;
     croak( "$file is not a valid $class file" )
-        unless $self->valid_file( $file );
+        unless $class->valid_file( $file );
 
     return bless( [ $file, 0 ], $class );
 }

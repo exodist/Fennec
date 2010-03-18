@@ -9,8 +9,9 @@ use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
+use Try::Tiny;
 
-our @EXPORT = qw/ export tb_wrapper result diag /;
+our @EXPORT = qw/ tester util tb_wrapper result diag /;
 our $TB_RESULT;
 our @TB_DIAGS;
 our $TB_OK;
@@ -31,7 +32,7 @@ our %TB_OVERRIDES = (
 );
 
 require Test::Builder;
-for my $ref (keys %OVERRIDE) {
+for my $ref (keys %TB_OVERRIDES) {
     no warnings 'redefine';
     no strict 'refs';
     my $newref = "real_$ref";
@@ -53,11 +54,11 @@ sub export_to {
     my ( $dest, $prefix ) = @_;
     my $exports = $class->exports;
     for my $name ( keys %$exports ) {
-        my $sub = $list->{ $item };
-        $sub = $class->can( $sub ) unless ref $sub eq 'CODE'
+        my $sub = $exports->{ $name };
+        $sub = $class->can( $sub ) unless ref $sub eq 'CODE';
 
         croak( "Could not find sub $name in $class for export" )
-            unless $sub eq 'CODE';
+            unless ref($sub) eq 'CODE';
 
         $name = $prefix . $name if $prefix;
         no strict 'refs';
@@ -71,19 +72,65 @@ sub import {
     my $caller = caller;
     $class->export_to( $caller, $prefix );
     no strict 'refs';
-    push @{ $class . '::ISA' } => __PACKAGE__
-        unless grep { $_ eq __PACKAGE__ } @{ $class . '::ISA' };
+    push @{ $caller . '::ISA' } => __PACKAGE__
+        unless grep { $_ eq __PACKAGE__ } @{ $caller . '::ISA' };
 }
 
-sub export {
+sub util {
     my $class = caller;
     my ( $name, $sub ) = @_;
-    croak( "You must provide a name to add_export()" )
+    croak( "You must provide a name to util()" )
         unless $name;
-    $sub ||= $name;
+    $sub ||= $class->can( $name );
+    croak( "No sub found for function $name" )
+        unless $sub;
+
     no strict 'refs';
     my $export = \%{ $class . '::EXPORT' };
     $export->{ $name } = $sub;
+}
+
+sub tester {
+    my $class = caller;
+    my ( $name, $sub ) = @_;
+    croak( "You must provide a name to tester()" )
+        unless $name;
+    $sub ||= $class->can( $name );
+    croak( "No sub found for function $name" )
+        unless $sub;
+
+    my $wrapsub = sub {
+        my $result;
+        my $benchmark;
+        my ( $caller, $file, $line ) = caller;
+        try {
+            no warnings 'redefine';
+            local *result = sub { $result = { @_ }};
+            $benchmark = timeit( 1, sub { $sub->( @_ )});
+        }
+        catch {
+            result(
+                pass => 0,
+                file => $file || "N/A",
+                line => $line || "N/A",
+                diag => [ "$name died: $_" ],
+            );
+        };
+        result(
+            file => $file || "N/A",
+            line => $line || "N/A",
+            benchmark => $benchmark || undef,
+            %$result
+        ) if $result;
+    };
+
+    my $proto = prototype( $sub );
+    my $newsub = $proto ? eval "sub($proto) { \$wrapsub->( \@_ )}" || die($@)
+                        : $wrapsub;
+
+    no strict 'refs';
+    my $export = \%{ $class . '::EXPORT' };
+    $export->{ $name } = $newsub;
 }
 
 sub diag {
@@ -91,10 +138,12 @@ sub diag {
 }
 
 sub result {
+    return unless @_;
+    my %proto = @_;
     Runner->handler->result(
         Result->new(
-            _first_test_caller_details,
-            @_,
+            @proto{qw/file line/} ? _first_test_caller_details() : (),
+            %proto,
         )
     );
 }

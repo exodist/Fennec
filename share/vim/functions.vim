@@ -21,5 +21,5 @@ endfunction
 map ,ts :w<cr>:call RunSet()<cr>
 map ,tc :w<cr>:call RunCase()<cr>
 map ,T :w<cr>:! script/fennec_prove %<cr>
-:map <F9> :w<cr>:! script/fennec_prove %<cr>
-:imap <F9> <ESC>:w<cr>:! script/fennec_prove %<cr>
+":map <F9> :w<cr>:! script/fennec_prove %<cr>
+":imap <F9> <ESC>:w<cr>:! script/fennec_prove %<cr>

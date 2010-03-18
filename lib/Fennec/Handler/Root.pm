@@ -19,13 +19,13 @@ sub new {
     my @handlers;
     for my $handler ( @_ ) {
         my $hpackage = 'Fennec::Handler::' . $handler;
-        eval "require $handler" || die( @_ );
+        eval "require $hpackage" || die( @_ );
         push @handlers => $hpackage->new;
     }
 
-    my $self = bless(
+    return bless(
         {
-            handlers => $handlers,
+            handlers => \@handlers,
             failures_list => [[]],
             listener => Listener->new,
         },
@@ -35,13 +35,13 @@ sub new {
 
 sub start {
     my $self = shift;
-    $handler->start for @{ $self->handlers };
+    $_->start for @{ $self->handlers };
     $self->started( 1 );
 }
 
 sub finish {
     my $self = shift;
-    $handler->finish for @{ $self->handlers };
+    $_->finish for @{ $self->handlers };
     $self->listener->finish;
     $self->finished( 1 );
 }

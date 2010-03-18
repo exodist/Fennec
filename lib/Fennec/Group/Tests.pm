@@ -5,6 +5,7 @@ use Carp;
 
 use base 'Fennec::Group';
 
+sub _tests { }
 sub tests { }
 sub function { 'tests' }
 

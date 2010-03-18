@@ -6,6 +6,7 @@ use base 'Fennec::Base';
 
 use Fennec::Util::Accessors;
 use Fennec::Group;
+use Carp;
 
 Accessors qw/ groups functions /;
 
@@ -22,10 +23,11 @@ sub build {
     my $groups = $self->groups;
     my %functions;
     while( my $group = pop @$groups ) {
-        my $gclass = $group =~ m/^Fennec::Group/
+        my $gclass = $group =~ m/^Fennec::Group::/
             ? $group
-            : 'Fennec::Group::' . $gclass;
+            : 'Fennec::Group::' . $group;
 
+        eval "require $gclass" || die ( $@ );
         next if $functions{ $gclass };
         push @$groups => @{ $gclass->depends };
         my ( $function, %specs ) = $gclass->function;
@@ -51,8 +53,10 @@ sub sub_for {
     my ( $function, $specs ) = @{ $self->functions->{ $gclass }};
 
     my $sub = sub {
+        my $name = shift;
+        my %proto = @_ > 1 ? @_ : (method => shift( @_ ));
         my ( $caller, $file, $line ) = caller;
-        Group->add_item( $gclass->new( file => $file, line => $line, @_ ))
+        Group->add_item( $gclass->new( $name, file => $file, line => $line, %proto ))
     };
 
     return $sub unless $specs and keys %$specs;

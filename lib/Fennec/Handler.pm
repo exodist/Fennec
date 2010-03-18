@@ -22,6 +22,7 @@ sub diag {
 
 sub finish {1}
 sub start {1}
+sub bail_out {1}
 
 1;
 

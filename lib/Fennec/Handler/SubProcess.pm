@@ -12,11 +12,13 @@ Accessors qw/socket/;
 
 sub init {
     my $self = shift;
-    $self->socket(
-        IO::Socket::UNIX->new(
-            Peer => Runner->handler->listener->socket_file,
-        )
-    )->autoflush( 1 );
+    my $socket = IO::Socket::INET->new(
+        PeerAddr => '127.0.0.1',
+        PeerPort => Runner->handler->listener->port,
+    ) die( $! );
+    $self->socket( $socket )->autoflush( 1 );
+
+    print $socket Runner->handler->listener->key . "\n";
 
     die( "Error connecting to master process $!" )
         unless $self->socket && $self->socket->connected;
@@ -33,6 +35,13 @@ sub diag {
     my $self = shift;
     $self->result( Fennec::Result->new(
         diag => [@_],
+    ));
+}
+
+sub bail_out {
+    my $self = shift;
+    $self->result( Fennec::Result->new(
+        bail_out => $_[0],
     ));
 }
 

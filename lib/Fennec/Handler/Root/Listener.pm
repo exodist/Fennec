@@ -6,35 +6,38 @@ use base 'Fennec::Base';
 
 use Fennec::Util::Accessors;
 use Fennec::Result;
-use IO::Socket::UNIX;
+use Fennec::Runner;
+use IO::Socket::INET;
 use Try::Tiny;
 use Carp;
 
-use File::Temp qw/tempfile/;
 use Cwd qw/cwd/;
 
-Accessors qw/socket file connections root_handler/;
+our @CHARS = ( 'a' .. 'z', 'A' .. 'Z', 0 .. 9, '#', ',', qw{!@$%^&*()_-=+/?.><`~|\\[]\{\}';:"});
+
+Accessors qw/socket port key connections root_handler/;
 
 sub new {
     my $class = shift;
     my ( $root_handler ) = shift;
 
-    # Get a temp file
-    my ( $fh, $socket_file ) = tempfile( cwd() . "/.fennec.$$.XXXX"  );
-    close( $fh ) || die( $! );
-    unlink( $socket_file );
-
-    my $socket = IO::Socket::UNIX->new(
-        Listen => 1,
-        Local => $socket_file,
-        Blocking => 0,
-    ) || die( $! );
-    $socket->blocking( 0 );
+    my ( $socket, $port );
+    do {
+        $port = int(rand(90000) + 10000);
+        $socket = IO::Socket::INET->new(
+            Listen => 1,
+            LocalAddr => '127.0.0.1',
+            LocalPort => $port,
+            Blocking => 0,
+        ) || die( $! );
+        $socket->blocking( 0 );
+    } until( $socket );
 
     return bless(
         {
             socket => $socket,
-            file => $socket_file,
+            port => $port,
+            key => join( map { $CHARS[rand(@CHARS)] } 1 .. 128 ),
             connections => [],
             root_handler => $root_handler,
         },
@@ -53,6 +56,9 @@ sub accept_connections {
     # Get new connections
     my $socket = $self->socket;
     while( my $incoming = $socket->accept ) {
+        chomp( my $inkey = <$incoming> );
+        next unless $inkey;
+        next unless $inkey eq $self->key;
         $incoming->blocking( 0 );
         $incoming->autoflush( 1 );
         push @{ $self->connections } => $incoming;

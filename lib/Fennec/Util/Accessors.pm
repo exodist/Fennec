@@ -4,12 +4,19 @@ use warnings;
 
 use base 'Fennec::Base';
 
+use Carp;
+use Scalar::Util qw/blessed/;
+
 sub alias {
     my $class = shift;
     my ($caller) = @{ shift(@_) };
     for my $accessor ( @_ ) {
         my $sub = sub {
             my $self = shift;
+            croak ( "$caller\->$accessor() is an object method, not a class method." )
+                if $self eq $caller;
+            confess( "$accessor() called on something other than an instance of $caller - how'd you do that?" )
+                unless blessed($self) and $self->isa( $caller );
             ($self->{ $accessor }) = @_ if @_;
             return $self->{ $accessor };
         };

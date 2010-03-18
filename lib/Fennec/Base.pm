@@ -9,15 +9,14 @@ sub import {
     my $name = $class;
     $name =~ s/^.*::([^:]+)$/$1/;
 
-    my $sub = $class->can( 'alias' )
-        ? sub {
-            my @caller = caller;
-            $class->alias( \@caller, @_ );
-        }
-        : sub { $class };
-
     no strict 'refs';
-    *{ $caller . '::' . $name } = $sub;
+    *{ $caller . '::' . $name } = sub {
+        my $alias = $class->can( 'alias' );
+        return $class unless $alias;
+
+        my @caller = caller;
+        return $class->alias( \@caller, @_ );
+    }
 }
 
 1;

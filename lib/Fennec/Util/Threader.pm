@@ -1,6 +1,9 @@
 package Fennec::Util::Threader;
 use strict;
 use warnings;
+
+use base 'Fennec::Base';
+
 use Fennec::Util::Accessors;
 use Fennec::Runner;
 use POSIX ();
@@ -11,9 +14,8 @@ Accessors qw/max pids/;
 sub new {
     my $class = shift;
     my ($max) = @_;
-    $proto{ pid } = $$;
     return bless(
-        { pids => [], max => $max || 1 },
+        { pids => [], pid => $$, max => $max || 1 },
         $class
     );
 }
@@ -43,7 +45,7 @@ sub _fork {
             unless $forced;
 
         until ( waitpid( $pid, &POSIX::WNOHANG )) {
-            Runner->listener->iteration;
+            Runner->handler->listener->iteration;
             sleep(0.10);
         }
         return;
@@ -52,7 +54,7 @@ sub _fork {
     # Make sure this new process does not wait on the previous process's children.
     $self->{pids} = [];
 
-    $code->( @$args );
+    $code->();
     $self->cleanup;
     Runner->_sub_process_exit;
 }

@@ -6,9 +6,8 @@ use Carp;
 use Fennec::Runner;
 use Fennec::Test;
 use Fennec::Test::Functions;
-use Fennec::Generator;
 
-our $VERSION = "0.006";
+our $VERSION = "0.010";
 our $TEST_CLASS;
 
 sub clear_test_class { $TEST_CLASS = undef }
@@ -18,7 +17,18 @@ sub import {
     my $class = shift;
     my %proto = @_;
     my ( $caller, $file, $line ) = caller;
-    my ( $groups, $generators ) = @proto{qw/ groups generators /}
+    my ( $groups, $generators ) = @proto{qw/ groups generators /};
+    my $standalone = delete $proto{ standalone };
+
+    if ( $standalone and !Runner ) {
+        'Fennec::Runner'->init(
+            %$standalone,
+            files => [ $caller ],
+            filetypes => [ 'Standalone' ]
+        );
+        no strict 'refs';
+        *{ $caller . '::start' } = sub { Runner->start };
+    }
 
     croak "Test runner not found"
         unless Runner;
@@ -32,11 +42,11 @@ sub import {
         push @{ $caller . '::ISA' } => Test;
     }
 
-    $groups ||= [ qw/Spec Case Tests/ ];
+    $groups ||= [ qw/Tests/ ];
     my $functions = Functions->new( @$groups );
     $functions->export_to( $caller );
 
-    $generators ||= [ qw/ Simple More Warn Exception / ];
+    $generators ||= [ qw/ Simple / ];
     export_package_to( 'Fennec::Generator::' . $_, $caller )
         for @$generators;
 

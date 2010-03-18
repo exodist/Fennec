@@ -6,15 +6,15 @@ use Fennec::Generator;
 use Fennec::Result;
 use Try::Tiny;
 
-export ok => sub {
+tester ok => sub {
     my ( $ok, $name ) = @_;
     result(
         pass => $ok ? 1 : 0,
         name => $name || 'nameless test',
     );
-}
+};
 
-export todo => sub(&;$) {
+util todo => sub(&;$) {
     my ( $code, $reason ) = @_;
     Result->TODO( $reason || "no reason given" );
     try {
@@ -24,11 +24,11 @@ export todo => sub(&;$) {
         diag( "Caught error in todo block\n  Error: $_\n  todo: $reason" );
     }
     Result->TODO( undef );
-}
+};
 
-export diag => \&diag;
+util diag => \&diag;
 
-export 'require_ok';
+tester 'require_ok';
 sub require_ok(*) {
     my ( $package ) = @_;
     try {
@@ -45,9 +45,9 @@ sub require_ok(*) {
         pass => 1,
         name => "require $package",
     );
-}
+};
 
-export 'use_into_ok';
+tester 'use_into_ok';
 sub use_into_ok(**;@) {
     my ( $from, $to, @importargs ) = @_;
     require_ok( $from );
@@ -67,13 +67,13 @@ sub use_into_ok(**;@) {
         pass => 1,
         name => "$from\->import(...)",
     );
-}
+};
 
-export use_ok(*) {
+tester use_ok => sub(*) {
     my( $from, @importargs ) = @_;
     my $caller = caller;
     use_into_ok( $from, $caller, @importargs );
-}
+};
 
 1;
 

@@ -26,7 +26,7 @@ sub TODO {
     return $TODO;
 }
 
-sub fail { !$self->pass }
+sub fail { !shift->pass }
 
 sub new {
     my $class = shift;

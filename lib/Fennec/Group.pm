@@ -6,6 +6,7 @@ use base 'Fennec::Base';
 
 use Fennec::Runner;
 use Fennec::Util::Accessors;
+use Fennec::Test;
 use Carp;
 
 Accessors qw/ parent children name method file line /;
@@ -20,7 +21,7 @@ sub new {
     my $class = shift;
     my $name = shift;
     my ( $method, %proto ) = $class->_method_proto( @_ );
-    confess( "$class must be created with a method" )
+    confess( "$class must be created with a method " )
         unless $method;
 
     my $self = bless({ %proto, method => $method, children => [] }, $class );
@@ -32,7 +33,7 @@ sub new {
 sub _method_proto {
     my $class = shift;
     return ( $_[0] ) if @_ == 1;
-    %proto = @_;
+    my %proto = @_;
     return ( $proto{ method }, %proto );
 }
 
@@ -65,6 +66,7 @@ sub run_method_as_current_on {
     my ( $method, $obj, @args ) = @_;
     my $depth = $self->depth + 1;
 
+    no warnings 'redefine';
     local *current = sub { $self };
     local *depth = sub { $depth };
     return $obj->$method( @args );
@@ -75,6 +77,7 @@ sub run_sub_as_current {
     my ( $sub, @args ) = @_;
     my $depth = $self->depth + 1;
 
+    no warnings 'redefine';
     local *current = sub { $self };
     local *depth = sub { $depth };
     return $sub->( @args );
@@ -89,7 +92,7 @@ sub build {
 
 sub build_children {
     my $self = shift;
-    $_->build for @{ $self->children }
+    $_->build for @{ $self->children };
     return $self;
 }
 

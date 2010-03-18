@@ -20,7 +20,7 @@ our $SINGLETON;
 
 sub alias { $SINGLETON }
 
-sub new {
+sub init {
     my $class = shift;
     my %proto = @_;
 
@@ -29,25 +29,25 @@ sub new {
 
     my $random = defined $proto{ random } ? $proto{ random } : 1;
     my $handlers = delete $proto{ handlers } || [ 'TAP' ];
-    my $handler = Fennec::Handler::Root->new( @$handlers );
+    my $handler = Fennec::Handler::Root->new( @$handlers ) || die ( "No handler" );
 
     my $ignore = delete $proto{ ignore };
-    my $files = File->find_types( delete $proto{ filetypes }, delete $proto{ files });
-    $files = [
-        grep {
-            my $file = $_;
-            !grep { $file =~ $_ } @$ignore
-        } @$files
-    ] if $ignore and @$ignore;
-    $files = [ shuffle( @$files )] if $random;
+    my @files = File->find_types( delete $proto{ filetypes }, delete $proto{ files });
+    @files = grep {
+        my $file = $_;
+        !grep { $file =~ $_ } @$ignore
+    } @files if $ignore and @$ignore;
+    croak( "No Fennec files found" )
+        unless @files;
+    @files = shuffle @files if $random;
 
     $SINGLETON = bless(
         {
             %proto,
             random      => $random,
-            files       => $files,
+            files       => \@files,
             handler     => $handler,
-            threader    => Threader->new( $proto{ p_files }),
+            threader    => Threader->new( $proto{ p_files }) || die( "No threader" ),
             parent_pid  => $$,
             pid         => $$,
         },
@@ -64,7 +64,7 @@ sub start {
             try {
                 my $group = Fennec::Group::Root->new(
                     $file->filename,
-                    method => sub { $self->file->load },
+                    method => sub { shift->file->load },
                     file => $file,
                 )->build;
 

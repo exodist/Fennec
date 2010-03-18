@@ -5,7 +5,6 @@ use warnings;
 use base 'Fennec::Base';
 
 use Fennec::Util::Accessors;
-use Fennec::Test::Stack;
 use Fennec::Util::Threader;
 use Fennec::Runner;
 use Try::Tiny;
