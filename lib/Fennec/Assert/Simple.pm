@@ -1,13 +1,14 @@
-package Fennec::Generator::Simple;
+package Fennec::Assert::Simple;
 use strict;
 use warnings;
 
-use Fennec::Generator;
+use Fennec::Assert;
 use Fennec::Result;
 use Try::Tiny;
 
 tester ok => sub {
     my ( $ok, $name ) = @_;
+    print STDERR "Inside 'ok'\n";
     result(
         pass => $ok ? 1 : 0,
         name => $name || 'nameless test',

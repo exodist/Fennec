@@ -6,8 +6,6 @@ use Fennec standalone => {};
 
 use Fennec::Runner;
 use Data::Dumper;
-print Dumper( Runner->handler );
-
 start;
 
 sub Fennec {
@@ -15,7 +13,9 @@ sub Fennec {
 
     tests hello_world => sub {
         my $self = shift;
+        print STDERR "Were here!\n";
         ok( 1, "Hello world" );
+        print STDERR "Were Done!\n";
     };
 }
 

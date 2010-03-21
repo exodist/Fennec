@@ -107,8 +107,8 @@ functions such as dies_ok. And finally Test::File extensions which can be used
 to add new ways of writing tests such as TestML.
 
 See the EXTENDABILITY OF FENNEC section below as well as the documentation for
-L<Fennec::Handler>, L<Fennec::Group>, L<Fennec::Generator>, and
-L<Fennec::Test::File>.
+L<Fennec::Handler>, L<Fennec::Workflow>, L<Fennec::Assert>, and
+L<Fennec::File>.
 
 =item Forking just works
 
@@ -118,10 +118,10 @@ expect it to work.
 
 =item Ships with rspec-like testing
 
-Fennec ships with L<Fennec::Group::Spec> which is an extension to provide a
+Fennec ships with L<Fennec::Workflow::Spec> which is an extension to provide a
 variation of spec testing (like Rubies RSPEC). This does nto work exactly the
 same as Rubies RSPEC, but it is close. If you want a perfectl clone of RSPEC
-you can write it fairly easy using L<Fennec::Group> extensions.
+you can write it fairly easy using L<Fennec::Workflow> extensions.
 
 =back
 
@@ -134,20 +134,20 @@ avenues for extending Fennec.
 
 =over 4
 
-=item Result Generators
+=item Asserts
 
-Result generators provide test utility functions, sometimes called asserts.
-This is similar to most of the module in the Test::XXX name space. The
-difference is that these all produce L<Fennec::Result> objects instead of
+Asserts generate result objects. Assert packages provide test utility
+functions. This is similar to most of the modules in the Test::XXX name space.
+The difference is that these all produce L<Fennec::Result> objects instead of
 issuing results to L<Test::Builder>.
 
-=item Test Groups
+=item Workflows
 
-Test Groups allow for different test organization scheme's such as RSPEC. You
-can create group objects which are created through utility functions. These
-objects are themselves glorified methods that will be run against your test
-object. Groups can be nested and return a list of test groups to be run. Test
-sets returned by groups may also contain setup and teardown methods.
+Test workflows allow for different test organization scheme's such as RSPEC.
+You can create workflow objects which are created through utility functions.
+These objects are themselves glorified methods that will be run against your
+test object. Workflows can be nested and return a list of test sets to be run.
+Test sets returned by groups may also contain setup and teardown methods.
 
 =item Result Handlers
 
@@ -158,7 +158,7 @@ format to STDOUT.
 
 =item Custom test file types
 
-L<Fennec::Test::File> extensions can be used to add new ways of writing tests
+L<Fennec::File> extensions can be used to add new ways of writing tests
 such as writing a TestML extentions.
 
 =back

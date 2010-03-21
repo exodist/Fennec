@@ -1,4 +1,4 @@
-package Fennec::Test::File;
+package Fennec::File;
 use strict;
 use warnings;
 
@@ -14,7 +14,7 @@ use Cwd qw/cwd/;
 use File::Find qw/find/;
 BEGIN {
     *_find = \&find;
-    undef( *Fennec::Test::File::find );
+    undef( *Fennec::File::find );
 }
 
 our $ROOT;

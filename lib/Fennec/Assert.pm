@@ -1,4 +1,4 @@
-package Fennec::Generator;
+package Fennec::Assert;
 use strict;
 use warnings;
 
@@ -100,13 +100,13 @@ sub tester {
         unless $sub;
 
     my $wrapsub = sub {
-        my $result;
+        my $outresult;
         my $benchmark;
         my ( $caller, $file, $line ) = caller;
         try {
             no warnings 'redefine';
-            local *result = sub { $result = { @_ }};
-            $benchmark = timeit( 1, sub { $sub->( @_ )});
+            local *result = sub { shift; print "result sub\n"; $outresult = { @_ }};
+            $benchmark = timeit( 1, sub { print "inner sub\n"; $sub->( @_ )});
         }
         catch {
             result(
@@ -120,8 +120,8 @@ sub tester {
             file => $file || "N/A",
             line => $line || "N/A",
             benchmark => $benchmark || undef,
-            %$result
-        ) if $result;
+            %$outresult
+        ) if $outresult;
     };
 
     my $proto = prototype( $sub );

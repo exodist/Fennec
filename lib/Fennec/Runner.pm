@@ -5,10 +5,10 @@ use warnings;
 use base 'Fennec::Base';
 use Fennec::Handler::Root;
 use Fennec::Test;
-use Fennec::Test::File;
+use Fennec::File;
 use Fennec::Util::Accessors;
 use Fennec::Util::Threader;
-use Fennec::Group::Root;
+use Fennec::Workflow::Root;
 use Fennec::Result;
 use Carp;
 use List::Util qw/shuffle/;
@@ -62,7 +62,7 @@ sub start {
     for my $file ( @{ $self->files }) {
         $self->threader->thread( sub {
             try {
-                my $group = Fennec::Group::Root->new(
+                my $group = Fennec::Workflow::Root->new(
                     $file->filename,
                     method => sub { shift->file->load },
                     file => $file,

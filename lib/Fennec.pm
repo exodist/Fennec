@@ -47,7 +47,7 @@ sub import {
     $functions->export_to( $caller );
 
     $generators ||= [ qw/ Simple / ];
-    export_package_to( 'Fennec::Generator::' . $_, $caller )
+    export_package_to( 'Fennec::Assert::' . $_, $caller )
         for @$generators;
 
     1;

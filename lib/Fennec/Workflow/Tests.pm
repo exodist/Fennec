@@ -1,9 +1,9 @@
-package Fennec::Group::Tests;
+package Fennec::Workflow::Tests;
 use strict;
 use warnings;
 use Carp;
 
-use base 'Fennec::Group';
+use base 'Fennec::Workflow';
 
 sub _tests { }
 sub tests { }

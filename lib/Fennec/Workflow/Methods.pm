@@ -1,8 +1,8 @@
-package Fennec::Group::Methods;
+package Fennec::Workflow::Methods;
 use strict;
 use warnings;
 
-use base 'Fennec::Group';
+use base 'Fennec::Workflow';
 
 use Fennec::Util;
 

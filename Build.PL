@@ -21,11 +21,6 @@ my $build = Module::Build->new(
         'Time::HiRes'       => 0,
         'Try::Tiny'         => 0,
     },
-    build_requires => {
-        'Object::Quick'               => '0.012',
-        'Test::Builder::Tester'       => 0,
-        'Test::Exception::LessClever' => '0.001',
-    },
     no_index => {
         package => [qw{
             Test::Builder

@@ -1,4 +1,4 @@
-package Fennec::Group;
+package Fennec::Workflow;
 use strict;
 use warnings;
 
@@ -39,12 +39,12 @@ sub _method_proto {
 
 sub tests {
     my $self = shift;
-    return grep { $_->isa('Fennec::Group::Tests') } @{ $self->children };
+    return grep { $_->isa('Fennec::Workflow::Tests') } @{ $self->children };
 }
 
 sub groups {
     my $self = shift;
-    return grep { !$_->isa('Fennec::Group::Tests') } @{ $self->children };
+    return grep { !$_->isa('Fennec::Workflow::Tests') } @{ $self->children };
 }
 
 sub add_item {

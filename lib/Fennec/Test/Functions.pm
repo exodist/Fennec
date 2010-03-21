@@ -5,7 +5,7 @@ use warnings;
 use base 'Fennec::Base';
 
 use Fennec::Util::Accessors;
-use Fennec::Group;
+use Fennec::Workflow;
 use Carp;
 
 Accessors qw/ groups functions /;
@@ -23,9 +23,9 @@ sub build {
     my $groups = $self->groups;
     my %functions;
     while( my $group = pop @$groups ) {
-        my $gclass = $group =~ m/^Fennec::Group::/
+        my $gclass = $group =~ m/^Fennec::Workflow::/
             ? $group
-            : 'Fennec::Group::' . $group;
+            : 'Fennec::Workflow::' . $group;
 
         eval "require $gclass" || die ( $@ );
         next if $functions{ $gclass };

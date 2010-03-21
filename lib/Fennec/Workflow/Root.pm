@@ -1,15 +1,15 @@
-package Fennec::Group::Root;
+package Fennec::Workflow::Root;
 use strict;
 use warnings;
 use Carp;
 
-use base 'Fennec::Group';
+use base 'Fennec::Workflow';
 
 use Fennec::Result;
 
 use List::Util qw/shuffle/;
 
-sub depends {[ 'Fennec::Group::Tests' ]}
+sub depends {[ 'Fennec::Workflow::Tests' ]}
 
 sub build {
     my $self = shift;
