@@ -3,12 +3,11 @@ use strict;
 use warnings;
 
 use Fennec::Assert;
-use Fennec::Result;
+use Fennec::Output::Result;
 use Try::Tiny;
 
 tester ok => sub {
     my ( $ok, $name ) = @_;
-    print STDERR "Inside 'ok'\n";
     result(
         pass => $ok ? 1 : 0,
         name => $name || 'nameless test',
@@ -17,7 +16,8 @@ tester ok => sub {
 
 util todo => sub(&;$) {
     my ( $code, $reason ) = @_;
-    Result->TODO( $reason || "no reason given" );
+    $reason ||= "no reason given";
+    Result->TODO( $reason );
     try {
         $code->();
     }

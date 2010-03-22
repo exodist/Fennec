@@ -10,14 +10,9 @@ sub new {
     return $self;
 }
 
-sub result {
+sub handle {
     my $class = shift;
     die( "$class does not implement result()" );
-}
-
-sub diag {
-    my $class = shift;
-    die( "$class does not implement diag()" );
 }
 
 sub finish {1}

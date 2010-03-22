@@ -13,7 +13,7 @@ sub new {
 
 sub function { 'use_test_methods' }
 
-sub add_item { croak 'Subgroups cannot be added to the Methods group' }
+sub add_item { croak 'Child workflows cannot be added to the Methods workflow' }
 
 sub tests {
     my $self = shift;

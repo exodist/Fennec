@@ -3,18 +3,19 @@ use strict;
 use warnings;
 
 use base 'Fennec::Base';
-use Fennec::Handler::Root;
 use Fennec::Test;
 use Fennec::File;
+use Fennec::Collector;
 use Fennec::Util::Accessors;
-use Fennec::Util::Threader;
 use Fennec::Workflow::Root;
-use Fennec::Result;
+use Fennec::Output::Result;
+use Try::Tiny;
+use Parallel::Runner;
 use Carp;
 use List::Util qw/shuffle/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/handler files p_files p_tests threader ignore random pid parent_pid/;
+Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector/;
 
 our $SINGLETON;
 
@@ -29,7 +30,6 @@ sub init {
 
     my $random = defined $proto{ random } ? $proto{ random } : 1;
     my $handlers = delete $proto{ handlers } || [ 'TAP' ];
-    my $handler = Fennec::Handler::Root->new( @$handlers ) || die ( "No handler" );
 
     my $ignore = delete $proto{ ignore };
     my @files = File->find_types( delete $proto{ filetypes }, delete $proto{ files });
@@ -46,8 +46,8 @@ sub init {
             %proto,
             random      => $random,
             files       => \@files,
-            handler     => $handler,
-            threader    => Threader->new( $proto{ p_files }) || die( "No threader" ),
+            threader    => Parallel::Runner->new( $proto{ p_files }) || die( "No threader" ),
+            collector   => Collector->new( @$handlers ) || die ( "No Collector" ),
             parent_pid  => $$,
             pid         => $$,
         },
@@ -57,36 +57,42 @@ sub init {
 
 sub start {
     my $self = shift;
-    $self->handler->start;
+
+    $self->prepare;
+    $self->threader->iteration_callback( sub { $self->collector->cull });
+    $self->collector->start;
 
     for my $file ( @{ $self->files }) {
-        $self->threader->thread( sub {
+        $self->threader->run( sub {
             try {
-                my $group = Fennec::Workflow::Root->new(
+                my $workflow = Fennec::Workflow::Root->new(
                     $file->filename,
                     method => sub { shift->file->load },
                     file => $file,
                 )->build;
 
-                my $test = $group->test;
-                return Result->skip_item( $test )
+                my $test = $workflow->test;
+                return Result->skip_workflow( $test )
                     if $test->skip;
 
                 try {
-                    $group->build_children;
-                    $group->run_tests;
+                    $workflow->build_children;
+                    $workflow->run_tests;
                 }
                 catch {
-                    Result->fail_item( $test, $_ );
+                    Result->fail_workflow( $test, $_ );
                 };
             }
             catch {
-                Result->fail_item( $file, $_ );
+                #Result->fail_workflow( $file, $_ );
+                print "File error $file, $_\n";
             };
         }, 1 );
     }
 
-    $self->handler->finish;
+    $self->threader->finish;
+    $self->collector->finish;
+    $self->cleanup;
 }
 
 sub pid_changed {
@@ -105,6 +111,28 @@ sub is_parent {
 sub is_subprocess {
     my $self = shift;
     return !$self->is_parent;
+}
+
+sub testdir { Fennec::File->root . "/_test" }
+
+sub prepare {
+    my $self = shift;
+    $self->cleanup;
+    my $path = $self->testdir;
+    mkdir( $path ) unless -d $path;
+}
+
+sub cleanup {
+    my $class = shift;
+    return unless -d $class->testdir;
+    opendir( my $TDIR, $class->testdir ) || die( $! );
+    for my $file ( readdir( $TDIR )) {
+        next if $file =~ m/^\.+$/;
+        next if -d $file;
+        unlink( $file );
+    }
+    closedir( $TDIR );
+    rmdir( $class->testdir ) || warn( "Cannot cleanup test dir: $!" );
 }
 
 1;

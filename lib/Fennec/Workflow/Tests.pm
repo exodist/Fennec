@@ -9,7 +9,7 @@ sub _tests { }
 sub tests { }
 sub function { 'tests' }
 
-sub add_item { croak 'Subgroups cannot be added to test groups' }
+sub add_item { croak 'Child workflows cannot be added to test workflows' }
 
 1;
 

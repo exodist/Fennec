@@ -8,28 +8,28 @@ use Fennec::Util::Accessors;
 use Fennec::Workflow;
 use Carp;
 
-Accessors qw/ groups functions /;
+Accessors qw/ workflows functions /;
 
 sub new {
     my $class = shift;
-    my @groups = @_;
-    my $self = bless({ groups => \@groups }, $class );
+    my @workflows = @_;
+    my $self = bless({ workflows => \@workflows }, $class );
     $self->build;
     return $self;
 }
 
 sub build {
     my $self = shift;
-    my $groups = $self->groups;
+    my $workflows = $self->workflows;
     my %functions;
-    while( my $group = pop @$groups ) {
-        my $gclass = $group =~ m/^Fennec::Workflow::/
-            ? $group
-            : 'Fennec::Workflow::' . $group;
+    while( my $workflow = pop @$workflows ) {
+        my $gclass = $workflow =~ m/^Fennec::Workflow::/
+            ? $workflow
+            : 'Fennec::Workflow::' . $workflow;
 
         eval "require $gclass" || die ( $@ );
         next if $functions{ $gclass };
-        push @$groups => @{ $gclass->depends };
+        push @$workflows => @{ $gclass->depends };
         my ( $function, %specs ) = $gclass->function;
         $functions{ $gclass } = [ $function, \%specs ];
     }
@@ -56,7 +56,7 @@ sub sub_for {
         my $name = shift;
         my %proto = @_ > 1 ? @_ : (method => shift( @_ ));
         my ( $caller, $file, $line ) = caller;
-        Group->add_item( $gclass->new( $name, file => $file, line => $line, %proto ))
+        Workflow->add_item( $gclass->new( $name, file => $file, line => $line, %proto ))
     };
 
     return $sub unless $specs and keys %$specs;

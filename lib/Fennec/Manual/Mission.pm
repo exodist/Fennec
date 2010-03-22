@@ -95,7 +95,7 @@ object.
 
 All results are objects which contain a boolean for pass/fail, but also contain
 the group the test was run under, the line number for the test, and much more
-context information. See L<Fennec::Result> for more information.
+context information. See L<Fennec::Output::Result> for more information.
 
 =item Extendability
 
@@ -138,7 +138,7 @@ avenues for extending Fennec.
 
 Asserts generate result objects. Assert packages provide test utility
 functions. This is similar to most of the modules in the Test::XXX name space.
-The difference is that these all produce L<Fennec::Result> objects instead of
+The difference is that these all produce L<Fennec::Output::Result> objects instead of
 issuing results to L<Test::Builder>.
 
 =item Workflows

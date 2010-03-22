@@ -3,7 +3,8 @@ use strict;
 use warnings;
 
 use Fennec::Runner;
-use Fennec::Result;
+use Fennec::Output::Result;
+use Fennec::Output::Diag;
 
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
@@ -105,8 +106,8 @@ sub tester {
         my ( $caller, $file, $line ) = caller;
         try {
             no warnings 'redefine';
-            local *result = sub { shift; print "result sub\n"; $outresult = { @_ }};
-            $benchmark = timeit( 1, sub { print "inner sub\n"; $sub->( @_ )});
+            local *result = sub { shift; $outresult = { @_ }};
+            $benchmark = timeit( 1, sub { $sub->( @_ )});
         }
         catch {
             result(
@@ -134,18 +135,16 @@ sub tester {
 }
 
 sub diag {
-    Runner->handler->diag( @_ );
+    Fennec::Output::Diag->new( stdout => \@_ )->write;
 }
 
 sub result {
     return unless @_;
     my %proto = @_;
-    Runner->handler->result(
-        Result->new(
-            @proto{qw/file line/} ? _first_test_caller_details() : (),
-            %proto,
-        )
-    );
+    Result->new(
+        @proto{qw/file line/} ? _first_test_caller_details() : (),
+        %proto,
+    )->write;
 }
 
 sub tb_wrapper(&) {
@@ -171,6 +170,7 @@ sub _first_test_caller_details {
     my ( $caller, $file, $line );
     do {
         ( $caller, $file, $line ) = caller( $current );
+        $current++;
     } while $caller && !$caller->isa( 'Fennec::Test' );
 
     return (

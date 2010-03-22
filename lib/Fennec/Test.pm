@@ -5,7 +5,7 @@ use warnings;
 use base 'Fennec::Base';
 
 use Fennec::Util::Accessors;
-use Fennec::Util::Threader;
+use Parallel::Runner;
 use Fennec::Runner;
 use Try::Tiny;
 use Carp;
@@ -14,18 +14,18 @@ use Scalar::Util qw/blessed/;
 
 our $NEW;
 
-Accessors qw/ group threader todo skip file /;
+Accessors qw/ workflow threader todo skip file /;
 
 sub new {
     my $class = shift;
     my %proto = @_;
-    my ( $todo, $skip, $group, $file ) = @proto{qw/ todo skip group file /};
+    my ( $todo, $skip, $workflow, $file ) = @proto{qw/ todo skip workflow file /};
 
     my $self = bless(
         {
-            group       => $group,
+            workflow    => $workflow,
             file        => $file,
-            threader    => Threader->new( $proto{ p_tests }),
+            threader    => Parallel::Runner->new( $proto{ p_tests }),
             skip        => $skip || undef,
             todo        => $todo || undef,
         },
@@ -45,6 +45,12 @@ sub random {
 }
 
 sub name { shift->file->filename }
+
+sub parent {
+    my $self = shift;
+    return unless $self->workflow;
+    return $self->workflow->parent;
+}
 
 1;
 

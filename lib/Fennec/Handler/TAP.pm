@@ -1,12 +1,14 @@
 package Fennec::Handler::TAP;
 use strict;
 use warnings;
+use Carp;
 
 use base 'Fennec::Handler';
 
 sub init {
     my $self = shift;
-    $self->{ output } ||= sub { print "$_\n" for @_ };
+    $self->{ out_std } ||= sub { print STDOUT "$_\n" for @_ };
+    $self->{ out_err } ||= sub { print STDERR "$_\n" for @_ };
 }
 
 sub count {
@@ -18,7 +20,20 @@ sub count {
 
 sub output {
     my $self = shift;
-    $self->{ output }->( @_ );
+    my $type = shift;
+    $self->{ $type }->( @_ );
+}
+
+sub handle {
+    my $self = shift;
+    my ( $item ) = @_;
+    unless ( $item ) {
+        carp "No item";
+        return;
+    }
+    return $self->result( $item ) if $item->isa( 'Fennec::Output::Result' );
+    return $self->stdout( @{ $item->stdout }) if $item->isa( 'Fennec::Output::Diag' );
+    warn "Unhandled output type: $item";
 }
 
 sub result {
@@ -36,29 +51,35 @@ sub result {
     elsif ( my $skip = $result->skip ) {
         $out .= " # SKIP $skip";
     }
-    $self->output( $out );
+    $self->output( 'out_std', $out );
     if ( $result->fail && !$result->todo && !$result->skip ) {
-        my $case = $result->case ? $result->case->name : 'N/A';
-        my $set = $result->set ? $result->set->name : 'N/A';
-        $self->diag( "Test failure at " . $result->file . " line " . $result->line );
-        $self->diag( "    case: $case", "    set: $set" );
+        $self->stderr( "Test failure at " . $result->file . " line " . $result->line );
+        $self->stderr( "Workflow Stack: " . join( ', ', @$result->workflow_stack ));
     }
-    my $diag = $result->diag;
-    return unless $diag;
-    $self->diag( $_ ) for @$diag
+    my $stdout = $result->stdout;
+    return unless $stdout;
+    $self->stdout( $_ ) for @$stdout
 }
 
-sub diag {
+sub stdout {
     my $self = shift;
     for my $msg ( @_ ) {
         chomp( my $out = $msg );
-        $self->output( "# $out" );
+        $self->output( 'out_std', "# $out" );
+    }
+}
+
+sub stderr {
+    my $self = shift;
+    for my $msg ( @_ ) {
+        chomp( my $out = $msg );
+        $self->output( 'out_err', "# $out" );
     }
 }
 
 sub finish {
     my $self = shift;
-    $self->output( '1..' . ($self->count - 1));
+    $self->output( 'out_std', '1..' . ($self->count - 1));
 }
 
 1;

@@ -1,11 +1,12 @@
 package Fennec::Workflow::Root;
 use strict;
 use warnings;
-use Carp;
 
 use base 'Fennec::Workflow';
 
-use Fennec::Result;
+use Fennec::Output::Result;
+use Carp;
+use Try::Tiny;
 
 use List::Util qw/shuffle/;
 
@@ -14,7 +15,7 @@ sub depends {[ 'Fennec::Workflow::Tests' ]}
 sub build {
     my $self = shift;
     my $tclass = $self->run_method_as_current( $self->method );
-    $self->parent( $tclass->new( group => $self, file => $self->file  ));
+    $self->parent( $tclass->new( workflow => $self, file => $self->file  ));
     return $self;
 }
 
@@ -31,26 +32,26 @@ sub run_test_list {
     for my $test ( @$tests ) {
         if ( ref $test eq 'HASH' ) {
             try {
-                $self->run_subgroup_list( $test );
+                $self->run_subworkflow_list( $test );
             }
             catch {
-                Result->fail_item( $test->{ group }, $_ );
+                Result->fail_workflow( $test->{ workflow }, $_ );
             };
         }
         else {
-            $self->test->threader->thread(sub {
+            $self->test->threader->run(sub {
                 try {
                     $test->run_on( $self->test );
                 }
                 catch {
-                    Result->fail_item( $test->{ group }, $_ );
+                    Result->fail_workflow( $test->{ workflow }, $_ );
                 };
             });
         }
     }
 }
 
-sub run_subgroup_list {
+sub run_subworkflow_list {
     my $self = shift;
     my ( $item ) = @_;
     my $before = delete $item->{ before } || [];

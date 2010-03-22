@@ -5,7 +5,7 @@ use warnings;
 use base 'Fennec::Base';
 
 use Carp;
-use Fennec::Result;
+use Fennec::Output::Result;
 use Fennec::Util::Abstract;
 require Fennec;
 
@@ -54,7 +54,7 @@ sub find_types {
 
     my @plugins;
     for my $type ( @$types ) {
-        my $plugin = "Fennec\::Test\::File\::$type";
+        my $plugin = "Fennec\::File\::$type";
         eval "require $plugin" || die( $@ );
         push @plugins => $plugin;
         push @paths => $plugin->paths;

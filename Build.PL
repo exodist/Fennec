@@ -11,10 +11,10 @@ my $build = Module::Build->new(
     requires => {
         'Benchmark'         => 0,
         'Cwd'               => 0,
-        'IO'                => 1.2301,
-        'List::Util'        => 0,
+        'Data::Dumper'      => 0,
         'List::MoreUtils'   => 0,
-        'Module::Pluggable' => 3,
+        'List::Util'        => 0,
+        'Parallel::Runner'  => 0.003,
         'Scalar::Util'      => 0,
         'Test::Simple'      => 0.88,
         'Test::Warn'        => 0,
@@ -22,12 +22,8 @@ my $build = Module::Build->new(
         'Try::Tiny'         => 0,
     },
     no_index => {
-        package => [qw{
-            Test::Builder
-        }],
-        namespace => [qw{
-            Test::Builder
-        }],
+        package   => [qw{ Test::Builder }],
+        namespace => [qw{ Test::Builder }],
     },
     meta_merge => {
         resources => {

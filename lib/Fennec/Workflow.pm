@@ -14,7 +14,8 @@ Accessors qw/ parent children name method file line /;
 sub function    {}
 sub depends     {[]}
 sub alias       { shift->current }
-sub current     { confess "No current group" }
+sub has_current { 0 }
+sub current     { confess "No current worflow" }
 sub depth       { 0 }
 
 sub new {
@@ -42,7 +43,7 @@ sub tests {
     return grep { $_->isa('Fennec::Workflow::Tests') } @{ $self->children };
 }
 
-sub groups {
+sub workflows {
     my $self = shift;
     return grep { !$_->isa('Fennec::Workflow::Tests') } @{ $self->children };
 }
@@ -67,6 +68,7 @@ sub run_method_as_current_on {
     my $depth = $self->depth + 1;
 
     no warnings 'redefine';
+    local *has_current = sub { 1 };
     local *current = sub { $self };
     local *depth = sub { $depth };
     return $obj->$method( @args );
@@ -78,6 +80,7 @@ sub run_sub_as_current {
     my $depth = $self->depth + 1;
 
     no warnings 'redefine';
+    local *has_current = sub { 1 };
     local *current = sub { $self };
     local *depth = sub { $depth };
     return $sub->( @args );

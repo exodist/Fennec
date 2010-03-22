@@ -17,7 +17,7 @@ sub import {
     my $class = shift;
     my %proto = @_;
     my ( $caller, $file, $line ) = caller;
-    my ( $groups, $generators ) = @proto{qw/ groups generators /};
+    my ( $workflows, $generators ) = @proto{qw/ workflows generators /};
     my $standalone = delete $proto{ standalone };
 
     if ( $standalone and !Runner ) {
@@ -42,8 +42,8 @@ sub import {
         push @{ $caller . '::ISA' } => Test;
     }
 
-    $groups ||= [ qw/Tests/ ];
-    my $functions = Functions->new( @$groups );
+    $workflows ||= [ qw/Tests/ ];
+    my $functions = Functions->new( @$workflows );
     $functions->export_to( $caller );
 
     $generators ||= [ qw/ Simple / ];
