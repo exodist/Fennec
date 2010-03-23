@@ -64,9 +64,8 @@ sub init {
 sub start {
     my $self = shift;
 
-    $self->prepare;
-    $self->threader->iteration_callback( sub { $self->collector->cull });
     $self->collector->start;
+    $self->threader->iteration_callback( sub { $self->collector->cull });
 
     for my $file ( @{ $self->files }) {
         $self->threader->run( sub {
@@ -101,7 +100,6 @@ sub start {
 
     $self->threader->finish;
     $self->collector->finish;
-    $self->cleanup;
 }
 
 sub pid_changed {
@@ -122,26 +120,11 @@ sub is_subprocess {
     return !$self->is_parent;
 }
 
-sub testdir { Fennec::File->root . "/_test" }
-
-sub prepare {
+sub run_with_collector {
     my $self = shift;
-    $self->cleanup;
-    my $path = $self->testdir;
-    mkdir( $path ) unless -d $path;
-}
-
-sub cleanup {
-    my $class = shift;
-    return unless -d $class->testdir;
-    opendir( my $TDIR, $class->testdir ) || die( $! );
-    for my $file ( readdir( $TDIR )) {
-        next if $file =~ m/^\.+$/;
-        next if -d $file;
-        unlink( $file );
-    }
-    closedir( $TDIR );
-    rmdir( $class->testdir ) || warn( "Cannot cleanup test dir: $!" );
+    my ( $collector, $code ) = @_;
+    local $self->{ collector } = $collector;
+    return $code->();
 }
 
 1;

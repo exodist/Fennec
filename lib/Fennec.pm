@@ -17,7 +17,7 @@ sub import {
     my $class = shift;
     my %proto = @_;
     my ( $caller, $file, $line ) = caller;
-    my ( $workflows, $generators ) = @proto{qw/ workflows generators /};
+    my ( $workflows, $asserts ) = @proto{qw/ workflows asserts /};
     my $standalone = delete $proto{ standalone };
 
     if ( $standalone and !Runner ) {
@@ -46,9 +46,9 @@ sub import {
     my $functions = Functions->new( @$workflows );
     $functions->export_to( $caller );
 
-    $generators ||= [ qw/ Simple / ];
+    $asserts ||= [ qw/ Simple / ];
     export_package_to( 'Fennec::Assert::' . $_, $caller )
-        for @$generators;
+        for @$asserts;
 
     1;
 }

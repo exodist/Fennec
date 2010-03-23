@@ -54,7 +54,8 @@ sub result {
     $self->output( 'out_std', $out );
     if ( $result->fail && !$result->todo && !$result->skip ) {
         $self->stderr( "Test failure at " . $result->file . " line " . $result->line );
-        $self->stderr( "Workflow Stack: " . join( ', ', @$result->workflow_stack ));
+        $self->stderr( "Workflow Stack: " . join( ', ', @{ $result->workflow_stack }))
+            if $result->workflow_stack;
     }
     my $stdout = $result->stdout;
     return unless $stdout;
