@@ -9,15 +9,20 @@ my $build = Module::Build->new(
     dist_author => 'Chad Granum <exodist7@gmail.com>',
     create_readme => 1,
     requires => {
+        # Core
         'Benchmark'         => 0,
         'Cwd'               => 0,
         'Data::Dumper'      => 0,
-        'List::MoreUtils'   => 0,
         'List::Util'        => 0,
-        'Parallel::Runner'  => 0.003,
         'Scalar::Util'      => 0,
         'Time::HiRes'       => 0,
+
+        # External
+        'List::MoreUtils'   => 0,
         'Try::Tiny'         => 0,
+
+        # Made for Fennec
+        'Parallel::Runner'  => 0.003,
     },
     no_index => {
         package   => [qw{ Test::Builder }],
