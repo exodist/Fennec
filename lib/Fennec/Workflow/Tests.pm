@@ -8,6 +8,7 @@ use base 'Fennec::Workflow';
 sub _tests { }
 sub tests { }
 sub function { 'tests' }
+sub build { }
 
 sub add_item { croak 'Child workflows cannot be added to test workflows' }
 

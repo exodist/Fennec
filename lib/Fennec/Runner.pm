@@ -31,6 +31,11 @@ sub init {
     my $random = defined $proto{ random } ? $proto{ random } : 1;
     my $handlers = delete $proto{ handlers } || [ 'TAP' ];
 
+    my $collector_class = delete $proto{ collector } || 'Files';
+    $collector_class = 'Fennec::Collector::' . $collector_class;
+    eval "require $collector_class; 1" || die( @_ );
+    my $collector = $collector_class->new( @$handlers );
+
     my $ignore = delete $proto{ ignore };
     my @files = File->find_types( delete $proto{ filetypes }, delete $proto{ files });
     @files = grep {
@@ -46,8 +51,8 @@ sub init {
             %proto,
             random      => $random,
             files       => \@files,
+            collector   => $collector,
             threader    => Parallel::Runner->new( $proto{ p_files }) || die( "No threader" ),
-            collector   => Collector->new( @$handlers ) || die ( "No Collector" ),
             parent_pid  => $$,
             pid         => $$,
         },
@@ -65,6 +70,7 @@ sub start {
     for my $file ( @{ $self->files }) {
         $self->threader->run( sub {
             try {
+                print "XXX: " . $file->filename . "\n";
                 my $workflow = Fennec::Workflow::Root->new(
                     $file->filename,
                     method => sub { shift->file->load },
@@ -78,14 +84,15 @@ sub start {
                 try {
                     $workflow->build_children;
                     $workflow->run_tests;
+                    Result->pass_workflow( $workflow );
                 }
                 catch {
                     Result->fail_workflow( $test, $_ );
                 };
             }
             catch {
-                #Result->fail_workflow( $file, $_ );
                 print "File error $file, $_\n";
+                Result->fail_file( $file, $_ );
             };
         }, 1 );
     }

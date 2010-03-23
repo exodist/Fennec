@@ -12,7 +12,8 @@ use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
 use Try::Tiny;
 
-our @EXPORT = qw/ tester util tb_wrapper result diag /;
+our @EXPORT = qw/tb_wrapper tester util result diag/;
+
 our $TB_RESULT;
 our @TB_DIAGS;
 our $TB_OK;
@@ -78,36 +79,38 @@ sub import {
 }
 
 sub util {
-    my $class = caller;
+    my $caller = caller;
     my ( $name, $sub ) = @_;
     croak( "You must provide a name to util()" )
         unless $name;
-    $sub ||= $class->can( $name );
+    $sub ||= $caller->can( $name );
     croak( "No sub found for function $name" )
         unless $sub;
 
     no strict 'refs';
-    my $export = \%{ $class . '::EXPORT' };
+    my $export = \%{ $caller . '::EXPORT' };
     $export->{ $name } = $sub;
 }
 
 sub tester {
-    my $class = caller;
+    my $assert_class = caller;
     my ( $name, $sub ) = @_;
     croak( "You must provide a name to tester()" )
         unless $name;
-    $sub ||= $class->can( $name );
+    $sub ||= $assert_class->can( $name );
     croak( "No sub found for function $name" )
         unless $sub;
 
     my $wrapsub = sub {
+        my @args = @_;
         my $outresult;
         my $benchmark;
         my ( $caller, $file, $line ) = caller;
         try {
             no warnings 'redefine';
-            local *result = sub { shift; $outresult = { @_ }};
-            $benchmark = timeit( 1, sub { $sub->( @_ )});
+            no strict 'refs';
+            local *{ $assert_class . '::result' } = sub { $outresult = { @_ }};
+            $benchmark = timeit( 1, sub { $sub->( @args )});
         }
         catch {
             result(
@@ -130,7 +133,7 @@ sub tester {
                         : $wrapsub;
 
     no strict 'refs';
-    my $export = \%{ $class . '::EXPORT' };
+    my $export = \%{ $assert_class . '::EXPORT' };
     $export->{ $name } = $newsub;
 }
 
@@ -141,6 +144,7 @@ sub diag {
 sub result {
     return unless @_;
     my %proto = @_;
+    use Data::Dumper;
     Result->new(
         @proto{qw/file line/} ? _first_test_caller_details() : (),
         %proto,

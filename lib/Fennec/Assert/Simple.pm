@@ -5,6 +5,7 @@ use warnings;
 use Fennec::Assert;
 use Fennec::Output::Result;
 use Try::Tiny;
+use Carp qw/cluck/;
 
 tester ok => sub {
     my ( $ok, $name ) = @_;
@@ -16,6 +17,7 @@ tester ok => sub {
 
 util todo => sub(&;$) {
     my ( $code, $reason ) = @_;
+    cluck 'xxx';
     $reason ||= "no reason given";
     Result->TODO( $reason );
     try {

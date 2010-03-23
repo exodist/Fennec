@@ -25,7 +25,7 @@ sub new {
     confess( "$class must be created with a method " )
         unless $method;
 
-    my $self = bless({ %proto, method => $method, children => [] }, $class );
+    my $self = bless({ %proto, method => $method, children => [], name => $name }, $class );
     my $init = $self->can( 'init' ) || $self->can( 'initialize' );
     $self->$init( $name, @_ ) if $init;
     return $self;

@@ -7,10 +7,16 @@ use base 'Fennec::File';
 sub valid_file { 1 }
 sub load_file {
     my $class = shift;
-    my ( $tclass ) = @_;
+    my ( $tcaller ) = @_;
+    my ( $tclass ) = @$tcaller;
     $Fennec::TEST_CLASS = $tclass;
     $tclass->Fennec;
 }
 sub paths {}
+
+sub filename {
+    my $self = shift;
+    $self->[0]->[1];
+}
 
 1;

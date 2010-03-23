@@ -9,13 +9,15 @@ use Fennec::Runner;
 use Fennec::Workflow;
 use Try::Tiny;
 
-our @WORKFLOW_OR_TEST_ACCESSORS = qw/ skip todo /;
+use Scalar::Util qw/blessed/;
+
+our @ANY_ACCESSORS = qw/ skip todo /;
 our @WORKFLOW_ACCESSORS = qw/ name file line /;
 our @SIMPLE_ACCESSORS = qw/ pass benchmark /;
 our @PROPERTIES = (
     @WORKFLOW_ACCESSORS,
     @SIMPLE_ACCESSORS,
-    @WORKFLOW_OR_TEST_ACCESSORS,
+    @ANY_ACCESSORS,
     qw/ stderr stdout workflow_stack test /,
 );
 our $TODO;
@@ -32,17 +34,16 @@ sub fail { !shift->pass }
 
 sub new {
     my $class = shift;
-    print "New Result\n";
-    my ( $pass, $workflow, %proto ) = @_;
+    my %proto = @_;
+    use Data::Dumper;
+    print Dumper( \%proto );
+    my $pass = delete $proto{ pass };
+
     return bless(
         {
             $TODO ? ( todo => $TODO ) : (),
             %proto,
             pass => $pass ? 1 : 0,
-            workflow => $workflow || undef,
-#            Workflow->has_current
-#                ? ( test => Workflow->current->test || undef )
-#                : (),
         },
         $class
     );
@@ -62,7 +63,7 @@ for my $workflow_accessor ( @WORKFLOW_ACCESSORS ) {
     };
 }
 
-for my $any_accessor ( @WORKFLOW_OR_TEST_ACCESSORS ) {
+for my $any_accessor ( @ANY_ACCESSORS ) {
     no strict 'refs';
     *$any_accessor = sub {
         my $self = shift;
@@ -71,9 +72,6 @@ for my $any_accessor ( @WORKFLOW_OR_TEST_ACCESSORS ) {
 
         return $self->workflow->$any_accessor
             if $self->workflow && $self->workflow->can( $any_accessor );
-
-        return $self->test->$any_accessor
-            if $self->test && $self->test->can( $any_accessor );
     };
 }
 
@@ -90,7 +88,7 @@ sub test {
 sub fail_workflow {
     my $class = shift;
     my ( $workflow, @stdout ) = @_;
-    $class->new( 0, $workflow, stdout => \@stdout )->write;
+    $class->new( pass => 0, workflow => $workflow, stdout => \@stdout )->write;
 }
 
 sub skip_workflow {
@@ -98,13 +96,13 @@ sub skip_workflow {
     my ( $workflow, $reason, @stdout ) = @_;
     $reason ||= $workflow->skip if $workflow->can( 'skip' );
     $reason ||= "no reason";
-    $class->new( 0, $workflow, skip => $reason, stdout => \@stdout )->write;
+    $class->new( pass => 0, workflow => $workflow, skip => $reason, stdout => \@stdout )->write;
 }
 
 sub pass_workflow {
     my $class = shift;
     my ( $workflow, @stdout ) = @_;
-    $class->new( 1, $workflow, stdout => \@stdout )->write;
+    $class->new( pass => 1, workflow => $workflow, stdout => \@stdout )->write;
 }
 
 sub serialize {

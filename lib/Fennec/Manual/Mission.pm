@@ -43,13 +43,42 @@ solutions to the other problems at the same time.
 
 =over 4
 
-=item Ease of entry - low learning curve
+=item Ease of entry
+
+L<Fennec> must be easy to simply drop into an existing project. It must also be
+easy to use when starting a project. The most common use cases should be simple
+to implement, with the ability to bring in more complicated items as needed.
+
+=item Distributability
+
+L<Fennec> must be cross-platform. It should rely on as little non-core
+dependancies as possible. That is not to say it should homebrew solutions to
+complicated problems, but rather it should avoid complicated problems where
+simple solutions are not available.
+
+People will avoid L<Fennec> if there are too many dependancies that are not
+typically part of a linux distribution. As well we want Fennec to be available
+for use in a wide range of projects, if it has a deep dependancy tree we
+increase the chance of eventually making an interdependancy.
+
+When there is a well solved complicated problem a dependancy should still be
+used. We do not want to take the road of implementing large parts of cpan
+internally. This is a judgement call and a tradeoff that must be considered
+whenever a new dependancy is suggested.
+
+This only applies to core Fennec. Extentions are free to depend on whatever
+they please.
 
 =item Extendability
 
+L<Fennec> must open itself to extentions in every way possible. If someone
+needs a hook added we will look at it. Currently every way we can think of that
+one might wish to extend fennec has been written accordingly.
+
 =item Compatability
 
-=item Distributability
+Fennec should work with prove. It should also play nicely with
+L<Test::Builder>.
 
 =back
 
