@@ -72,7 +72,7 @@ sub write {
     my $self = shift;
     my ( $output ) = @_;
     my $out = $output->serialize;
-    my $file = Runner->testdir . "/$$-$output-" . $SEMI_UNIQ++;
+    my $file = Runner->testdir . "/$$-" . $SEMI_UNIQ++ . '.res';
     open( my $HANDLE, '>', $file ) || warn "Error writing output:\n\t$file\n\t$!";
     print $HANDLE Dumper( $out ) || warn "Error writing output";
     close( $HANDLE ) || die( $! );

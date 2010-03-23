@@ -13,6 +13,7 @@ use Try::Tiny;
 use Parallel::Runner;
 use Carp;
 use List::Util qw/shuffle/;
+use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
 Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector/;
@@ -70,7 +71,6 @@ sub start {
     for my $file ( @{ $self->files }) {
         $self->threader->run( sub {
             try {
-                print "XXX: " . $file->filename . "\n";
                 my $workflow = Fennec::Workflow::Root->new(
                     $file->filename,
                     method => sub { shift->file->load },
@@ -83,8 +83,10 @@ sub start {
 
                 try {
                     $workflow->build_children;
-                    $workflow->run_tests;
-                    Result->pass_workflow( $workflow );
+                    my $benchmark = timeit( 1, sub {
+                        $workflow->run_tests
+                    });
+                    Result->pass_workflow( $workflow, benchmark => $benchmark );
                 }
                 catch {
                     Result->fail_workflow( $test, $_ );

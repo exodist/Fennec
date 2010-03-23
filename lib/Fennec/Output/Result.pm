@@ -35,8 +35,6 @@ sub fail { !shift->pass }
 sub new {
     my $class = shift;
     my %proto = @_;
-    use Data::Dumper;
-    print Dumper( \%proto );
     my $pass = delete $proto{ pass };
 
     return bless(
@@ -101,8 +99,8 @@ sub skip_workflow {
 
 sub pass_workflow {
     my $class = shift;
-    my ( $workflow, @stdout ) = @_;
-    $class->new( pass => 1, workflow => $workflow, stdout => \@stdout )->write;
+    my ( $workflow, %proto ) = @_;
+    $class->new( %proto, pass => 1, workflow => $workflow )->write;
 }
 
 sub serialize {

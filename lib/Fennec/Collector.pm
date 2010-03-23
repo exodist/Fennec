@@ -18,7 +18,9 @@ sub new {
         eval "require $hclass; 1" || die ( @_ );
         push @handlers => $hclass->new();
     }
-    return bless( { handlers => \@handlers }, $class );
+    my $self = bless( { handlers => \@handlers }, $class );
+    $self->init if $self->can( 'init' );
+    return $self;
 }
 
 sub start {

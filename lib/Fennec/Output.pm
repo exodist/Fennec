@@ -17,7 +17,6 @@ sub workflow_stack {
         return undef unless $current;
         my @out = ( $current->name );
         while (( $current = $current->parent ) && $current->isa( 'Fennec::Workflow' )) {
-            print "Current: $current\n";
             push @out => $current->name;
         }
         $self->{ workflow_stack } = [ reverse @out ];

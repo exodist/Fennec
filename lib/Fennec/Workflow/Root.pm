@@ -7,6 +7,8 @@ use base 'Fennec::Workflow';
 use Fennec::Output::Result;
 use Carp;
 use Try::Tiny;
+use Time::HiRes qw/time/;
+use Benchmark qw/timeit :hireswallclock/;
 
 use List::Util qw/shuffle/;
 
@@ -41,7 +43,10 @@ sub run_test_list {
         else {
             $self->test->threader->run(sub {
                 try {
-                    $test->run_on( $self->test );
+                    my $benchmark = timeit( 1, sub {
+                        $test->run_on( $self->test );
+                    });
+                    Result->pass_workflow( $test, benchmark => $benchmark );
                 }
                 catch {
                     Result->fail_workflow( $test->{ workflow }, $_ );

@@ -16,8 +16,6 @@ my $build = Module::Build->new(
         'List::Util'        => 0,
         'Parallel::Runner'  => 0.003,
         'Scalar::Util'      => 0,
-        'Test::Simple'      => 0.88,
-        'Test::Warn'        => 0,
         'Time::HiRes'       => 0,
         'Try::Tiny'         => 0,
     },

@@ -33,13 +33,14 @@ our %TB_OVERRIDES = (
     },
 );
 
-require Test::Builder;
-for my $ref (keys %TB_OVERRIDES) {
-    no warnings 'redefine';
-    no strict 'refs';
-    my $newref = "real_$ref";
-    *{ 'Test::Builder::' . $newref } = \&$ref;
-    *{ 'Test::Builder::' . $ref    } = $TB_OVERRIDES{ $ref };
+if ( eval { require Test::Builder; 1 }) {
+    for my $ref (keys %TB_OVERRIDES) {
+        no warnings 'redefine';
+        no strict 'refs';
+        my $newref = "real_$ref";
+        *{ 'Test::Builder::' . $newref } = \&$ref;
+        *{ 'Test::Builder::' . $ref    } = $TB_OVERRIDES{ $ref };
+    }
 }
 
 sub exports {
