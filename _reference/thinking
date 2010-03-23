@@ -1,7 +1,0 @@
-Group {
-    setup {}
-    test {}
-    Group {}
-}
-
-

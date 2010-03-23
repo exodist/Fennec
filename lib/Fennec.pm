@@ -61,6 +61,21 @@ sub export_package_to {
 
 1;
 
+=pod
+
+=head1 NAME
+
+Fennec - Framework upon which intercompatible testing solutions can be built.
+
+=head1 DESCRIPTION
+
+L<Fennec> provides a solid base that is highly extendable. It allows for the
+writing of custom nestable workflows (like RSPEC), Custom Asserts (like
+L<Test::Exception>), Custom output handlers (Alternatives to TAP), Custom file
+types, and custom result passing (collectors). In L<Fennec> all test files are
+objects. L<Fennec> also solves the forking problem, thats it, forking just
+plain works.
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>
