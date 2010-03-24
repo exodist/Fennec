@@ -103,6 +103,18 @@ sub pass_workflow {
     $class->new( %proto, pass => 1, workflow => $workflow )->write;
 }
 
+sub pass_file {
+    my $class = shift;
+    my ( $file, %proto ) = @_;
+    $class->new( %proto, pass => 1, file => $file, name => $file->filename )->write;
+}
+
+sub fail_file {
+    my $class = shift;
+    my ( $file, @stdout ) = @_;
+    $class->new( pass => 0, file => $file, name => $file->filename, stdout => \@stdout )->write;
+}
+
 sub serialize {
     my $self = shift;
     my $data = { map {( $_ => ( $self->$_ || undef ))} @PROPERTIES };

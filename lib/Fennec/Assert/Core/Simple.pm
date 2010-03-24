@@ -1,4 +1,4 @@
-package Fennec::Assert::Simple;
+package Fennec::Assert::Core::Simple;
 use strict;
 use warnings;
 

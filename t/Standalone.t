@@ -3,7 +3,7 @@ package TEST::Standalone;
 use strict;
 use warnings;
 use Fennec standalone => {},
-           asserts    => [ 'Simple', 'Interceptor' ];
+           asserts    => [ 'Core', 'Interceptor' ];
 
 use Fennec::Runner;
 use Data::Dumper;
@@ -13,7 +13,7 @@ start;
 sub Fennec {
     my $class = shift;
 
-    tests hello_world_group_1 => sub {
+    tests hello_world_group => sub {
         my $self = shift;
         ok( 1, "Hello world" );
         diag "Hello Message";

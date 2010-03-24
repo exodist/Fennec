@@ -22,17 +22,14 @@ sub cull {
         my ($obj) = $self->read_and_unlink( $file );
         $_->handle( $obj ) for @{ $self->handlers };
     }
+    close( $handle );
 }
 
 sub dirhandle {
     my $self = shift;
-    unless( $self->{ dirhandle }) {
-        my $path = $self->testdir;
-        opendir( my $handle, $path ) || die( "Cannot open dir $path: $!" );
-        $self->{ dirhandle } = $handle;
-    }
-
-    return $self->{ dirhandle };
+    my $path = $self->testdir;
+    opendir( my $handle, $path ) || die( "Cannot open dir $path: $!" );
+    return $handle;
 }
 
 sub start {
@@ -44,8 +41,7 @@ sub start {
 sub finish {
     my $self = shift;
     $self->SUPER::finish(@_);
-    my $handle = $self->{ dirhandle };
-    close( $handle );
+    $self->cull;
     $self->cleanup;
 }
 
@@ -69,6 +65,7 @@ sub read {
     if ( $obj ) {
         my $bless = $obj->{ bless };
         my $data = $obj->{ data };
+        eval "require $bless" || die( $@ );
         return bless( $data, $bless );
     }
     warn( "bad file: '$file' - $! - $@" );

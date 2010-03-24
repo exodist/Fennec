@@ -25,7 +25,7 @@ sub new {
         {
             workflow    => $workflow,
             file        => $file,
-            threader    => Parallel::Runner->new( $proto{ p_tests }),
+            threader    => Parallel::Runner->new( Runner->p_tests ),
             skip        => $skip || undef,
             todo        => $todo || undef,
         },

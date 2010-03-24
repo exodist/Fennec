@@ -74,6 +74,10 @@ sub import {
     my ( $prefix ) = @_;
     my $caller = caller;
     $class->export_to( $caller, $prefix );
+
+    # Assert subclasses should not modify @ISA
+    return if $class ne __PACKAGE__;
+
     no strict 'refs';
     push @{ $caller . '::ISA' } => __PACKAGE__
         unless grep { $_ eq __PACKAGE__ } @{ $caller . '::ISA' };

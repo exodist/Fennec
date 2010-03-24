@@ -46,7 +46,7 @@ sub import {
     my $functions = Functions->new( @$workflows );
     $functions->export_to( $caller );
 
-    $asserts ||= [ qw/ Simple / ];
+    $asserts ||= [ qw/ Core / ];
     export_package_to( 'Fennec::Assert::' . $_, $caller )
         for @$asserts;
 
@@ -75,6 +75,29 @@ L<Test::Exception>), Custom output handlers (Alternatives to TAP), Custom file
 types, and custom result passing (collectors). In L<Fennec> all test files are
 objects. L<Fennec> also solves the forking problem, thats it, forking just
 plain works.
+
+=head1 DOCUMENTATION
+
+=over 4
+
+=item QUICK START
+
+L<Fennec::Manual::Quickstart> - Drop Fennec standalone tests into an existing
+suite.
+
+=item FENNEC BASED TEST SUITE
+
+L<Fennec::Manual::TestSuite> - How to create a Fennec based test suite.
+
+=item MISSION
+
+L<Fennec::Manual::Mission> - Why does Fennec exist?
+
+=item MANUAL
+
+L<Fennec::Manual> - Advanced usage and extending Fennec.
+
+=back
 
 =head1 AUTHORS
 

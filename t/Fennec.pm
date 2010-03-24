@@ -2,13 +2,17 @@ package TEST::Fennec;
 use strict;
 use warnings;
 
-use Fennec groups     => [ 'methods' ],
-           generators => [ 'simple' ];
+use Fennec asserts => [ 'Core', 'Interceptor' ];
 
-sub test_simple {
+tests hello_world_group => sub {
     my $self = shift;
-    ok( 1, "We got a result" );
-    ok( $self->isa( 'TEST::Fennec' ), "Ran as method" );
-}
+    ok( 1, "Hello world" );
+    diag "Hello Message";
+
+    my $output = capture {
+        ok( 0, "Should fail" );
+    };
+    ok( !$output->[0]->pass, "intercepted a failed test" );
+};
 
 1;

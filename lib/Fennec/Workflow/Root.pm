@@ -24,7 +24,8 @@ sub build {
 sub run_tests {
     my $self = shift;
     my @tests = $self->_tests;
-    $self->run_test_list ( \@tests )
+    $self->run_test_list ( \@tests );
+    $self->test->threader->finish;
 }
 
 sub run_test_list {

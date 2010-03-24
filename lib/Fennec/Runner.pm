@@ -47,6 +47,9 @@ sub init {
         unless @files;
     @files = shuffle @files if $random;
 
+    $proto{ p_files } = 2 unless defined $proto{ p_files };
+    $proto{ p_tests } = 2 unless defined $proto{ p_tests };
+
     $SINGLETON = bless(
         {
             %proto,
@@ -88,16 +91,15 @@ sub start {
                     Result->pass_workflow( $workflow, benchmark => $benchmark );
                 }
                 catch {
+                    $test->threader->finish;
                     Result->fail_workflow( $test, $_ );
                 };
             }
             catch {
-                print "File error $file, $_\n";
                 Result->fail_file( $file, $_ );
             };
         }, 1 );
     }
-
     $self->threader->finish;
     $self->collector->finish;
 }
