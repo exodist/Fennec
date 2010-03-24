@@ -122,6 +122,15 @@ sub run_on {
     $on->$code( @args );
 }
 
+sub part_of {
+    my $self = shift;
+    my ( $search ) = @_;
+    return 1 if $self->name eq $search;
+    return $self->parent->part_of( $search )
+        if $self->parent && $self->parent->isa( 'Fennec::Workflow' );
+    return 0;
+}
+
 sub test {
     my $self = shift;
 

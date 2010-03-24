@@ -5,6 +5,7 @@ use warnings;
 use base 'Fennec::Workflow';
 
 use Fennec::Output::Result;
+use Fennec::Runner;
 use Carp;
 use Try::Tiny;
 use Time::HiRes qw/time/;
@@ -31,6 +32,7 @@ sub run_tests {
 sub run_test_list {
     my $self = shift;
     my ( $tests ) = @_;
+    my $search = Runner->search;
     @$tests = shuffle @$tests if $self->test->random;
     for my $test ( @$tests ) {
         if ( ref $test eq 'HASH' ) {
@@ -42,6 +44,7 @@ sub run_test_list {
             };
         }
         else {
+            next if $search && !$test->part_of( $search );
             $self->test->threader->run(sub {
                 try {
                     my $benchmark = timeit( 1, sub {

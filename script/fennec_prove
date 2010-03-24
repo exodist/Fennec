@@ -2,60 +2,28 @@
 use strict;
 use warnings;
 
-use Fennec::Runner::Args qw/parse_args/;
-
 if ( grep { m/^-+h(elp)?$/ } @ARGV ) {
     print <<EOT;
 
-USAGE: $0 [prove_args] [-- fennec_args [files...]]
+USAGE: $0 file item|-- prove args
 
-prove args and fennec args must be seperated by '--'
+Fennec test file item is optional, use -- for none
 
-Fennec args:
-    -c CASE_NAME
-    -d SET_NAME
+Wrapper for:
 
-Will run one of the following in order, placing the fennec arguments in an
-environment variable.
-    \$ prove [args] ./test.pl
-    \$ prove [args] ../test.pl
-    \$ prove [args] `which fennec_run.pl`
-    \$ prove [args] `script/fennec_run.pl`
+    \$ FENNEC_FILE="file" FENNEC_ITEM="item" prove [args] t/Fennec.t
 
 EOT
     exit;
 }
 
-my @prove_args;
-my @fennec_args;
+my ( $file, $item, @prove_args ) = @ARGV;
 
-my $seperator;
-for my $arg ( @ARGV ) {
-    if ( $arg eq '--' ) {
-        $seperator++;
-    }
-    elsif ($seperator) {
-        push @fennec_args => $arg;
-    }
-    else {
-        push @prove_args => $arg;
-    }
-}
+my $run = "FENNEC_FILE='$file' ";
+$run .= "FENNEC_ITEM='$item' " if $item and $item ne '--';
+my $runner = 't/Fennec.t';
+$runner = -e 't/Fennec.t' ? 't/Fennec.t' : `fennec_run.pl`;
+$run .= "prove " . join(' ', @prove_args) . " $runner";
 
-my $prove = join(" ", @prove_args);
-$prove = "prove $prove ";
-if ( -e './test.pl' ) {
-    $prove .= "./test.pl"
-}
-elsif( -e "../test.pl" ) {
-    $prove .= "../test.pl"
-}
-else {
-    $prove .= `which fennec_run.pl 2>/dev/null` || 'script/fennec_run.pl';
-}
-
-my $fennec = join( " ", @fennec_args );
-
-my $run = "FENNEC_ARGV='$fennec' $prove\n";
-print $run;
+print $run . "\n";
 exec $run;

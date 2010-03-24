@@ -68,6 +68,8 @@ for my $any_accessor ( @ANY_ACCESSORS ) {
         return $self->{ $any_accessor }
             if $self->{ $any_accessor };
 
+        return unless $self->workflow;
+        return unless $self->workflow->isa( 'Fennec::Workflow' );
         return $self->workflow->$any_accessor
             if $self->workflow && $self->workflow->can( $any_accessor );
     };
@@ -106,13 +108,13 @@ sub pass_workflow {
 sub pass_file {
     my $class = shift;
     my ( $file, %proto ) = @_;
-    $class->new( %proto, pass => 1, file => $file, name => $file->filename )->write;
+    $class->new( %proto, pass => 1, name => $file->filename )->write;
 }
 
 sub fail_file {
     my $class = shift;
     my ( $file, @stdout ) = @_;
-    $class->new( pass => 0, file => $file, name => $file->filename, stdout => \@stdout )->write;
+    $class->new( pass => 0, name => $file->filename, stdout => \@stdout )->write;
 }
 
 sub serialize {

@@ -53,7 +53,11 @@ sub result {
     }
     $self->output( 'out_std', $out );
     if ( $result->fail && !$result->todo && !$result->skip ) {
-        $self->stderr( "Test failure at " . $result->file . " line " . $result->line );
+        if ( $result->file ) {
+            my $error = "Test failure at " . $result->file;
+            $error .= " line " . $result->line if $result->line;
+            $self->stderr( $error );
+        }
         $self->stderr( "Workflow Stack: " . join( ', ', @{ $result->workflow_stack }))
             if $result->workflow_stack;
     }

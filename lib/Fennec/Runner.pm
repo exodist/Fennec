@@ -16,7 +16,7 @@ use List::Util qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector/;
+Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search/;
 
 our $SINGLETON;
 
@@ -43,7 +43,7 @@ sub init {
         my $file = $_;
         !grep { $file =~ $_ } @$ignore
     } @files if $ignore and @$ignore;
-    croak( "No Fennec files found" )
+    die ( "No Fennec files found" )
         unless @files;
     @files = shuffle @files if $random;
 
@@ -86,7 +86,7 @@ sub start {
                 try {
                     $workflow->build_children;
                     my $benchmark = timeit( 1, sub {
-                        $workflow->run_tests
+                        $workflow->run_tests( $self->search )
                     });
                     Result->pass_workflow( $workflow, benchmark => $benchmark );
                 }
