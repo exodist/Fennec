@@ -10,6 +10,20 @@ DESCRIPTION
     test files are objects. Fennec also solves the forking problem, thats
     it, forking just plain works.
 
+DOCUMENTATION
+    QUICK START
+        Fennec::Manual::Quickstart - Drop Fennec standalone tests into an
+        existing suite.
+
+    FENNEC BASED TEST SUITE
+        Fennec::Manual::TestSuite - How to create a Fennec based test suite.
+
+    MISSION
+        Fennec::Manual::Mission - Why does Fennec exist?
+
+    MANUAL
+        Fennec::Manual - Advanced usage and extending Fennec.
+
 AUTHORS
     Chad Granum exodist7@gmail.com
 
