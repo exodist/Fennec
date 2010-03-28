@@ -41,9 +41,9 @@ sub require_ok(*) {
         result(
             pass => 0,
             name => "require $package",
-            diag => [ $_ ],
+            stdout => [ $_ ],
         );
-    }
+    };
     result(
         pass => 1,
         name => "require $package",
@@ -63,7 +63,7 @@ sub use_into_ok(**;@) {
         result(
             pass => 0,
             name => "$from\->import(...)",
-            diag => [ $_ ],
+            stdout => [ $_ ],
         );
     }
     result(

@@ -122,7 +122,7 @@ sub tester {
                 pass => 0,
                 file => $file || "N/A",
                 line => $line || "N/A",
-                diag => [ "$name died: $_" ],
+                stdout => [ "$name died: $_" ],
             );
         };
         result(
