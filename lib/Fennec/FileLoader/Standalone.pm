@@ -1,8 +1,8 @@
-package Fennec::File::Standalone;
+package Fennec::FileLoader::Standalone;
 use strict;
 use warnings;
 
-use base 'Fennec::File';
+use base 'Fennec::FileLoader';
 
 sub valid_file { 1 }
 sub load_file {

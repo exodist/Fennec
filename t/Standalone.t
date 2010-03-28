@@ -8,6 +8,7 @@ use Fennec standalone => {},
 use Fennec::Runner;
 use Data::Dumper;
 use Carp qw/cluck/;
+
 start;
 
 sub Fennec {

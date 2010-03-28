@@ -1,8 +1,8 @@
-package Fennec::File::Module;
+package Fennec::FileLoader::Module;
 use strict;
 use warnings;
 
-use base 'Fennec::File';
+use base 'Fennec::FileLoader';
 
 sub valid_file {
     my $self = shift;

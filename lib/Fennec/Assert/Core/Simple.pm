@@ -7,15 +7,7 @@ use Fennec::Output::Result;
 use Try::Tiny;
 use Carp qw/cluck/;
 
-tester ok => sub {
-    my ( $ok, $name ) = @_;
-    result(
-        pass => $ok ? 1 : 0,
-        name => $name || 'nameless test',
-    );
-};
-
-util todo => sub(&;$) {
+util TODO => sub(&;$) {
     my ( $code, $reason ) = @_;
     cluck 'xxx';
     $reason ||= "no reason given";
@@ -25,11 +17,19 @@ util todo => sub(&;$) {
     }
     catch {
         diag( "Caught error in todo block\n  Error: $_\n  todo: $reason" );
-    }
+    };
     Result->TODO( undef );
 };
 
 util diag => \&diag;
+
+tester ok => sub {
+    my ( $ok, $name ) = @_;
+    result(
+        pass => $ok ? 1 : 0,
+        name => $name || 'nameless test',
+    );
+};
 
 tester 'require_ok';
 sub require_ok(*) {

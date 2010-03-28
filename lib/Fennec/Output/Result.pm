@@ -11,14 +11,12 @@ use Try::Tiny;
 
 use Scalar::Util qw/blessed/;
 
-our @ANY_ACCESSORS = qw/ skip todo /;
-our @WORKFLOW_ACCESSORS = qw/ name file line /;
+our @ANY_ACCESSORS = qw/ skip todo name file line/;
 our @SIMPLE_ACCESSORS = qw/ pass benchmark /;
 our @PROPERTIES = (
-    @WORKFLOW_ACCESSORS,
     @SIMPLE_ACCESSORS,
     @ANY_ACCESSORS,
-    qw/ stderr stdout workflow_stack test /,
+    qw/ stderr stdout workflow_stack testfile /,
 );
 our $TODO;
 
@@ -47,20 +45,6 @@ sub new {
     );
 }
 
-for my $workflow_accessor ( @WORKFLOW_ACCESSORS ) {
-    no strict 'refs';
-    *$workflow_accessor = sub {
-        my $self = shift;
-        return $self->{ $workflow_accessor }
-            if $self->{ $workflow_accessor };
-
-        return undef unless $self->workflow
-                        and $self->workflow->can( $workflow_accessor );
-
-        return $self->workflow->$workflow_accessor;
-    };
-}
-
 for my $any_accessor ( @ANY_ACCESSORS ) {
     no strict 'refs';
     *$any_accessor = sub {
@@ -68,53 +52,57 @@ for my $any_accessor ( @ANY_ACCESSORS ) {
         return $self->{ $any_accessor }
             if $self->{ $any_accessor };
 
-        return unless $self->workflow;
-        return unless $self->workflow->isa( 'Fennec::Workflow' );
-        return $self->workflow->$any_accessor
-            if $self->workflow && $self->workflow->can( $any_accessor );
+        my @any = ( $self->testset, $self->workflow, $self->testfile );
+        for my $item ( @any ) {
+            next unless $item;
+            next unless $item->can( $any_accessor );
+
+            my $found = $item->$any_accessor;
+            next unless $found;
+
+            return $found;
+        }
     };
 }
 
-sub test {
-    my $self = shift;
-    if ( my $workflow = $self->workflow ) {
-        return $workflow if $workflow->isa( 'Fennec::Test' );
-        my $test = $workflow->test if $workflow->can( 'test' );
-        return $test if $test;
-    }
-    return $self->{ test };
-}
-
-sub fail_workflow {
-    my $class = shift;
-    my ( $workflow, @stdout ) = @_;
-    $class->new( pass => 0, workflow => $workflow, stdout => \@stdout )->write;
-}
-
-sub skip_workflow {
-    my $class = shift;
-    my ( $workflow, $reason, @stdout ) = @_;
-    $reason ||= $workflow->skip if $workflow->can( 'skip' );
-    $reason ||= "no reason";
-    $class->new( pass => 0, workflow => $workflow, skip => $reason, stdout => \@stdout )->write;
-}
-
-sub pass_workflow {
-    my $class = shift;
-    my ( $workflow, %proto ) = @_;
-    $class->new( %proto, pass => 1, workflow => $workflow )->write;
-}
-
-sub pass_file {
-    my $class = shift;
-    my ( $file, %proto ) = @_;
-    $class->new( %proto, pass => 1, name => $file->filename )->write;
-}
-
-sub fail_file {
-    my $class = shift;
-    my ( $file, @stdout ) = @_;
-    $class->new( pass => 0, name => $file->filename, stdout => \@stdout )->write;
+for my $type ( qw/workflow testfile testset/ ) {
+    my $fail = sub {
+        my $class = shift;
+        my ( $item, @stdout ) = @_;
+        $class->new(
+            pass => 0,
+            $type => $item,
+            $item->can( 'name' ) ? ( name => $item->name ) : (),
+            stdout => \@stdout,
+        )->write;
+    };
+    my $pass = sub {
+        my $class = shift;
+        my ( $item, $benchmark, @stdout ) = @_;
+        $class->new(
+            pass => 1,
+            $type => $item,
+            name => $item->name,
+            benchmark => $benchmark,
+            stdout => \@stdout,
+        )->write;
+    };
+    my $skip = sub {
+        my $class = shift;
+        my ( $item, $reason, @stdout ) = @_;
+        $reason ||= $item->skip || "no reason";
+        $class->new(
+            pass => 1,
+            $type => $item,
+            name => $item->name,
+            skip => $reason,
+            stdout => \@stdout,
+        )->write;
+    };
+    no strict 'refs';
+    *{ "fail_$type" } = $fail;
+    *{ "pass_$type" } = $pass;
+    *{ "skip_$type" } = $skip;
 }
 
 sub serialize {

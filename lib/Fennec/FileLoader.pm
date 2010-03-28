@@ -1,4 +1,4 @@
-package Fennec::File;
+package Fennec::FileLoader;
 use strict;
 use warnings;
 
@@ -14,7 +14,7 @@ use Cwd qw/cwd/;
 use File::Find qw/find/;
 BEGIN {
     *_find = \&find;
-    undef( *Fennec::File::find );
+    undef( *Fennec::FileLoader::find );
 }
 
 our $ROOT;
@@ -54,7 +54,7 @@ sub find_types {
 
     my @plugins;
     for my $type ( @$types ) {
-        my $plugin = "Fennec\::File\::$type";
+        my $plugin = "Fennec\::FileLoader\::$type";
         eval "require $plugin" || die( $@ );
         push @plugins => $plugin;
         push @paths => $plugin->paths;

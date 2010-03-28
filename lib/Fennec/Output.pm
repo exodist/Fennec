@@ -8,7 +8,7 @@ use Fennec::Util::Accessors;
 use Fennec::Util::Abstract;
 use Fennec::Runner;
 
-Accessors qw/ stdout stderr workflow /;
+Accessors qw/ stdout stderr _workflow testset /;
 
 sub workflow_stack {
     my $self = shift;
@@ -29,7 +29,8 @@ sub serialize {
     return {
         data => {
             %$self,
-            workflow => undef,
+            _workflow => undef,
+            testset => undef,
             workflow_stack => $self->workflow_stack,
         },
         bless => ref( $self ),
@@ -39,6 +40,27 @@ sub serialize {
 sub write {
     my $self = shift;
     Runner->collector->write( $self );
+}
+
+sub testfile {
+    my $self = shift;
+    return $self->{ testfile } if $self->{ test_file };
+
+    if ( my $workflow = $self->workflow ) {
+        return $workflow if $workflow->isa( 'Fennec::TestFile' );
+        my $testfile = $workflow->testfile if $workflow->can( 'testfile' );
+        return $testfile if $testfile;
+    }
+    return $self->{ testfile };
+}
+
+sub workflow {
+    my $self = shift;
+    unless( $self->_workflow ) {
+        return unless $self->testset;
+        $self->_workflow( $self->testset->workflow );
+    }
+    return $self->_workflow;
 }
 
 1;

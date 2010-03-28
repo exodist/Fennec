@@ -3,11 +3,11 @@ use strict;
 use warnings;
 
 use base 'Fennec::Base';
-use Fennec::Test;
-use Fennec::File;
+use Fennec::TestFile;
+use Fennec::FileLoader;
 use Fennec::Collector;
 use Fennec::Util::Accessors;
-use Fennec::Workflow::Root;
+use Fennec::Workflow;
 use Fennec::Output::Result;
 use Try::Tiny;
 use Parallel::Runner;
@@ -38,7 +38,7 @@ sub init {
     my $collector = $collector_class->new( @$handlers );
 
     my $ignore = delete $proto{ ignore };
-    my @files = File->find_types( delete $proto{ filetypes }, delete $proto{ files });
+    my @files = FileLoader->find_types( delete $proto{ filetypes }, delete $proto{ files });
     @files = grep {
         my $file = $_;
         !grep { $file =~ $_ } @$ignore
@@ -73,30 +73,29 @@ sub start {
     for my $file ( @{ $self->files }) {
         $self->threader->run( sub {
             try {
-                my $workflow = Fennec::Workflow::Root->new(
+                my $workflow = Fennec::Workflow->new(
                     $file->filename,
                     method => sub { shift->file->load },
                     file => $file,
-                )->build;
+                )->_build_as_root;
 
-                my $test = $workflow->test;
-                return Result->skip_workflow( $test )
-                    if $test->skip;
+                my $testfile = $workflow->testfile;
+                return Result->skip_workflow( $testfile )
+                    if $testfile->skip;
 
                 try {
                     $workflow->build_children;
                     my $benchmark = timeit( 1, sub {
                         $workflow->run_tests( $self->search )
                     });
-                    Result->pass_workflow( $workflow, benchmark => $benchmark );
                 }
                 catch {
-                    $test->threader->finish;
-                    Result->fail_workflow( $test, $_ );
+                    $testfile->threader->finish;
+                    Result->fail_workflow( $testfile, $_ );
                 };
             }
             catch {
-                Result->fail_file( $file, $_ );
+                Result->fail_testfile( $file, $_ );
             };
         }, 1 );
     }

@@ -1,4 +1,4 @@
-package Fennec::Test::Functions;
+package Fennec::TestFile::Functions;
 use strict;
 use warnings;
 
@@ -6,14 +6,15 @@ use base 'Fennec::Base';
 
 use Fennec::Util::Accessors;
 use Fennec::Workflow;
+use Fennec::TestSet;
 use Carp;
 
 Accessors qw/ workflows functions /;
 
 sub new {
     my $class = shift;
-    my @workflows = @_;
-    my $self = bless({ workflows => \@workflows }, $class );
+    my ( $workflows ) = @_;
+    my $self = bless({ workflows => $workflows }, $class );
     $self->build;
     return $self;
 }
@@ -33,6 +34,7 @@ sub build {
         my ( $function, %specs ) = $gclass->function;
         $functions{ $gclass } = [ $function, \%specs ];
     }
+    $functions{ 'Fennec::TestSet' } = [ 'tests' ];
     $self->functions( \%functions );
 }
 

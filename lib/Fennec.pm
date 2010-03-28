@@ -4,8 +4,8 @@ use warnings;
 
 use Carp;
 use Fennec::Runner;
-use Fennec::Test;
-use Fennec::Test::Functions;
+use Fennec::TestFile;
+use Fennec::TestFile::Functions;
 
 our $VERSION = "0.010";
 our $TEST_CLASS;
@@ -39,11 +39,10 @@ sub import {
 
     {
         no strict 'refs';
-        push @{ $caller . '::ISA' } => Test;
+        push @{ $caller . '::ISA' } => TestFile;
     }
 
-    $workflows ||= [ qw/Tests/ ];
-    my $functions = Functions->new( @$workflows );
+    my $functions = Functions->new( $workflows );
     $functions->export_to( $caller );
 
     $asserts ||= [ qw/ Core / ];

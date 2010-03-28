@@ -5,6 +5,7 @@ use warnings;
 use base 'Fennec::Workflow';
 
 use Fennec::Util;
+use Scalar::Util qw/blessed/;
 
 sub new {
     my $class = shift;
@@ -17,8 +18,8 @@ sub add_item { croak 'Child workflows cannot be added to the Methods workflow' }
 
 sub tests {
     my $self = shift;
-    my $test = $self->test;
-    my $tclass = blessed( $test );
+    my $testfile = $self->testfile;
+    my $tclass = blessed( $testfile );
     return {
         before => [ sort Util->package_subs( $tclass, qr/^setup_/i    )],
         tests  => [ sort Util->package_subs( $tclass, qr/^test_/i     )],

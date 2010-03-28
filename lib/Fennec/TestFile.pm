@@ -1,4 +1,4 @@
-package Fennec::Test;
+package Fennec::TestFile;
 use strict;
 use warnings;
 

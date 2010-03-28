@@ -180,7 +180,7 @@ sub _first_test_caller_details {
     do {
         ( $caller, $file, $line ) = caller( $current );
         $current++;
-    } while $caller && !$caller->isa( 'Fennec::Test' );
+    } while $caller && !$caller->isa( 'Fennec::TestFile' );
 
     return (
         file => $file || "N/A",

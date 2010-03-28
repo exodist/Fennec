@@ -5,7 +5,7 @@ use warnings;
 use base 'Fennec::Collector';
 
 use Fennec::Runner;
-use Fennec::File;
+use Fennec::FileLoader;
 use Data::Dumper;
 
 our %BADFILES;
@@ -83,7 +83,7 @@ sub write {
     close( $HANDLE ) || die( $! );
 }
 
-sub testdir { Fennec::File->root . "/_test" }
+sub testdir { Fennec::FileLoader->root . "/_test" }
 
 sub prepare {
     my $self = shift;
