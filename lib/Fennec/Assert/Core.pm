@@ -2,7 +2,7 @@ package Fennec::Assert::Core;
 use strict;
 use warnings;
 
-our @CORE_LIST = qw/Simple/;
+our @CORE_LIST = qw/Simple More Exception/;
 
 sub export_to {
     my $class = shift;

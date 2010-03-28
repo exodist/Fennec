@@ -20,7 +20,7 @@ sub import {
     my ( $workflows, $asserts ) = @proto{qw/ workflows asserts /};
     my $standalone = delete $proto{ standalone };
 
-    if ( $standalone and !Runner ) {
+    if ( $standalone ) {
         'Fennec::Runner'->init(
             %$standalone,
             files => [ [ $caller, $file, $line ] ],

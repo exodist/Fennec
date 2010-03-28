@@ -149,7 +149,6 @@ sub diag {
 sub result {
     return unless @_;
     my %proto = @_;
-    use Data::Dumper;
     Result->new(
         @proto{qw/file line/} ? _first_test_caller_details() : (),
         %proto,
@@ -160,13 +159,16 @@ sub tb_wrapper(&) {
     my ( $orig ) = @_;
     my $proto = prototype( $orig );
     my $wrapper = sub {
+        my @args = @_;
         local $TB_OK = 1;
         local ( $TB_RESULT, @TB_DIAGS );
-        $orig->( @_ );
+        my $benchmark = timeit( 1, sub { $orig->( @args )});
         return diag( @TB_DIAGS ) unless $TB_RESULT;
         return result(
-            pass => $TB_RESULT,
-            diag => [@TB_DIAGS],
+            pass      => $TB_RESULT->[0],
+            name      => $TB_RESULT->[1],
+            benchmark => $benchmark,
+            stdout    => [@TB_DIAGS],
         );
     };
     return $wrapper unless $proto;
