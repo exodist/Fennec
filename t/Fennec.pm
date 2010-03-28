@@ -25,36 +25,19 @@ tests error_tests => sub {
     }
     ok( $fail, "Failed w/o runner" );
     like( $err, qr/Test runner not found/, "Proper error" );
+
     ok( !eval 'package main; use Fennec; 1', "Fail in main" );
     like( $@, qr/You must put your tests into a package, not main/, "Proper error" );
+
+    throws_ok { Fennec::export_package_to( 'FAKEPACKAGE' )}
+        qr/Can't locate FAKEPACKAGE\.pm in \@INC/,
+        "Cannot export from invalid package";
 };
 
 1;
 
 __END__
 
-
-    croak "Test runner not found"
-        unless Runner;
-    croak( "You must put your tests into a package, not main" )
-        if $caller eq 'main';
-
-    $TEST_CLASS = $caller;
-
-    {
-        no strict 'refs';
-        push @{ $caller . '::ISA' } => TestFile;
-    }
-
-    my $functions = Functions->new( $workflows );
-    $functions->export_to( $caller );
-
-    $asserts ||= [ qw/ Core / ];
-    export_package_to( 'Fennec::Assert::' . $_, $caller )
-        for @$asserts;
-
-    1;
-}
 
 sub export_package_to {
     my ( $from, $to ) = @_;
