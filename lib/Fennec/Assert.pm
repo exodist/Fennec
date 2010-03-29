@@ -139,6 +139,21 @@ sub tester {
                 stdout => [ "$name died: $_" ],
             );
         };
+
+        # Try to provide a minimum diag for failed tests that do not provide
+        # their own.
+        if ( !$outresult->{ pass }
+        && ( !$outresult->{ stdout } || !@{ $outresult->{ stdout }})) {
+            my @diag;
+            $outresult->{ stdout } = \@diag;
+            for my $i ( 0 .. (@args - 1)) {
+                my $arg = $args[$i];
+                $arg = 'undef' unless defined( $arg );
+                next if "$arg" eq $outresult->{ name } || "";
+                push @diag => "\$_[$i] = '$arg'";
+            }
+        }
+
         result(
             file => $file || "N/A",
             line => $line || "N/A",

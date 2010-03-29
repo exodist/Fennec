@@ -8,13 +8,20 @@ use Scalar::Util qw/blessed reftype/;
 
 tester( $_ ) for qw/is isnt like unlike can_ok isa_ok is_deeply advanced_is/;
 
+tester fail => sub {
+    result(
+        pass => 0,
+        name => 'failing test',
+    );
+};
+
 sub is($$;$) {
     my ( $got, $want, $name ) = @_;
     my $ok = "$got" eq "$want" ? 1 : 0;
     result(
         pass => $ok,
         name => $name,
-        $ok ? () : ( stdout => [ "Got: $got\nWanted: $want" ]),
+        $ok ? () : ( stdout => [ "Got: $got", "Wanted: $want" ]),
     );
 }
 
@@ -24,7 +31,7 @@ sub isnt($$;$) {
     result(
         pass => $ok,
         name => $name,
-        $ok ? () : ( stdout => [ "Got: $got\nWanted: Anything else" ]),
+        $ok ? () : ( stdout => [ "Got: $got", "Wanted: Anything else" ]),
     );
 }
 

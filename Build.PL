@@ -21,8 +21,6 @@ my $build = Module::Build->new(
         # External
         'List::MoreUtils'   => 0,
         'Try::Tiny'         => 0,
-        'Test::More'        => 0,
-        'Test::Warn'        => 0,
 
         # Made for Fennec
         'Parallel::Runner'  => 0.003,

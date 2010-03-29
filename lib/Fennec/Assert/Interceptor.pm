@@ -45,7 +45,7 @@ sub result_line_number_is {
     result(
         pass => $pass,
         name => $name,
-        $pass ? () : (stdout => [ "Got: " . $result->line ]),
+        $pass ? () : (stdout => [ "Got: " . $result->line, "Wanted: $number" ]),
     );
 };
 

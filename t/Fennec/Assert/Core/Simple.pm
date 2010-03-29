@@ -39,6 +39,8 @@ tests 'todo tests' => sub {
         qr/Caught error in todo block\n  Error: I dies badly.*\n  todo: This will die/s,
         "Convey problem"
     );
+
+    fail( 'a', undef, '', 'd', [], {}, 0, 'failing test' );
 };
 
 1;
