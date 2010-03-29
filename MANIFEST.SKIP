@@ -1,3 +1,4 @@
+\B\.vimrc
 
 #!start included /usr/lib64/perl5/5.10.1/ExtUtils/MANIFEST.SKIP
 # Avoid version control files.

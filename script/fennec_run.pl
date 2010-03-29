@@ -12,6 +12,7 @@ use Fennec::Runner;
     Collector => 'Files',
     ignore => undef,
     filetypes => [qw/ Module /],
+    default_asserts => [qw/Interceptor/],
     $ENV{ FENNEC_FILE } ? ( files => [ cwd() . '/' . $ENV{ FENNEC_FILE }]) : (),
     $ENV{ FENNEC_ITEM } ? ( search => $ENV{ FENNEC_ITEM }) : (),
 );

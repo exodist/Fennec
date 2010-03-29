@@ -8,6 +8,7 @@ my $build = Module::Build->new(
     license     => 'perl',
     dist_author => 'Chad Granum <exodist7@gmail.com>',
     create_readme => 1,
+    script_files => "script",
     requires => {
         # Core
         'Benchmark'         => 0,

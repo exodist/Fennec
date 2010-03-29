@@ -17,29 +17,39 @@ our @EXPORT = qw/tb_wrapper tester util result diag/;
 our $TB_RESULT;
 our @TB_DIAGS;
 our $TB_OK;
-our %TB_OVERRIDES = (
-    ok => sub {
-        carp( 'Test::Builder result intercepted but ignored.' )
-            unless $TB_OK;
-        shift;
-        my ( $ok, $name ) = @_;
-        $TB_RESULT = [ $ok, $name ];
-    },
-    diag => sub {
-        carp( 'Test::Builder diag intercepted but ignored.' )
-            unless $TB_OK;
-        shift;
-        push @TB_DIAGS => @_;
-    },
-);
+our %TB_OVERRIDES;
+BEGIN {
+    %TB_OVERRIDES = (
+        ok => sub {
+            shift;
+            carp( 'Test::Builder result intercepted but ignored.' )
+                unless $TB_OK;
+            my ( $ok, $name ) = @_;
+            $TB_RESULT = [ $ok, $name ];
+        },
+        diag => sub {
+            shift;
+            carp( 'Test::Builder diag intercepted but ignored.' )
+                unless $TB_OK;
+            push @TB_DIAGS => @_;
+        },
+        note => sub {
+            shift;
+            carp( 'Test::Builder note intercepted but ignored.' )
+                unless $TB_OK;
+            push @TB_DIAGS => @_;
+        }
+    );
 
-if ( eval { require Test::Builder; 1 }) {
-    for my $ref (keys %TB_OVERRIDES) {
-        no warnings 'redefine';
-        no strict 'refs';
-        my $newref = "real_$ref";
-        *{ 'Test::Builder::' . $newref } = \&$ref;
-        *{ 'Test::Builder::' . $ref    } = $TB_OVERRIDES{ $ref };
+    if ( eval { require Test::Builder; 1 }) {
+        Test::Builder->new->plan('no_plan');
+        for my $ref (keys %TB_OVERRIDES) {
+            no warnings 'redefine';
+            no strict 'refs';
+            my $newref = "real_$ref";
+            *{ 'Test::Builder::' . $newref } = \&$ref;
+            *{ 'Test::Builder::' . $ref    } = $TB_OVERRIDES{ $ref };
+        }
     }
 }
 
@@ -114,7 +124,11 @@ sub tester {
         try {
             no warnings 'redefine';
             no strict 'refs';
-            local *{ $assert_class . '::result' } = sub { $outresult = { @_ }};
+            local *{ $assert_class . '::result' } = sub {
+                confess( "tester functions can only generate a single result." )
+                    if $outresult;
+                $outresult = { @_ }
+            };
             $benchmark = timeit( 1, sub { $sub->( @args )});
         }
         catch {
@@ -150,7 +164,7 @@ sub result {
     return unless @_;
     my %proto = @_;
     Result->new(
-        @proto{qw/file line/} ? _first_test_caller_details() : (),
+        @proto{qw/file line/} ? () : _first_test_caller_details(),
         %proto,
     )->write;
 }

@@ -56,7 +56,7 @@ sub result {
         if ( $result->file ) {
             my $error = "Test failure at " . $result->file;
             $error .= " line " . $result->line if $result->line;
-            $self->stderr( $error );
+            $self->stdout( $error );
         }
         $self->stderr( "Workflow Stack: " . join( ', ', @{ $result->workflow_stack }))
             if $result->workflow_stack;

@@ -16,7 +16,7 @@ use List::Util qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search/;
+Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search default_asserts/;
 
 our $SINGLETON;
 

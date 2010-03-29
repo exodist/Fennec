@@ -2,7 +2,7 @@ package TEST::Fennec;
 use strict;
 use warnings;
 
-use Fennec asserts => [ 'Core', 'Interceptor' ];
+use Fennec;
 
 tests hello_world_group => sub {
     my $self = shift;

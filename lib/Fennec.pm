@@ -45,7 +45,7 @@ sub import {
     my $functions = Functions->new( $workflows );
     $functions->export_to( $caller );
 
-    $asserts ||= [ qw/ Core / ];
+    $asserts ||= Runner->default_asserts || [ qw/ Core / ];
     export_package_to( 'Fennec::Assert::' . $_, $caller )
         for @$asserts;
 

@@ -1,24 +1,49 @@
-package Fennec::Assert::Core::Simple;
+package TEST::Fennec::Assert::Core::Simple;
 use strict;
 use warnings;
 
-use Fennec::Assert;
-use Fennec::Output::Result;
-use Try::Tiny;
-use Carp qw/cluck/;
+use Fennec;
 
-util TODO => sub(&;$) {
-    my ( $code, $reason ) = @_;
-    $reason ||= "no reason given";
-    Result->TODO( $reason );
-    try {
-        $code->();
-    }
-    catch {
-        diag( "Caught error in todo block\n  Error: $_\n  todo: $reason" );
+our $CLASS = 'Fennec::Assert::Core::Simple';
+
+tests 'todo tests' => sub {
+    my $output = capture {
+        TODO {
+            ok( 0, "Fail" );
+            ok( 1, "Pass" );
+            is_deeply(
+                [qw/a b c/],
+                [ 'a' .. 'c'],
+                "Pass TB"
+            );
+            is_deeply(
+                [qw/a b c/],
+                [ 'x' .. 'z' ],
+                "Fail TB"
+            );
+        } "Havn't gotten to it yet";
     };
-    Result->TODO( undef );
+    is( @$output, 4, "4 results" );
+    is( $_->todo, "Havn't gotten to it yet", "Result has todo" )
+        for @$output;
+    result_line_numbers_are( $output, map { ln($_) } -17, -16, -15, -10 );
+
+    $output = capture {
+        TODO { die( 'I dies badly' )} "This will die";
+    };
+    isa_ok( $output->[0], 'Fennec::Output::Diag' );
+    is_deeply( [ 'a' ], ['b'], "No!" );
+    is( 'aaaa', 'xxx', "is" );
+    like(
+        $output->[0]->stdout->[0],
+        qr/Caught error in todo block\n  Error: I dies badly.*\n  todo: This will die/s,
+        "Convey problem"
+    );
 };
+
+1;
+
+__END__
 
 util diag => \&diag;
 
