@@ -10,7 +10,13 @@ use Scalar::Util qw/blessed/;
 sub alias {
     my $class = shift;
     my ($caller) = @{ shift(@_) };
-    for my $accessor ( @_ ) {
+    $class->build_accessors( $caller, @_ );
+}
+
+sub build_accessors {
+    my $class = shift;
+    my ( $caller, @list ) = @_;
+    for my $accessor ( @list ) {
         my $sub = sub {
             my $self = shift;
             croak ( "$caller\->$accessor() is an object method, not a class method." )
@@ -23,6 +29,7 @@ sub alias {
         no strict 'refs';
         *{ $caller . '::' . $accessor } = $sub;
     }
+
 }
 
 1;

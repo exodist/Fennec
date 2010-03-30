@@ -31,16 +31,11 @@ tests 'todo tests' => sub {
     $output = capture {
         TODO { die( 'I dies badly' )} "This will die";
     };
-    isa_ok( $output->[0], 'Fennec::Output::Diag' );
-    is_deeply( [ 'a' ], ['b'], "No!" );
-    is( 'aaaa', 'xxx', "is" );
     like(
         $output->[0]->stdout->[0],
         qr/Caught error in todo block\n  Error: I dies badly.*\n  todo: This will die/s,
         "Convey problem"
     );
-
-    fail( 'a', undef, '', 'd', [], {}, 0, 'failing test' );
 };
 
 1;

@@ -35,6 +35,10 @@ sub require_ok(*) {
     my ( $package ) = @_;
     try {
         eval "require $package" || die( $@ );
+        result(
+            pass => 1,
+            name => "require $package",
+        );
     }
     catch {
         result(
@@ -43,10 +47,6 @@ sub require_ok(*) {
             stdout => [ $_ ],
         );
     };
-    result(
-        pass => 1,
-        name => "require $package",
-    );
 };
 
 tester 'use_into_ok';
@@ -57,18 +57,18 @@ sub use_into_ok(**;@) {
     $run .= '(@_)' if @importargs;
     try {
         eval $run || die( $@ );
+        result(
+            pass => 1,
+            name => "$from\->import(...)",
+        );
     }
     catch {
-        result(
+        return result(
             pass => 0,
             name => "$from\->import(...)",
             stdout => [ $_ ],
         );
     }
-    result(
-        pass => 1,
-        name => "$from\->import(...)",
-    );
 };
 
 tester use_ok => sub(*) {

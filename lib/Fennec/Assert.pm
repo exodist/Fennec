@@ -13,6 +13,7 @@ use Scalar::Util 'blessed';
 use Try::Tiny;
 
 our @EXPORT = qw/tb_wrapper tester util result diag/;
+our @CARP_NOT = qw/ Try::Tiny Benchmark /;
 
 our $TB_RESULT;
 our @TB_DIAGS;
@@ -20,23 +21,28 @@ our $TB_OK;
 our %TB_OVERRIDES;
 BEGIN {
     %TB_OVERRIDES = (
+        _ending => sub {},
+        _my_exit => sub {},
+        exit => sub {},
         ok => sub {
             shift;
-            carp( 'Test::Builder result intercepted but ignored.' )
-                unless $TB_OK;
             my ( $ok, $name ) = @_;
+            result(
+                _first_test_caller_details(),
+                pass => $ok,
+                name => $name,
+            ) unless $TB_OK;
             $TB_RESULT = [ $ok, $name ];
         },
         diag => sub {
             shift;
-            carp( 'Test::Builder diag intercepted but ignored.' )
-                unless $TB_OK;
+            return if $_[0] =~ m/No tests run!/;
+            diag( @_ ) unless $TB_OK;
             push @TB_DIAGS => @_;
         },
         note => sub {
             shift;
-            carp( 'Test::Builder note intercepted but ignored.' )
-                unless $TB_OK;
+            diag( @_ ) unless $TB_OK;
             push @TB_DIAGS => @_;
         }
     );
@@ -121,45 +127,44 @@ sub tester {
         my $outresult;
         my $benchmark;
         my ( $caller, $file, $line ) = caller;
+        my %caller = _first_test_caller_details();
         try {
             no warnings 'redefine';
             no strict 'refs';
             local *{ $assert_class . '::result' } = sub {
-                confess( "tester functions can only generate a single result." )
+                croak( "tester functions can only generate a single result." )
                     if $outresult;
                 $outresult = { @_ }
             };
             $benchmark = timeit( 1, sub { $sub->( @args )});
+
+            # Try to provide a minimum diag for failed tests that do not provide
+            # their own.
+            if ( !$outresult->{ pass }
+            && ( !$outresult->{ stdout } || !@{ $outresult->{ stdout }})) {
+                my @diag;
+                $outresult->{ stdout } = \@diag;
+                for my $i ( 0 .. (@args - 1)) {
+                    my $arg = $args[$i];
+                    $arg = 'undef' unless defined( $arg );
+                    next if "$arg" eq $outresult->{ name } || "";
+                    push @diag => "\$_[$i] = '$arg'";
+                }
+            }
+
+            result(
+                %caller,
+                benchmark => $benchmark || undef,
+                %$outresult
+            ) if $outresult;
         }
         catch {
             result(
                 pass => 0,
-                file => $file || "N/A",
-                line => $line || "N/A",
+                %caller,
                 stdout => [ "$name died: $_" ],
             );
         };
-
-        # Try to provide a minimum diag for failed tests that do not provide
-        # their own.
-        if ( !$outresult->{ pass }
-        && ( !$outresult->{ stdout } || !@{ $outresult->{ stdout }})) {
-            my @diag;
-            $outresult->{ stdout } = \@diag;
-            for my $i ( 0 .. (@args - 1)) {
-                my $arg = $args[$i];
-                $arg = 'undef' unless defined( $arg );
-                next if "$arg" eq $outresult->{ name } || "";
-                push @diag => "\$_[$i] = '$arg'";
-            }
-        }
-
-        result(
-            file => $file || "N/A",
-            line => $line || "N/A",
-            benchmark => $benchmark || undef,
-            %$outresult
-        ) if $outresult;
     };
 
     my $proto = prototype( $sub );
