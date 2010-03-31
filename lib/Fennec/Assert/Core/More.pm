@@ -5,6 +5,7 @@ use warnings;
 use Fennec::Assert;
 use Fennec::Output::Result;
 use Scalar::Util qw/blessed reftype/;
+use Carp;
 
 tester( $_ ) for qw/is isnt like unlike can_ok isa_ok is_deeply advanced_is/;
 
@@ -89,11 +90,13 @@ sub is_deeply($$;$) {
 
 sub advanced_is {
     my %proto = @_;
+    croak( "You must specify got and want" ) unless exists $proto{ got }
+                                                 && exists $proto{ want };
     my ( $have, $want, $name ) = @proto{qw/got want name/};
     my @err = compare( $have, $want, \%proto );
     result(
         pass => @err ? 0 : 1,
-        name => $name,
+        name => $name || undef,
         stdout => \@err,
     );
 }
@@ -113,8 +116,8 @@ sub compare($$;$) {
         ) if defined( $have ) || defined( $want );
     }
 
-    my $haveref = reftype( $have ) || $have;
-    my $wantref = reftype( $want ) || $want;
+    my $haveref = reftype( $have ) || $have || "undef";
+    my $wantref = reftype( $want ) || $want || "undef";
     return ( "Expected: '$wantref' Got: '$haveref'" )
         unless( "$haveref" eq "$wantref" );
 
@@ -165,6 +168,13 @@ sub SCALAR_compare {
     $want = $$want unless blessed( $want ) eq 'Regexp';
     return unless "$have" eq "$want";
     return ( "Expected: '$want' Got: '$have'" );
+}
+
+sub CODE_compare {
+    my ( $have, $want, $specs ) = @_;
+    return if $specs->{ no_code_checks };
+    my $msg = "Expected: '$want' Got: '$have'";
+    return $msg unless $have == $want;
 }
 
 1;

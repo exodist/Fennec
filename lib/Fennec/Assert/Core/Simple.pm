@@ -52,11 +52,11 @@ sub require_ok(*) {
 tester 'use_into_ok';
 sub use_into_ok(**;@) {
     my ( $from, $to, @importargs ) = @_;
-    require_ok( $from );
     my $run = "package $to; $from->import";
     $run .= '(@_)' if @importargs;
     try {
-        eval $run || die( $@ );
+        eval "require $from; 1" || die( $@ );
+        eval "$run; 1" || die( $@ );
         result(
             pass => 1,
             name => "$from\->import(...)",

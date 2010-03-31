@@ -100,7 +100,10 @@ sub import {
 }
 
 sub util {
-    my $caller = caller;
+    my $caller;
+    $caller = shift( @_ ) if blessed( $_[0] )
+                          && blessed( $_[0] )->isa( __PACKAGE__ );
+    $caller = blessed( $caller ) || $caller || caller;
     my ( $name, $sub ) = @_;
     croak( "You must provide a name to util()" )
         unless $name;
@@ -114,7 +117,10 @@ sub util {
 }
 
 sub tester {
-    my $assert_class = caller;
+    my $assert_class;
+    $assert_class = shift( @_ ) if blessed( $_[0] )
+                                && blessed( $_[0] )->isa( __PACKAGE__ );
+    $assert_class = blessed( $assert_class ) || $assert_class || caller;
     my ( $name, $sub ) = @_;
     croak( "You must provide a name to tester()" )
         unless $name;
@@ -132,6 +138,8 @@ sub tester {
             no warnings 'redefine';
             no strict 'refs';
             local *{ $assert_class . '::result' } = sub {
+                shift( @_ ) if blessed( $_[0] )
+                            && blessed( $_[0] )->isa( __PACKAGE__ );
                 croak( "tester functions can only generate a single result." )
                     if $outresult;
                 $outresult = { @_ }
@@ -177,10 +185,14 @@ sub tester {
 }
 
 sub diag {
+    shift( @_ ) if blessed( $_[0] )
+                && blessed( $_[0] )->isa( __PACKAGE__ );
     Fennec::Output::Diag->new( stdout => \@_ )->write;
 }
 
 sub result {
+    shift( @_ ) if blessed( $_[0] )
+                && blessed( $_[0] )->isa( __PACKAGE__ );
     return unless @_;
     my %proto = @_;
     Result->new(
@@ -190,6 +202,8 @@ sub result {
 }
 
 sub tb_wrapper(&) {
+    shift( @_ ) if blessed( $_[0] )
+                && blessed( $_[0] )->isa( __PACKAGE__ );
     my ( $orig ) = @_;
     my $proto = prototype( $orig );
     my $wrapper = sub {

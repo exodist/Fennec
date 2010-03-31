@@ -11,17 +11,10 @@ tests 'Bad core module' => sub {
 };
 
 tests 'direct use' => sub {
-    eval '
-        package TEST::Fennec::Assert::Core::Import;
-        use strict;
-        use warnings;
-        use Fennec::Assert::Core;
-        1;
-    ' || die( $@ );
-    can_ok(
-        'TEST::Fennec::Assert::Core::Import',
-        qw/ok is is_deeply warning_like throws_ok/
-    );
+    my $ac = anonclass( use => 'Fennec::Assert::Core' );
+    TODO {
+        $ac->can_ok(qw/ ok is is_deeply warning_like throws_ok /);
+    } 'Assert::Core::Warn not implemented yet';
 };
 
 1;

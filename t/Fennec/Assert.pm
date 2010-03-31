@@ -2,138 +2,95 @@ package TEST::Fennec::Assert;
 use strict;
 use warnings;
 
-use Fennec;
+use Fennec asserts => [ 'Core', 'Interceptor' ];
+use Time::HiRes qw/time sleep/;
 our $CLASS = 'Fennec::Assert';
+
+our $HAVE_TB = eval 'require Test::Builder; 1';
 
 tests use_package => sub {
     require_ok $CLASS;
     my $ac = anonclass( use => $CLASS );
     $ac->can_ok( qw/tb_wrapper tester util result diag/ );
+    $ac->isa_ok( 'Fennec::Assert' );
 };
 
+tests tb_overrides => (
+    skip => $HAVE_TB ? undef : 'No Test::Builder',
+    method => sub {
+        for my $method ( keys %Fennec::Assert::TB_OVERRIDES ) {
+            no strict 'refs';
+            is(
+                $Fennec::Assert::TB_OVERRIDES{ $method },
+                \&{'Test::Builder::' . $method},
+                "Overrode Test\::Builder\::$method\()"
+            );
+            can_ok( 'Test::Builder', "real_$method" );
+        }
+    },
+);
 
+tests declare_exports => sub {
+    my $ac = anonclass( use => $CLASS )->new();
+    my $result = 0;
+    $ac->util( do_stuff => sub { $result++ });
+    $ac->tester( is_stuff => sub { $ac->result( pass => $_[0], name => $_[1] ) });
+    no strict 'refs';
+    advanced_is(
+        name => "Export added",
+        got => ref($ac)->exports,
+        want => { do_stuff => sub {}, is_stuff => sub {} },
+        no_code_checks => 1,
+    );
+    use_into_ok( ref($ac), main::__dce );
+    can_ok( main::__dce, 'do_stuff', 'is_stuff' );
+    main::__dce::do_stuff();
+    is( $result, 1, "Function behaved properly" );
+    main::__dce::do_stuff();
+    is( $result, 2, "Function behaved properly (double check)" );
+    my $cap = capture {
+        main::__dce::is_stuff( 1, "a" );
+        main::__dce::is_stuff( 0, "b" );
+    };
+    is( @$cap, 2, "captured 2 results" );
+    is( $cap->[0]->line, ln(-4), "First result, added line number" );
+    is( $cap->[1]->line, ln(-4), "Second result, added line number" );
+    is( $cap->[0]->file, __FILE__, "Set file name" );
+    ok( $cap->[0]->benchmark, "Added benchmark" );
+    is_deeply(
+        $cap->[1]->stdout,
+        ['$_[0] = \'0\''],
+        "Added diag when missing"
+    );
+    ok( $cap->[0]->pass, "First result passed" );
+    ok( !$cap->[1]->pass, "Second result failed" );
+    is( $cap->[0]->name, 'a', "First name" );
+    is( $cap->[1]->name, 'b', "Second name" );
+};
+
+tests export_exceptions => sub {
+    my $ac = anonclass( use => $CLASS )->new();
+    throws_ok { $ac->util() }
+        qr/You must provide a name to util\(\)/,
+        "must provide a name to util";
+    throws_ok { $ac->util( 'fake' )}
+        qr/No sub found for function fake/,
+        "Must provide sub";
+    throws_ok { $ac->tester() }
+        qr/You must provide a name to tester\(\)/,
+        "must provide a name to tester";
+    throws_ok { $ac->tester( 'fake' )}
+        qr/No sub found for function fake/,
+        "Must provide sub";
+};
+
+tests tester_wrapper_exceptions => sub {
+
+};
 
 1;
+
 __END__
-
-package Fennec::Assert;
-use strict;
-use warnings;
-
-use Fennec::Runner;
-use Fennec::Output::Result;
-use Fennec::Output::Diag;
-
-use Time::HiRes qw/time/;
-use Benchmark qw/timeit :hireswallclock/;
-use Carp qw/confess croak carp cluck/;
-use Scalar::Util 'blessed';
-use Try::Tiny;
-
-our @EXPORT = qw/tb_wrapper tester util result diag/;
-our @CARP_NOT = qw/ Try::Tiny Benchmark /;
-
-our $TB_RESULT;
-our @TB_DIAGS;
-our $TB_OK;
-our %TB_OVERRIDES;
-BEGIN {
-    %TB_OVERRIDES = (
-        ok => sub {
-            shift;
-            carp( 'Test::Builder result intercepted but ignored.' )
-                unless $TB_OK;
-            my ( $ok, $name ) = @_;
-            $TB_RESULT = [ $ok, $name ];
-        },
-        diag => sub {
-            shift;
-            carp( 'Test::Builder diag intercepted but ignored.' )
-                unless $TB_OK;
-            push @TB_DIAGS => @_;
-        },
-        note => sub {
-            shift;
-            carp( 'Test::Builder note intercepted but ignored.' )
-                unless $TB_OK;
-            push @TB_DIAGS => @_;
-        }
-    );
-
-    if ( eval { require Test::Builder; 1 }) {
-        Test::Builder->new->plan('no_plan');
-        for my $ref (keys %TB_OVERRIDES) {
-            no warnings 'redefine';
-            no strict 'refs';
-            my $newref = "real_$ref";
-            *{ 'Test::Builder::' . $newref } = \&$ref;
-            *{ 'Test::Builder::' . $ref    } = $TB_OVERRIDES{ $ref };
-        }
-    }
-}
-
-sub exports {
-    my $class = shift;
-    no strict 'refs';
-    return {
-        ( map { $_ => $_ } @{ $class . '::EXPORT' }),
-        %{ $class . '::EXPORT' },
-    };
-}
-
-sub export_to {
-    my $class = shift;
-    my ( $dest, $prefix ) = @_;
-    my $exports = $class->exports;
-    for my $name ( keys %$exports ) {
-        my $sub = $exports->{ $name };
-        $sub = $class->can( $sub ) unless ref $sub eq 'CODE';
-
-        croak( "Could not find sub $name in $class for export" )
-            unless ref($sub) eq 'CODE';
-
-        $name = $prefix . $name if $prefix;
-        no strict 'refs';
-        *{ $dest . '::' . $name } = $sub;
-    }
-}
-
-sub import {
-    my $class = shift;
-    my ( $prefix ) = @_;
-    my $caller = caller;
-    $class->export_to( $caller, $prefix );
-
-    # Assert subclasses should not modify @ISA
-    return if $class ne __PACKAGE__;
-
-    no strict 'refs';
-    push @{ $caller . '::ISA' } => __PACKAGE__
-        unless grep { $_ eq __PACKAGE__ } @{ $caller . '::ISA' };
-}
-
-sub util {
-    my $caller = caller;
-    my ( $name, $sub ) = @_;
-    croak( "You must provide a name to util()" )
-        unless $name;
-    $sub ||= $caller->can( $name );
-    croak( "No sub found for function $name" )
-        unless $sub;
-
-    no strict 'refs';
-    my $export = \%{ $caller . '::EXPORT' };
-    $export->{ $name } = $sub;
-}
-
-sub tester {
-    my $assert_class = caller;
-    my ( $name, $sub ) = @_;
-    croak( "You must provide a name to tester()" )
-        unless $name;
-    $sub ||= $assert_class->can( $name );
-    croak( "No sub found for function $name" )
-        unless $sub;
 
     my $wrapsub = sub {
         my @args = @_;
@@ -145,6 +102,8 @@ sub tester {
             no warnings 'redefine';
             no strict 'refs';
             local *{ $assert_class . '::result' } = sub {
+                shift( @_ ) if blessed( $_[0] )
+                            && blessed( $_[0] )->isa( __PACKAGE__ );
                 croak( "tester functions can only generate a single result." )
                     if $outresult;
                 $outresult = { @_ }
@@ -180,20 +139,15 @@ sub tester {
         };
     };
 
-    my $proto = prototype( $sub );
-    my $newsub = $proto ? eval "sub($proto) { \$wrapsub->( \@_ )}" || die($@)
-                        : $wrapsub;
-
-    no strict 'refs';
-    my $export = \%{ $assert_class . '::EXPORT' };
-    $export->{ $name } = $newsub;
-}
-
 sub diag {
+    shift( @_ ) if blessed( $_[0] )
+                && blessed( $_[0] )->isa( __PACKAGE__ );
     Fennec::Output::Diag->new( stdout => \@_ )->write;
 }
 
 sub result {
+    shift( @_ ) if blessed( $_[0] )
+                && blessed( $_[0] )->isa( __PACKAGE__ );
     return unless @_;
     my %proto = @_;
     Result->new(
@@ -203,6 +157,8 @@ sub result {
 }
 
 sub tb_wrapper(&) {
+    shift( @_ ) if blessed( $_[0] )
+                && blessed( $_[0] )->isa( __PACKAGE__ );
     my ( $orig ) = @_;
     my $proto = prototype( $orig );
     my $wrapper = sub {
@@ -236,19 +192,3 @@ sub _first_test_caller_details {
         line => $line || "N/A",
     );
 }
-
-1;
-
-=head1 AUTHORS
-
-Chad Granum L<exodist7@gmail.com>
-
-=head1 COPYRIGHT
-
-Copyright (C) 2010 Chad Granum
-
-Fennec is free software; Standard perl licence.
-
-Fennec is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the license for more details.
