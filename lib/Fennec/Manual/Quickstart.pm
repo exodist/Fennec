@@ -88,7 +88,7 @@ a failure in the grand scheme.
     use warnings;
     use Fennec standalone => {};
 
-    # Don;t forget this
+    # Don't forget this
     start();
 
     sub Fennec {
