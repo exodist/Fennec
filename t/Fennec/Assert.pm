@@ -11,7 +11,7 @@ our $HAVE_TB = eval 'require Test::Builder; 1';
 tests use_package => sub {
     require_ok $CLASS;
     my $ac = anonclass( use => $CLASS );
-    $ac->can_ok( qw/tb_wrapper tester util result diag/ );
+    $ac->can_ok( qw/tb_wrapper tester util result diag test_caller/ );
     $ac->isa_ok( 'Fennec::Assert' );
 };
 
@@ -27,22 +27,32 @@ tests tb_overrides => (
             );
             can_ok( 'Test::Builder', "real_$method" );
         }
+        lives_ok { Test::Builder::_my_exit } "TB::_my_exit";
+        lives_ok { Test::Builder::exit() } "TB::exit";
+        my $res = capture {
+            Test::Builder->ok( 1, "pass" );
+            Test::Builder->ok( 0, "fail" );
+            Test::Builder->diag( "Diag" );
+            Test::Builder->note( "Note" );
+        };
+        is( @$res, 4, "4 output items" );
     },
 );
 
 tests declare_exports => sub {
-    my $ac = anonclass( use => $CLASS )->new();
+    my $ac = anonclass( use => [$CLASS] );
+    my $acinst = $ac->new();
     my $result = 0;
-    $ac->util( do_stuff => sub { $result++ });
-    $ac->tester( is_stuff => sub { $ac->result( pass => $_[0], name => $_[1] ) });
+    $acinst->util( do_stuff => sub { $result++ });
+    $acinst->tester( is_stuff => sub { $acinst->result( pass => $_[0], name => $_[1] ) });
     no strict 'refs';
     advanced_is(
         name => "Export added",
-        got => ref($ac)->exports,
+        got => ref($acinst)->exports,
         want => { do_stuff => sub {}, is_stuff => sub {} },
         no_code_checks => 1,
     );
-    use_into_ok( ref($ac), main::__dce );
+    use_into_ok( ref($acinst), main::__dce );
     can_ok( main::__dce, 'do_stuff', 'is_stuff' );
     main::__dce::do_stuff();
     is( $result, 1, "Function behaved properly" );
@@ -69,126 +79,50 @@ tests declare_exports => sub {
 };
 
 tests export_exceptions => sub {
-    my $ac = anonclass( use => $CLASS )->new();
-    throws_ok { $ac->util() }
+    my $ac = anonclass( use => $CLASS );
+    my $acinst = $ac->new;
+    throws_ok { $acinst->util() }
         qr/You must provide a name to util\(\)/,
         "must provide a name to util";
-    throws_ok { $ac->util( 'fake' )}
+    throws_ok { $acinst->util( 'fake' )}
         qr/No sub found for function fake/,
         "Must provide sub";
-    throws_ok { $ac->tester() }
+    throws_ok { $acinst->tester() }
         qr/You must provide a name to tester\(\)/,
         "must provide a name to tester";
-    throws_ok { $ac->tester( 'fake' )}
+    throws_ok { $acinst->tester( 'fake' )}
         qr/No sub found for function fake/,
         "Must provide sub";
+
+    my $res = capture {
+        $acinst->tester( dies => sub { die( 'I died' )});
+        anonclass( use => $ac->class )->new->dies(1);
+    };
+    is( @$res, 1, "1 result" );
+    ok( !$res->[0]->pass, "result failed" );
+    like( $res->[0]->stdout->[0], qr/I died/, "diag for fail" );
 };
 
-tests tester_wrapper_exceptions => sub {
-
-};
+tests tb_wrapper => (
+    skip => $HAVE_TB ? undef : 'No Test::Builder',
+    method => sub {
+        my $wrapped = Fennec::Assert::tb_wrapper( sub($$) {
+            Test::Builder->new->ok( @_ );
+            Test::Builder->new->diag( 'a message' );
+        });
+        is( prototype( $wrapped ), '$$', "Preserve prototype" );
+        my $res = capture { $wrapped->( 1, 'name' ) };
+        is( @$res, 1, "1 output" );
+        ok( $res->[0]->pass, "passed" );
+        is( $res->[0]->stdout->[0], "a message", "message" );
+        $wrapped = Fennec::Assert::tb_wrapper( sub {
+            Test::Builder->new->diag( 'a message' );
+        });
+        ok( !prototype( $wrapped ), "No prototype" );
+        $res = capture { $wrapped->( 1, 'name' ) };
+        ok( !$res->[0]->isa('Fennec::Output::Result'), "Not a result" );
+        is( $res->[0]->stdout->[0], "a message", "message" );
+    },
+);
 
 1;
-
-__END__
-
-    my $wrapsub = sub {
-        my @args = @_;
-        my $outresult;
-        my $benchmark;
-        my ( $caller, $file, $line ) = caller;
-        my %caller = _first_test_caller_details();
-        try {
-            no warnings 'redefine';
-            no strict 'refs';
-            local *{ $assert_class . '::result' } = sub {
-                shift( @_ ) if blessed( $_[0] )
-                            && blessed( $_[0] )->isa( __PACKAGE__ );
-                croak( "tester functions can only generate a single result." )
-                    if $outresult;
-                $outresult = { @_ }
-            };
-            $benchmark = timeit( 1, sub { $sub->( @args )});
-
-            # Try to provide a minimum diag for failed tests that do not provide
-            # their own.
-            if ( !$outresult->{ pass }
-            && ( !$outresult->{ stdout } || !@{ $outresult->{ stdout }})) {
-                my @diag;
-                $outresult->{ stdout } = \@diag;
-                for my $i ( 0 .. (@args - 1)) {
-                    my $arg = $args[$i];
-                    $arg = 'undef' unless defined( $arg );
-                    next if "$arg" eq $outresult->{ name } || "";
-                    push @diag => "\$_[$i] = '$arg'";
-                }
-            }
-
-            result(
-                %caller,
-                benchmark => $benchmark || undef,
-                %$outresult
-            ) if $outresult;
-        }
-        catch {
-            result(
-                pass => 0,
-                %caller,
-                stdout => [ "$name died: $_" ],
-            );
-        };
-    };
-
-sub diag {
-    shift( @_ ) if blessed( $_[0] )
-                && blessed( $_[0] )->isa( __PACKAGE__ );
-    Fennec::Output::Diag->new( stdout => \@_ )->write;
-}
-
-sub result {
-    shift( @_ ) if blessed( $_[0] )
-                && blessed( $_[0] )->isa( __PACKAGE__ );
-    return unless @_;
-    my %proto = @_;
-    Result->new(
-        @proto{qw/file line/} ? () : _first_test_caller_details(),
-        %proto,
-    )->write;
-}
-
-sub tb_wrapper(&) {
-    shift( @_ ) if blessed( $_[0] )
-                && blessed( $_[0] )->isa( __PACKAGE__ );
-    my ( $orig ) = @_;
-    my $proto = prototype( $orig );
-    my $wrapper = sub {
-        my @args = @_;
-        local $TB_OK = 1;
-        local ( $TB_RESULT, @TB_DIAGS );
-        my $benchmark = timeit( 1, sub { $orig->( @args )});
-        return diag( @TB_DIAGS ) unless $TB_RESULT;
-        return result(
-            pass      => $TB_RESULT->[0],
-            name      => $TB_RESULT->[1],
-            benchmark => $benchmark,
-            stdout    => [@TB_DIAGS],
-        );
-    };
-    return $wrapper unless $proto;
-    # Preserve the prototype
-    return eval "sub($proto) { \$wrapper->(\@_) }";
-}
-
-sub _first_test_caller_details {
-    my $current = 1;
-    my ( $caller, $file, $line );
-    do {
-        ( $caller, $file, $line ) = caller( $current );
-        $current++;
-    } while $caller && !$caller->isa( 'Fennec::TestFile' );
-
-    return (
-        file => $file || "N/A",
-        line => $line || "N/A",
-    );
-}

@@ -10,6 +10,11 @@ DESCRIPTION
     test files are objects. Fennec also solves the forking problem, thats
     it, forking just plain works.
 
+EARLY VERSION WARNING
+    Fennec is still under active development, many features are untested or
+    even unimplemented. Please give it a try and report any bugs or
+    suggestions.
+
 DOCUMENTATION
     QUICK START
         Fennec::Manual::Quickstart - Drop Fennec standalone tests into an

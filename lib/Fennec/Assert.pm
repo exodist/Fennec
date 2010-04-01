@@ -12,7 +12,7 @@ use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
 use Try::Tiny;
 
-our @EXPORT = qw/tb_wrapper tester util result diag/;
+our @EXPORT = qw/tb_wrapper tester util result diag test_caller/;
 our @CARP_NOT = qw/ Try::Tiny Benchmark /;
 
 our $TB_RESULT;
@@ -28,7 +28,7 @@ BEGIN {
             shift;
             my ( $ok, $name ) = @_;
             result(
-                _first_test_caller_details(),
+                test_caller(),
                 pass => $ok,
                 name => $name,
             ) unless $TB_OK;
@@ -133,7 +133,7 @@ sub tester {
         my $outresult;
         my $benchmark;
         my ( $caller, $file, $line ) = caller;
-        my %caller = _first_test_caller_details();
+        my %caller = test_caller();
         try {
             no warnings 'redefine';
             no strict 'refs';
@@ -196,7 +196,7 @@ sub result {
     return unless @_;
     my %proto = @_;
     Result->new(
-        @proto{qw/file line/} ? () : _first_test_caller_details(),
+        @proto{qw/file line/} ? () : test_caller(),
         %proto,
     )->write;
 }
@@ -224,7 +224,7 @@ sub tb_wrapper(&) {
     return eval "sub($proto) { \$wrapper->(\@_) }";
 }
 
-sub _first_test_caller_details {
+sub test_caller {
     my $current = 1;
     my ( $caller, $file, $line );
     do {
@@ -239,6 +239,201 @@ sub _first_test_caller_details {
 }
 
 1;
+
+=head1 DESCRIPTION
+
+Fennec::Assert - Assertions (tester functions) for Fennec.
+
+=head1 SYNOPSYS
+
+    package My::Assert;
+    use Fennec::Assert;
+
+    tester ok => sub($$) {
+        my ( $status, $name ) = @_;
+        result( pass => $status, name => $name );
+    };
+    util diag => sub {
+        # diag() is exported by Fennec::Assert
+        diag( @_ );
+    };
+
+    tester 'is';
+    sub is {
+        ...
+    }
+
+    1;
+
+=head1 WRAPPING TEST::BUILDER
+
+This is actual code from Fennec 0.11 as an example
+
+    package Fennec::Assert::TBCore::More;
+    use strict;
+    use warnings;
+
+    use Fennec::Assert;
+    use Fennec::Output::Result;
+    require Test::More;
+
+    our @LIST = qw/ ok is isnt like unlike cmp_ok can_ok isa_ok new_ok pass fail
+                    use_ok require_ok is_deeply /;
+
+    for my $name ( @LIST ) {
+        no strict 'refs';
+        next unless Test::More->can( $name );
+        tester $name => tb_wrapper \&{ 'Test::More::' . $name };
+    }
+
+    # Technically "util 'diag';" would work, but it is less clear since diag()
+    # is imported.
+    util diag => \&diag;
+
+    util note => \&diag;
+
+    1;
+
+=head1 MAGIC
+
+=over 4
+
+=item Test::Builder overrides
+
+L<Fennec::Assert> will override some subs within Test::Bulder so that it
+generates L<Fennec::Output> objects instead of printing to STDIN and STDERR.
+
+=item Subclassing
+
+When you use L<Fennec::Assert> it will automatically make your package a
+subclass of L<Fennec::Assert>.
+
+    package My::Assert;
+    use strict;
+    use warnings;
+
+    # Import functions AND add 'Fennec::Assert' to @ISA.
+    use Fennec::Assert;
+
+This is important because it gives your package an import() and some export
+helper functions that allow the 'tester' and 'util' methods to define exports
+that may not actually be subs in your package. This provides an export_to
+method that Fennec uses to provide your assert functions to tests, it also
+allows 'use My::Assert' to work as expected.
+
+=back
+
+=head1 EXPORTED FUNCTIONS
+
+Note: These also work in method form, if your assert class can be instantiated
+as an object you can call $instance->NAME().
+
+=over 4
+
+=item $newsub = tb_wrapper( sub { ... } )
+
+=item $newsub = tb_wrapper( \&function_name )
+
+Wrap a Test::Builder function (such as is_deeply()) with a Fennec wrapper that
+provides extra information such as diagnostics, benchmarking, and scope/caller
+information to generated results.
+
+The wrapper function will be defined with the same prototype as the function
+being wrapped. If the original was defined as sub($$) {...} then $newsub will
+also have the ($$) prototype.
+
+=item tester( 'name' )
+
+=item tester( name => sub { ... })
+
+In the first form you export a package sub as a tester by name. Int he second
+form you create a new export with an anonymous sub. Note: Your function will be
+wrapped inside another function that provides extra information such as
+diagnostics, benchmarking, and scope/caller information to generated results.
+
+The wrapper function will be defined with the same prototype as the function
+being wrapped. If the original was defined as sub($$) {...} then $newsub will
+also have the ($$) prototype.
+
+***NOTE: Only one result may be generated from a tester method, if you attempt
+to generate more it will throw an exception. If you want to generate multiple
+results you will have to write a util function and add benchmarking/caller/etc.
+manually.
+
+=item util( 'name' )
+
+=item util( name => sub { ... })
+
+In the first form you export a package sub as a util by name. In the second
+form you create a new export with an anonymous sub. Note: Utility functions are
+not wrapped like tester functions are, this means no free diagnostics, scope,
+caller, or benchmarking. However unlike tester() a util can produce any number
+of results, or no results at all.
+
+=item %line_and_filename = test_caller()
+
+Returns a hash containing the keys 'line' and 'file' which hold the filename
+and line number of the most recent L<Fennec::TestFile> caller. It does not rely
+on knowing how deep you are in the stack, or tracking anything, it searches the
+stack from current backwords until it finds a testfile.
+
+This is used in tester functions that have been wrapped to provide a line
+number and filename to results. If you generate results in util or other
+non-tester functions you can use this to add the line number and filename.
+
+=item result( %result_proto )
+
+Create and write a test result. %result_proto can have any keys that are valid
+L<Fennec::Output::Result> construction parameters.
+
+=item diag( @messages )
+
+Issue a L<Fennec::Output::Diag> object with the provided messages.
+
+=back
+
+=head1 CLASS METHODS
+
+All of these are inherited by any class that uses L<Fennec::Assert>
+
+=over 4
+
+=item my $items = $class->exports()
+
+Retrieve a hashref containing { name => sub {} } pairs for all exports provided
+by your module.
+
+=item $class->export_to( $dest_class )
+
+=item $class->export_to( $dest_class, $prefix )
+
+Export all exported subs to the specified package. If a prefix is specified
+then all exported subs will be exported with that prefix.
+
+=item $class->import()
+
+=item use Fennec::Assert
+
+=item $class->import( $prefix )
+
+=item use Fennec::Assert qw/prefix/
+
+Called automatically when you use L<Fennec::Assert>. It will import all
+exported subs into the calling class. If a prefix is specified then all
+exported subs will be exported with that prefix. If the package being used is a
+L<Fennec::Assert> itself then @ISA will be modified to subclass the calling
+package. Assert subclasses do not modify the @ISA whent hey are used.
+
+=back
+
+=head1 EARLY VERSION WARNING
+
+L<Fennec> is still under active development, many features are untested or even
+unimplemented. Please give it a try and report any bugs or suggestions.
+
+=head1 MANUAL
+
+L<Fennec::Manual> - Advanced usage and extending Fennec.
 
 =head1 AUTHORS
 

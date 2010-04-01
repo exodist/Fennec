@@ -14,12 +14,12 @@ tests 'todo tests' => sub {
             is_deeply(
                 [qw/a b c/],
                 [ 'a' .. 'c'],
-                "Pass TB"
+                "Pass"
             );
             is_deeply(
                 [qw/a b c/],
                 [ 'x' .. 'z' ],
-                "Fail TB"
+                "Fail"
             );
         } "Havn't gotten to it yet";
     };
@@ -57,6 +57,10 @@ sub require_ok(*) {
     my ( $package ) = @_;
     try {
         eval "require $package" || die( $@ );
+        result(
+            pass => 1,
+            name => "require $package",
+        );
     }
     catch {
         result(
@@ -65,32 +69,28 @@ sub require_ok(*) {
             stdout => [ $_ ],
         );
     };
-    result(
-        pass => 1,
-        name => "require $package",
-    );
 };
 
 tester 'use_into_ok';
 sub use_into_ok(**;@) {
     my ( $from, $to, @importargs ) = @_;
-    require_ok( $from );
     my $run = "package $to; $from->import";
     $run .= '(@_)' if @importargs;
     try {
-        eval $run || die( $@ );
+        eval "require $from; 1" || die( $@ );
+        eval "$run; 1" || die( $@ );
+        result(
+            pass => 1,
+            name => "$from\->import(...)",
+        );
     }
     catch {
-        result(
+        return result(
             pass => 0,
             name => "$from\->import(...)",
             stdout => [ $_ ],
         );
     }
-    result(
-        pass => 1,
-        name => "$from\->import(...)",
-    );
 };
 
 tester use_ok => sub(*) {

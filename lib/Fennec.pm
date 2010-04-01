@@ -7,7 +7,7 @@ use Fennec::Runner;
 use Fennec::TestFile;
 use Fennec::TestFile::Functions;
 
-our $VERSION = "0.010";
+our $VERSION = "0.011";
 our $TEST_CLASS;
 
 sub clear_test_class { $TEST_CLASS = undef }
@@ -74,6 +74,11 @@ L<Test::Exception>), Custom output handlers (Alternatives to TAP), Custom file
 types, and custom result passing (collectors). In L<Fennec> all test files are
 objects. L<Fennec> also solves the forking problem, thats it, forking just
 plain works.
+
+=head1 EARLY VERSION WARNING
+
+L<Fennec> is still under active development, many features are untested or even
+unimplemented. Please give it a try and report any bugs or suggestions.
 
 =head1 DOCUMENTATION
 
