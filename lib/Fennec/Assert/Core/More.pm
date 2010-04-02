@@ -11,21 +11,21 @@ tester( $_ ) for qw/is isnt like unlike can_ok isa_ok is_deeply advanced_is/;
 
 sub is($$;$) {
     my ( $got, $want, $name ) = @_;
-    my $ok = "$got" eq "$want" ? 1 : 0;
+    my ($err) = SCALAR_compare( \$got, \$want );
     result(
-        pass => $ok,
+        pass => !$err,
         name => $name,
-        $ok ? () : ( stdout => [ "Got: $got", "Wanted: $want" ]),
+        $err ? ( stdout => [ $err ]) : (),
     );
 }
 
 sub isnt($$;$) {
     my ( $got, $nowant, $name ) = @_;
-    my $ok = "$got" ne "$nowant" ? 1 : 0;
+    my ($err) = SCALAR_compare( \$got, \$nowant );
     result(
-        pass => $ok,
+        pass => $err ? 1 : 0,
         name => $name,
-        $ok ? () : ( stdout => [ "Got: $got", "Wanted: Anything else" ]),
+        $err ? () : ( stdout => [ "Got: $got", "Wanted: Anything else" ]),
     );
 }
 
@@ -164,9 +164,15 @@ sub HASH_compare {
 
 sub SCALAR_compare {
     my ( $have, $want, $specs ) = @_;
-    $have = $$have unless blessed( $have ) eq 'Regexp';
-    $want = $$want unless blessed( $want ) eq 'Regexp';
-    return unless "$have" eq "$want";
+    $have = $$have unless blessed( $have ) || '' eq 'Regexp';
+    $want = $$want unless blessed( $want ) || '' eq 'Regexp';
+
+    return if !defined( $have ) && !defined( $want );
+    my $bad = (!$have && $want) || (!$want && $have);
+    return if !$bad && "$have" eq "$want";
+
+    $want = 'undef' unless defined( $want );
+    $have = 'undef' unless defined( $have );
     return ( "Expected: '$want' Got: '$have'" );
 }
 

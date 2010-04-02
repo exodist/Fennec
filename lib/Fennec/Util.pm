@@ -3,14 +3,24 @@ use strict;
 use warnings;
 
 use base 'Fennec::Base';
+use Carp;
 
 sub package_subs {
+    my $class = shift;
     my ( $package, $match ) = @_;
     $package = $package . '::';
     no strict 'refs';
     my @list = grep { defined( *{$package . $_}{CODE} )} keys %$package;
     return @list unless $match;
     return grep { $_ =~ $match } @list;
+}
+
+sub package_sub_map {
+    my $class = shift;
+    my ( $package, $match ) = @_;
+    croak( "Must specify a package" ) unless $package;
+    my @list = $class->package_subs( @_ );
+    return map {[ $_, $package->can( $_ )]} @list;
 }
 
 1;

@@ -9,6 +9,7 @@ use Fennec::Collector;
 use Fennec::Util::Accessors;
 use Fennec::Workflow;
 use Fennec::Output::Result;
+use Fennec::Output::Diag;
 use Try::Tiny;
 use Parallel::Runner;
 use Carp;
@@ -59,6 +60,7 @@ sub init {
             threader    => Parallel::Runner->new( $proto{ p_files }) || die( "No threader" ),
             parent_pid  => $$,
             pid         => $$,
+            pre_tests_hooks => [],
         },
         $class
     );
@@ -78,6 +80,14 @@ sub start {
                     method => sub { shift->file->load },
                     file => $file,
                 )->_build_as_root;
+
+                try {
+                    $workflow->run_sub_as_current( $_ )
+                        for @{ $self->pre_tests_hooks };
+                }
+                catch {
+                    Diag->new( "pre_tests_hook error: $_" )->write
+                };
 
                 my $testfile = $workflow->testfile;
                 return Result->skip_workflow( $testfile )
@@ -101,6 +111,17 @@ sub start {
     }
     $self->threader->finish;
     $self->collector->finish;
+}
+
+sub pre_tests_hooks {
+    my $self = shift;
+    return $self->{ pre_tests_hooks };
+}
+
+sub pre_tests_hook {
+    my $self = shift;
+    my ($code) = @_;
+    push @{ $self->pre_tests_hooks } => $code;
 }
 
 sub pid_changed {

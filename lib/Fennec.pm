@@ -9,9 +9,11 @@ use Fennec::TestFile::Functions;
 
 our $VERSION = "0.011";
 our $TEST_CLASS;
+our @TEST_CLASS_ARGS;
 
 sub clear_test_class { $TEST_CLASS = undef }
 sub test_class { $TEST_CLASS }
+sub test_class_args { @TEST_CLASS_ARGS }
 
 sub import {
     my $class = shift;
@@ -36,6 +38,7 @@ sub import {
         if $caller eq 'main';
 
     $TEST_CLASS = $caller;
+    @TEST_CLASS_ARGS = @_;
 
     {
         no strict 'refs';

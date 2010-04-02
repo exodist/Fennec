@@ -11,6 +11,7 @@ use Fennec::TestSet;
 use Fennec::Output::Result;
 use Try::Tiny;
 use Carp;
+require Fennec;
 
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
@@ -20,12 +21,13 @@ use List::Util   qw/shuffle/;
 Accessors qw/ parent _testsets _workflows /;
 
 sub function    {}
-sub depends     {[ 'Fennec::TestSet' ]}
+sub depends     {[]}
 sub alias       { shift->current }
 sub has_current { 0 }
 sub current     { confess "No current worflow" }
 sub depth       { 0 }
 sub proto       {( _testsets => [], _workflows => [] )}
+sub build_hook  {}
 
 sub run_tests {
     my $self = shift;
@@ -35,9 +37,9 @@ sub run_tests {
                 @sets = $self->search_filter( Runner->search, \@sets );
             }
 
-            # Even if we are searching we might have multiple tests, randomize
-            # them.
             @sets = shuffle @sets if $self->testfile->random;
+            @sets = sort { $a->name cmp $b->name } @sets
+                if $self->testfile->sort;
 
             my $benchmark = timeit( 1, sub {
                 for my $set ( @sets ) {
@@ -127,7 +129,11 @@ sub build {
 sub _build_as_root {
     my $self = shift;
     my $tclass = $self->run_method_as_current( $self->method );
-    $self->parent( $tclass->new( workflow => $self, file => $self->file  ));
+    $self->parent( $tclass->new(
+        Fennec->test_class_args,
+        workflow => $self,
+        file => $self->file,
+    ));
     return $self;
 }
 

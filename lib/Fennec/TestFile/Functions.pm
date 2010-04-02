@@ -31,8 +31,14 @@ sub build {
         eval "require $gclass" || die ( $@ );
         next if $functions{ $gclass };
         push @$workflows => @{ $gclass->depends };
-        my ( $function, %specs ) = $gclass->function;
-        $functions{ $gclass } = [ $function, \%specs ];
+        if( $gclass->function ) {
+            my ( $function, %specs ) = $gclass->function;
+            $functions{ $gclass } = [ $function, \%specs ];
+        }
+        else {
+            $functions{ $gclass } = [ undef ];
+        }
+        $gclass->build_hook;
     }
     $functions{ 'Fennec::TestSet' } = [ 'tests' ];
     $self->functions( \%functions );
@@ -44,6 +50,7 @@ sub export_to {
     my $functions = $self->functions;
     for my $gclass ( keys %$functions ) {
         my $sub = $self->sub_for( $gclass );
+        next unless $sub;
         no strict 'refs';
         *{ $dest . '::' . $functions->{ $gclass }->[0]} = $sub;
     }
@@ -53,6 +60,7 @@ sub sub_for {
     my $self = shift;
     my ( $gclass ) = @_;
     my ( $function, $specs ) = @{ $self->functions->{ $gclass }};
+    return unless $function;
 
     my $sub = sub {
         my $name = shift;

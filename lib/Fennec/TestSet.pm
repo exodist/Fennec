@@ -8,6 +8,7 @@ use Fennec::Runner;
 use Fennec::Util::Accessors;
 use Fennec::Output::Result;
 use Try::Tiny;
+use Carp;
 
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
