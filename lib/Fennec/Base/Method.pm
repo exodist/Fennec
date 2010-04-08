@@ -2,9 +2,9 @@ package Fennec::Base::Method;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
-
-use Fennec::Util::Accessors;
+use Fennec::Util::Alias qw/
+    Fennec::Util::Accessors
+/;
 
 Accessors qw/method name file line skip todo/;
 

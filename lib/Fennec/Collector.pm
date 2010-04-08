@@ -2,8 +2,6 @@ package Fennec::Collector;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
-
 use Fennec::Util::Accessors;
 use Fennec::Util::Abstract;
 

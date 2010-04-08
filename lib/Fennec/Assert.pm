@@ -2,15 +2,18 @@ package Fennec::Assert;
 use strict;
 use warnings;
 
-use Fennec::Runner;
-use Fennec::Output::Result;
-use Fennec::Output::Diag;
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+    Fennec::Output::Result
+    Fennec::Output::Diag
+/;
 
+use Try::Tiny;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
-use Try::Tiny;
+use Exporter::Declare ':extend';
 
 our @EXPORT = qw/tb_wrapper tester util result diag test_caller/;
 our @CARP_NOT = qw/ Try::Tiny Benchmark /;
@@ -59,73 +62,26 @@ BEGIN {
     }
 }
 
-sub exports {
+sub import_as_base {
     my $class = shift;
-    no strict 'refs';
-    return {
-        ( map { $_ => $_ } @{ $class . '::EXPORT' }),
-        %{ $class . '::EXPORT' },
-    };
+    return 1 if $class eq __PACKAGE__;
+    return 0;
 }
 
-sub export_to {
-    my $class = shift;
-    my ( $dest, $prefix ) = @_;
-    my $exports = $class->exports;
-    for my $name ( keys %$exports ) {
-        my $sub = $exports->{ $name };
-        $sub = $class->can( $sub ) unless ref $sub eq 'CODE';
-
-        croak( "Could not find sub $name in $class for export" )
-            unless ref($sub) eq 'CODE';
-
-        $name = $prefix . $name if $prefix;
-        no strict 'refs';
-        *{ $dest . '::' . $name } = $sub;
-    }
-}
-
-sub import {
-    my $class = shift;
-    my ( $prefix ) = @_;
-    my $caller = caller;
-    $class->export_to( $caller, $prefix );
-
-    # Assert subclasses should not modify @ISA
-    return if $class ne __PACKAGE__;
-
-    no strict 'refs';
-    push @{ $caller . '::ISA' } => __PACKAGE__
-        unless grep { $_ eq __PACKAGE__ } @{ $caller . '::ISA' };
-}
-
-sub util {
-    my $caller;
-    $caller = shift( @_ ) if blessed( $_[0] )
-                          && blessed( $_[0] )->isa( __PACKAGE__ );
-    $caller = blessed( $caller ) || $caller || caller;
-    my ( $name, $sub ) = @_;
-    croak( "You must provide a name to util()" )
-        unless $name;
-    $sub ||= $caller->can( $name );
-    croak( "No sub found for function $name" )
-        unless $sub;
-
-    no strict 'refs';
-    my $export = \%{ $caller . '::EXPORT' };
-    $export->{ $name } = $sub;
-}
+sub util { goto &export }
 
 sub tester {
-    my $assert_class;
-    $assert_class = shift( @_ ) if blessed( $_[0] )
-                                && blessed( $_[0] )->isa( __PACKAGE__ );
+    my ( $assert_class, $sub );
+
+    $sub = pop( @_ ) if ref( $_[-1] ) && ref( $_[-1] ) eq 'CODE';
+    $assert_class = shift( @_ ) if @_ > 1;
+    my ( $name ) = @_;
     $assert_class = blessed( $assert_class ) || $assert_class || caller;
-    my ( $name, $sub ) = @_;
+
     croak( "You must provide a name to tester()" )
         unless $name;
     $sub ||= $assert_class->can( $name );
-    croak( "No sub found for function $name" )
+    croak( "No code found in '$assert_class' for exported sub '$name'" )
         unless $sub;
 
     my $wrapsub = sub {
@@ -138,11 +94,10 @@ sub tester {
             no warnings 'redefine';
             no strict 'refs';
             local *{ $assert_class . '::result' } = sub {
-                shift( @_ ) if blessed( $_[0] )
-                            && blessed( $_[0] )->isa( __PACKAGE__ );
+                shift( @_ ) if blessed( $_[0] );
                 croak( "tester functions can only generate a single result." )
                     if $outresult;
-                $outresult = { @_ }
+                $outresult = { @_ };
             };
             $benchmark = timeit( 1, sub { $sub->( @args )});
 
@@ -179,9 +134,7 @@ sub tester {
     my $newsub = $proto ? eval "sub($proto) { \$wrapsub->( \@_ )}" || die($@)
                         : $wrapsub;
 
-    no strict 'refs';
-    my $export = \%{ $assert_class . '::EXPORT' };
-    $export->{ $name } = $newsub;
+    $assert_class->export( $name, $newsub );
 }
 
 sub diag {

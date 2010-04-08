@@ -19,7 +19,12 @@ sub cull {
     for my $file ( readdir( $handle )) {
         next if -d $file;
         next if $file =~ m/^\.+$/;
+        next if $BADFILES{ $file };
         my ($obj) = $self->read_and_unlink( $file );
+        unless( $obj ) {
+            warn "Error procesing file: $file\n";
+            next;
+        }
         $_->handle( $obj ) for @{ $self->handlers };
     }
     close( $handle );

@@ -4,11 +4,19 @@ use warnings;
 
 use base 'Fennec::Base::Method';
 
-use Fennec::Output::Diag;
 use Fennec::Util::Accessors;
 use Try::Tiny;
 
+use Fennec::Util::Alias qw/
+    Fennec::Output::Diag
+/;
+
 Accessors qw/testfile/;
+
+sub lines_for_filter {
+    my $self = shift;
+    B::svref_2object( $self->method )->START->line;
+}
 
 sub run {
     my $self = shift;

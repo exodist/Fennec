@@ -4,23 +4,33 @@ use warnings;
 
 use base 'Fennec::TestSet';
 
-use Fennec::Runner;
-use Fennec::Output::Result;
 use Try::Tiny;
-use Fennec::Workflow;
 use Fennec::Util::Accessors;
-use Fennec::TestSet;
-use Fennec::TestSet::SubSet::Setup;
+use B;
+
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+    Fennec::Workflow
+    Fennec::Output::Result
+    Fennec::TestSet
+    Fennec::TestSet::SubSet::Setup
+/;
 
 use List::Util   qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/setups teardowns tests/;
+Accessors qw/setups teardowns tests lines/;
 
 sub new {
     my $class = shift;
     return bless( { @_ }, $class );
+}
+
+sub lines_for_filter {
+    my $self = shift;
+    return 0 unless wantarray;
+    map { $_->lines_for_filter } @{$self->tests}, @{$self->setups}, @{$self->teardowns};
 }
 
 sub run {
@@ -35,7 +45,12 @@ sub run {
 
 sub add_testset {
     my $self = shift;
-    my $ts = TestSet->new( @_ );
+    my ( $name, $sub ) = @_;
+    # Subtract 1, the line number is the first statement, not the 'sub {' line.
+    # For one-line subs it will return the line before defenition, but in most
+    # cases this is what we want.
+    my $line = B::svref_2object( $sub )->START->line;
+    my $ts = TestSet->new( $name, method => $sub, line => $line );
     $ts->workflow( $self->workflow );
     push @{ $self->{ tests }} => $ts;
 }
@@ -67,7 +82,7 @@ sub run_tests {
     try {
         my @sets = @{ $self->tests };
         if ( Runner->search ) {
-            @sets = Workflow->search_filter( Runner->search, \@sets );
+            @sets = $self->workflow->search_filter( Runner->search, \@sets );
         }
 
         @sets = shuffle @sets if $self->testfile->random;

@@ -2,8 +2,11 @@ package Fennec::Assert::Core::Simple;
 use strict;
 use warnings;
 
+use Fennec::Util::Alias qw/
+    Fennec::Output::Result
+/;
+
 use Fennec::Assert;
-use Fennec::Output::Result;
 use Try::Tiny;
 use Carp qw/cluck/;
 

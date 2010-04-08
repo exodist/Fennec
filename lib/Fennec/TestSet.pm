@@ -4,16 +4,34 @@ use warnings;
 
 use base 'Fennec::Base::Method';
 
-use Fennec::Runner;
 use Fennec::Util::Accessors;
-use Fennec::Output::Result;
+use Exporter::Declare;
 use Try::Tiny;
 use Carp;
+use B;
+
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+    Fennec::Output::Result
+    Fennec::Workflow
+/;
 
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
 Accessors qw/ workflow /;
+
+export 'tests' => sub {
+    my $name = shift;
+    my %proto = @_ > 1 ? @_ : (method => shift( @_ ));
+    my ( $caller, $file, $line ) = caller;
+    Workflow->add_item( __PACKAGE__->new( $name, file => $file, line => $line, %proto ));
+};
+
+sub lines_for_filter {
+    my $self = shift;
+    B::svref_2object( $self->method )->START->line;
+}
 
 sub run {
     my $self = shift;

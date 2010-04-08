@@ -12,7 +12,7 @@ tests use_package => sub {
     require_ok $CLASS;
     my $ac = anonclass( use => $CLASS );
     $ac->can_ok( qw/tb_wrapper tester util result diag test_caller/ );
-    $ac->isa_ok( 'Fennec::Assert' );
+    $ac->isa_ok( 'Exporter::Declare::Base' );
 };
 
 tests tb_overrides => (
@@ -81,18 +81,9 @@ tests declare_exports => sub {
 tests export_exceptions => sub {
     my $ac = anonclass( use => $CLASS );
     my $acinst = $ac->new;
-    throws_ok { $acinst->util() }
-        qr/You must provide a name to util\(\)/,
-        "must provide a name to util";
-    throws_ok { $acinst->util( 'fake' )}
-        qr/No sub found for function fake/,
-        "Must provide sub";
-    throws_ok { $acinst->tester() }
-        qr/You must provide a name to tester\(\)/,
-        "must provide a name to tester";
     throws_ok { $acinst->tester( 'fake' )}
-        qr/No sub found for function fake/,
-        "Must provide sub";
+        qr/No code found in 'Fennec::Assert::Core::More::__ANON__::AAAA' for exported sub 'fake'/,
+        "Must provide sub for tester";
 
     my $res = capture {
         $acinst->tester( dies => sub { die( 'I died' )});

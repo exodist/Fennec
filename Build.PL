@@ -24,6 +24,7 @@ my $build = Module::Build->new(
 
         # Made for Fennec
         'Parallel::Runner'  => 0.003,
+        'Exporter::Declare' => 0.003,
     },
     no_index => {
         package   => [qw{ Test::Builder }],

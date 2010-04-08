@@ -4,6 +4,7 @@ use warnings;
 
 use Fennec::Assert;
 use Fennec::Util::Accessors;
+
 use Fennec::Assert::Core;
 use Scalar::Util qw/blessed reftype/;
 use Carp;

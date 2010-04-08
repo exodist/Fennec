@@ -2,11 +2,11 @@ package Fennec::Output;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
-
 use Fennec::Util::Accessors;
 use Fennec::Util::Abstract;
-use Fennec::Runner;
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+/;
 
 Accessors qw/ stdout stderr _workflow testset /;
 

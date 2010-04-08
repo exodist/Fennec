@@ -40,7 +40,7 @@ sub like($$;$) {
     );
 }
 
-sub unlike {
+sub unlike($$;$) {
     my ( $thing, $check, $name ) = @_;
     my $regex = ref $check eq 'Regexp' ? $check : qr{$check};
     my $ok = $thing !~ $check;

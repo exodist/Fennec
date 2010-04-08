@@ -2,13 +2,14 @@ package Fennec::TestFile;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
-
 use Fennec::Util::Accessors;
 use Parallel::Runner;
-use Fennec::Runner;
 use Try::Tiny;
 use Carp;
+
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+/;
 
 use Scalar::Util qw/blessed/;
 

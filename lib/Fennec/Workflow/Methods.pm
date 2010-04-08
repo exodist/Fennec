@@ -2,50 +2,63 @@ package Fennec::Workflow::Methods;
 use strict;
 use warnings;
 
-use base 'Fennec::Workflow';
+use Fennec::Util::Accessors;
 
-use Fennec::Util;
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+    Fennec::TestSet::SubSet
+    Fennec::Workflow
+    Fennec::Util
+/;
+
 use Scalar::Util qw/blessed/;
-use Fennec::Runner;
-use Fennec::Workflow;
-use Fennec::TestSet::SubSet;
+use Fennec::Workflow qw/:subclass/;
 use Carp;
+
+Accessors qw/subset/;
+
+build_hook { Workflow->add_item( __PACKAGE__->new )};
 
 sub new {
     my $class = shift;
     return bless({ method => sub {1}, children => [] }, $class );
 }
 
-#sub function { 'use_test_methods' }
-sub build_hook {
-    my $class = shift;
-    Runner->pre_tests_hook( sub {
-        Workflow->add_item( $class->new );
-    });
-}
-
 sub add_item { croak 'Child workflows cannot be added to the Methods workflow' }
 
 sub testsets {
     my $self = shift;
-    my $testfile = $self->testfile;
-    my $tclass = blessed( $testfile );
-    my $subset = SubSet->new(
-        name => 'Test Methods',
-        workflow  => $self,
-    );
-    $subset->add_setup( @$_ )
-        for sort { $a->[0] cmp $b->[0] }
-            Fennec::Util->package_sub_map( $tclass, qr/^setup/i );
 
-    $subset->add_testset( @$_ )
-        for Fennec::Util->package_sub_map( $tclass, qr/^test_/i );
+    unless( $self->subset ) {
+        my $testfile = $self->testfile;
+        my $tclass = blessed( $testfile );
+        my $subset = SubSet->new(
+            name => 'Test Methods',
+            workflow  => $self,
+            file => $self->file,
+        );
+        $subset->add_setup( @$_ )
+            for sort { $a->[0] cmp $b->[0] }
+                Fennec::Util->package_sub_map( $tclass, qr/^setup/i );
 
-    $subset->add_teardown( @$_ )
-        for sort { $a->[0] cmp $b->[0] }
-            Fennec::Util->package_sub_map( $tclass, qr/^teardown/i );
+        $subset->add_testset( @$_ )
+            for Fennec::Util->package_sub_map( $tclass, qr/^test_/i );
 
-    return $subset;
+        $subset->add_teardown( @$_ )
+            for sort { $a->[0] cmp $b->[0] }
+                Fennec::Util->package_sub_map( $tclass, qr/^teardown/i );
+
+        $self->subset( $subset );
+    }
+
+    return $self->subset;
+}
+
+sub lines {
+    my $self = shift;
+    return 0 unless wantarray;
+    my $subset = $self->testsets;
+    return $subset->lines;
 }
 
 sub build_children {}

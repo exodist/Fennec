@@ -2,10 +2,17 @@ package Fennec::Util::Accessors;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
-
 use Carp;
 use Scalar::Util qw/blessed/;
+
+sub import {
+    my $class = shift;
+    my $caller = caller;
+    no strict 'refs';
+    *{ $caller . '::Accessors' } = sub {
+        $class->build_accessors( $caller, @_ )
+    };
+}
 
 sub alias {
     my $class = shift;

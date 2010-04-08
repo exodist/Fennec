@@ -2,8 +2,6 @@ package Fennec::FileLoader;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
-
 use Carp;
 use Fennec::Output::Result;
 use Fennec::Util::Abstract;

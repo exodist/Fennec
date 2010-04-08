@@ -2,22 +2,28 @@ package Fennec::Runner;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
-use Fennec::TestFile;
-use Fennec::FileLoader;
-use Fennec::Collector;
+use Fennec::Util::Alias qw/
+    Fennec::TestFile
+    Fennec::Collector
+    Fennec::Workflow
+/;
+
 use Fennec::Util::Accessors;
-use Fennec::Workflow;
-use Fennec::Output::Result;
-use Fennec::Output::Diag;
 use Try::Tiny;
 use Parallel::Runner;
 use Carp;
+
+use Fennec::Util::Alias qw/
+    Fennec::FileLoader
+    Fennec::Output::Result
+    Fennec::Output::Diag
+/;
+
 use List::Util qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search default_asserts/;
+Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search default_asserts default_workflows/;
 
 our $SINGLETON;
 
@@ -60,7 +66,6 @@ sub init {
             threader    => Parallel::Runner->new( $proto{ p_files }) || die( "No threader" ),
             parent_pid  => $$,
             pid         => $$,
-            pre_tests_hooks => [],
         },
         $class
     );
@@ -83,10 +88,10 @@ sub start {
 
                 try {
                     $workflow->run_sub_as_current( $_ )
-                        for @{ $self->pre_tests_hooks };
+                        for Fennec::Workflow->build_hooks();
                 }
                 catch {
-                    Diag->new( "pre_tests_hook error: $_" )->write
+                    Diag->new( "build_hook error: $_" )->write
                 };
 
                 my $testfile = $workflow->testfile;
@@ -111,17 +116,6 @@ sub start {
     }
     $self->threader->finish;
     $self->collector->finish;
-}
-
-sub pre_tests_hooks {
-    my $self = shift;
-    return $self->{ pre_tests_hooks };
-}
-
-sub pre_tests_hook {
-    my $self = shift;
-    my ($code) = @_;
-    push @{ $self->pre_tests_hooks } => $code;
 }
 
 sub pid_changed {

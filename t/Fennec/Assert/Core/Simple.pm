@@ -38,19 +38,40 @@ tests 'todo tests' => sub {
     );
 };
 
+tests 'utils' => sub {
+    my $output = capture {
+        diag "hi there", "blah";
+    };
+    is( @$output, 1, "1 output" );
+    is_deeply(
+        $output->[0],
+        { stdout => [ "hi there", "blah" ]},
+        "Proper diag"
+    );
+};
+
+tests 'ok' => sub {
+    my $output = capture {
+        ok( 1, 'pass' );
+        ok( 0, 'fail' );
+        ok( 1 );
+        ok( 0 );
+    };
+
+    is( @$output, 4, "4 results" );
+    is( $output->[0]->pass, 1, "passed" );
+    is( $output->[0]->name, 'pass', 'name' );
+    is( $output->[1]->pass, 0, "failed" );
+    is( $output->[1]->name, 'fail', 'name' );
+    is( $output->[2]->pass, 1, "passed" );
+    is( $output->[2]->name, 'nameless test', 'name' );
+    is( $output->[3]->pass, 0, "failed" );
+    is( $output->[3]->name, 'nameless test', 'name' );
+};
+
 1;
 
 __END__
-
-util diag => \&diag;
-
-tester ok => sub {
-    my ( $ok, $name ) = @_;
-    result(
-        pass => $ok ? 1 : 0,
-        name => $name || 'nameless test',
-    );
-};
 
 tester 'require_ok';
 sub require_ok(*) {

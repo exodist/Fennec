@@ -3,11 +3,12 @@ use strict;
 use warnings;
 
 use Carp;
-use Fennec::Runner;
-use Fennec::TestFile;
-use Fennec::TestFile::Functions;
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+    Fennec::TestFile
+/;
 
-our $VERSION = "0.011";
+our $VERSION = "0.012";
 our $TEST_CLASS;
 our @TEST_CLASS_ARGS;
 
@@ -45,8 +46,11 @@ sub import {
         push @{ $caller . '::ISA' } => TestFile;
     }
 
-    my $functions = Functions->new( $workflows );
-    $functions->export_to( $caller );
+    export_package_to( 'Fennec::TestSet', $caller );
+
+    $workflows ||= Runner->default_workflows || [];
+    export_package_to( 'Fennec::Workflow::' . $_, $caller )
+        for @$workflows;
 
     $asserts ||= Runner->default_asserts || [ qw/ Core / ];
     export_package_to( 'Fennec::Assert::' . $_, $caller )

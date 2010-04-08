@@ -2,7 +2,6 @@ package Fennec::Util;
 use strict;
 use warnings;
 
-use base 'Fennec::Base';
 use Carp;
 
 sub package_subs {

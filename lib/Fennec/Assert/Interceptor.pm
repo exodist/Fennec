@@ -3,12 +3,15 @@ use strict;
 use warnings;
 
 use Fennec::Assert;
-use Fennec::Runner;
-use Fennec::Collector::Interceptor;
+
+use Fennec::Util::Alias qw/
+    Fennec::Collector::Interceptor
+    Fennec::Runner
+/;
 
 util capture => sub(&) {
     my ( $code ) = @_;
-    my $collector = Fennec::Collector::Interceptor->new;
+    my $collector = Interceptor->new;
     Runner->run_with_collector( $collector, $code );
     return $collector->intercepted;
 };
