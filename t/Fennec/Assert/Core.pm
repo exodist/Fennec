@@ -12,9 +12,7 @@ tests 'Bad core module' => sub {
 
 tests 'direct use' => sub {
     my $ac = anonclass( use => 'Fennec::Assert::Core' );
-    TODO {
-        $ac->can_ok(qw/ ok is is_deeply warning_like throws_ok /);
-    } 'Assert::Core::Warn not implemented yet';
+    $ac->can_ok(qw/ ok is is_deeply warning_like throws_ok /);
 };
 
 1;
