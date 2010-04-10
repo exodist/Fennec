@@ -18,6 +18,7 @@ sub handle {
 sub finish {1}
 sub start {1}
 sub bail_out {1}
+sub fennec_error {1}
 
 1;
 

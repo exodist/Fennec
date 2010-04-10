@@ -103,6 +103,15 @@ sub finish {
     $self->output( 'out_std', '1..' . ($self->count - 1));
 }
 
+sub fennec_error {
+    my $self = shift;
+    for my $msg ( @_ ) {
+        my $out = "not ok " . $self->count . " - Fennec Internal error";
+        $self->stdout( $out );
+        $self->stderr( $msg );
+    }
+}
+
 1;
 
 =head1 AUTHORS

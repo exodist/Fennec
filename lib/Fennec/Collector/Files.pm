@@ -24,7 +24,9 @@ sub cull {
         my ($obj) = $self->read_and_unlink( $file );
         unless( $obj ) {
             require Fennec::Debug;
-            Fennec::Debug->debug( "Error procesing file: $file" );
+            Fennec::Debug->debug( "Error processing file: $file" );
+            $_->fennec_error( "Error processing file: $file" )
+                for @{ $self->handlers };
             next;
         }
         $_->handle( $obj ) for @{ $self->handlers };
@@ -53,22 +55,22 @@ sub finish {
 }
 
 sub read_and_unlink {
-    my $class = shift;
+    my $self = shift;
     my @out;
     for my $file ( @_ ) {
         next if $BADFILES{ $file };
-        if( my $obj = $class->read( $file )) {
+        if( my $obj = $self->read( $file )) {
             push @out => $obj;
-            unlink( $class->testdir . "/$file" );
+            unlink( $self->testdir . "/$file" );
         }
     }
     return @out;
 }
 
 sub read {
-    my $class = shift;
+    my $self = shift;
     my ( $file ) = @_;
-    my $obj = do( $class->testdir . "/$file" );
+    my $obj = do( $self->testdir . "/$file" );
     if ( $obj ) {
         my $bless = $obj->{ bless };
         my $data = $obj->{ data };
@@ -78,6 +80,8 @@ sub read {
     require Fennec::Debug;
     Fennec::Debug->debug( "bad file: '$file' - $! - $@" );
     $BADFILES{$file} = [ $!, $@ ];
+    $_->fennec_error( "bad file: '$file' - $! - $@" )
+        for @{ $self->handlers };
     return;
 }
 

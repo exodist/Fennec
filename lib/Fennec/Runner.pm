@@ -41,7 +41,7 @@ sub init {
 
     my $collector_class = delete $proto{ collector } || 'Files';
     $collector_class = 'Fennec::Collector::' . $collector_class;
-    eval "require $collector_class; 1" || die( @_ );
+    eval "require $collector_class; 1" || die( $@ );
     my $collector = $collector_class->new( @$handlers );
 
     my $ignore = delete $proto{ ignore };
