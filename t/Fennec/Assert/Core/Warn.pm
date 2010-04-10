@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Fennec;
+use Fennec::Assert::Interceptor;
 
 our $CLASS = 'Fennec::Assert::Core::Warn';
 

@@ -15,7 +15,7 @@ sub is($$;$) {
     result(
         pass => !$err,
         name => $name,
-        $err ? ( stdout => [ $err ]) : (),
+        $err ? ( stderr => [ $err ]) : (),
     );
 }
 
@@ -25,7 +25,7 @@ sub isnt($$;$) {
     result(
         pass => $err ? 1 : 0,
         name => $name,
-        $err ? () : ( stdout => [ "Got: $got", "Wanted: Anything else" ]),
+        $err ? () : ( stderr => [ "Got: $got", "Wanted: Anything else" ]),
     );
 }
 
@@ -36,7 +36,7 @@ sub like($$;$) {
     result(
         pass => $ok,
         name => $name,
-        $ok ? () : ( stdout => [ "$thing does not match $check" ]),
+        $ok ? () : ( stderr => [ "$thing does not match $check" ]),
     );
 }
 
@@ -47,7 +47,7 @@ sub unlike($$;$) {
     result(
         pass => $ok,
         name => $name,
-        $ok ? () : ( stdout => [ "$thing matches $check (it shouldn't)" ]),
+        $ok ? () : ( stderr => [ "$thing matches $check (it shouldn't)" ]),
     );
 }
 
@@ -57,13 +57,13 @@ sub can_ok(*;@) {
     return result(
         pass => 0,
         name => $name,
-        stdout => ["$thing is an unblessed reference"],
+        stderr => ["$thing is an unblessed reference"],
     ) if ref( $thing ) && !blessed( $thing );
     my @err = map { $thing->can( $_ ) ? () : "$thing cannot $_"} @stuff;
     result(
         pass => @err ? 0 : 1,
         name => $name,
-        stdout => \@err,
+        stderr => \@err,
     );
 }
 
@@ -73,13 +73,13 @@ sub isa_ok(*@) {
     return result(
         pass => 0,
         name => $name,
-        stdout => ["$thing is an unblessed reference"],
+        stderr => ["$thing is an unblessed reference"],
     ) if ref( $thing ) && !blessed( $thing );
     my @err = map { $thing->isa( $_ ) ? () : "$thing is not a $_"} @stuff;
     result(
         pass => @err ? 0 : 1,
         name => $name,
-        stdout => \@err,
+        stderr => \@err,
     );
 }
 
@@ -97,7 +97,7 @@ sub advanced_is {
     result(
         pass => @err ? 0 : 1,
         name => $name || undef,
-        stdout => \@err,
+        stderr => \@err,
     );
 }
 

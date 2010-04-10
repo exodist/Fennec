@@ -68,35 +68,35 @@ for my $any_accessor ( @ANY_ACCESSORS ) {
 for my $type ( qw/workflow testfile testset/ ) {
     my $fail = sub {
         my $class = shift;
-        my ( $item, @stdout ) = @_;
+        my ( $item, @stderr ) = @_;
         $class->new(
             pass => 0,
             $type => $item,
             $item->can( 'name' ) ? ( name => $item->name ) : (),
-            stdout => \@stdout,
+            stderr => \@stderr,
         )->write;
     };
     my $pass = sub {
         my $class = shift;
-        my ( $item, $benchmark, @stdout ) = @_;
+        my ( $item, $benchmark, @stderr ) = @_;
         $class->new(
             pass => 1,
             $type => $item,
             name => $item->name,
             benchmark => $benchmark,
-            stdout => \@stdout,
+            stderr => \@stderr,
         )->write;
     };
     my $skip = sub {
         my $class = shift;
-        my ( $item, $reason, @stdout ) = @_;
+        my ( $item, $reason, @stderr ) = @_;
         $reason ||= $item->skip || "no reason";
         $class->new(
             pass => 1,
             $type => $item,
             name => $item->name,
             skip => $reason,
-            stdout => \@stdout,
+            stderr => \@stderr,
         )->write;
     };
     no strict 'refs';

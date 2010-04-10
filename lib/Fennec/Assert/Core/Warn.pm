@@ -23,7 +23,7 @@ sub warning_is(&$;$) {
     return result(
         pass => 0,
         name => $name,
-        stdout => [ "Too many warnings:", map { "\t$_" } @warns ],
+        stderr => [ "Too many warnings:", map { "\t$_" } @warns ],
     ) if @warns > 1;
 
     return is( $warns[0], $match, $name );
@@ -41,7 +41,7 @@ sub warning_like(&$;$) {
     return result(
         pass => 0,
         name => $name,
-        stdout => [ "Too many warnings:", map { "\t$_" } @warns ],
+        stderr => [ "Too many warnings:", map { "\t$_" } @warns ],
     ) if @warns > 1;
 
     return like( $warns[0], $match, $name );
@@ -54,7 +54,7 @@ sub warnings_like(&$;$) {
     return result(
         pass => 0,
         name => $name,
-        stdout => [ "Wrong number of warnings:", map { "\t$_" } @warns ],
+        stderr => [ "Wrong number of warnings:", map { "\t$_" } @warns ],
     ) if @warns != @$matches;
 
     my @fail;
@@ -66,7 +66,7 @@ sub warnings_like(&$;$) {
     result(
         pass => @fail ? 0 : 1,
         name => $name,
-        @fail ? ( stdout => \@fail ) : (),
+        @fail ? ( stderr => \@fail ) : (),
     );
 }
 
@@ -90,7 +90,7 @@ sub warnings_exist(&$;$) {
     result(
         pass => @missing ? 0 : 1,
         name => $name,
-        stdout => [
+        stderr => [
             @missing ? ( "Missing warnings:", map { "\t$_" } @missing )
                      : (),
             @extra ? ( "Extra warnings (not an error):", map { "\t$_" } @extra )

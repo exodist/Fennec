@@ -7,8 +7,21 @@ use base 'Fennec::Handler';
 
 sub init {
     my $self = shift;
+
     $self->{ out_std } ||= sub { print STDOUT "$_\n" for @_ };
-    $self->{ out_err } ||= sub { print STDERR "$_\n" for @_ };
+
+    my $harness = $ENV{HARNESS_ACTIVE};
+    my $verbose = $ENV{HARNESS_IS_VERBOSE};
+    # If we have a non-verbose harness then output the errors to STDERR so that
+    # they are seen. Outside of a harness, or in verbose mode the error output
+    # is sent to STDOUT so that the error message appear at or near the result
+    # that generated them.
+    if ( $harness && !$verbose ) {
+        $self->{ out_err } ||= sub { print STDERR "$_\n" for @_ };
+    }
+    else {
+        $self->{ out_err } ||= $self->{ out_std };
+    }
 }
 
 sub count {
@@ -32,7 +45,7 @@ sub handle {
         return;
     }
     return $self->result( $item ) if $item->isa( 'Fennec::Output::Result' );
-    return $self->stdout( @{ $item->stdout }) if $item->isa( 'Fennec::Output::Diag' );
+    return $self->stderr( @{ $item->stderr }) if $item->isa( 'Fennec::Output::Diag' );
     warn "Unhandled output type: $item";
 }
 
@@ -56,14 +69,17 @@ sub result {
         if ( $result->file ) {
             my $error = "Test failure at " . $result->file;
             $error .= " line " . $result->line if $result->line;
-            $self->stdout( $error );
+            $self->stderr( $error );
         }
         $self->stderr( "Workflow Stack: " . join( ', ', @{ $result->workflow_stack }))
             if $result->workflow_stack;
     }
-    my $stdout = $result->stdout;
-    return unless $stdout;
-    $self->stdout( $_ ) for @$stdout
+    if( my $stdout = $result->stdout ) {
+        $self->stdout( $_ ) for @$stdout;
+    }
+    if( my $stderr = $result->stderr ) {
+        $self->stderr( $_ ) for @$stderr;
+    }
 }
 
 sub stdout {

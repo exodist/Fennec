@@ -14,8 +14,8 @@ our $ANON_PKG = 'AAAA';
 util anonclass => sub {
     my %proto = @_;
     my $tail = $ANON_PKG++;
-    my $pkg = 'Fennec::Assert::Core::More::__ANON__::' . $tail;
-    $INC{ "Fennec/Assert/Core/More/__ANON__/$tail.pm" } = __FILE__;
+    my $pkg = 'Fennec::Assert::Core::Anonclass::__ANON__::' . $tail;
+    $INC{ "Fennec/Assert/Core/Anonclass/__ANON__/$tail.pm" } = __FILE__;
     no strict 'refs';
     push @{ $pkg . '::ISA' } => ___as_list( $proto{ isa })
         if $proto{ isa };

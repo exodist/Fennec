@@ -27,7 +27,7 @@ util result_line_numbers_are => sub {
     result(
         pass => 0,
         name => "result+line counts match",
-        stdout => "Number of results, and number of line numbers do not match"
+        stderr => "Number of results, and number of line numbers do not match"
     ) unless @$results == @numbers;
 
     my $count = 0;
@@ -48,7 +48,7 @@ sub result_line_number_is {
     result(
         pass => $pass,
         name => $name,
-        $pass ? () : (stdout => [ "Got: " . $result->line, "Wanted: $number" ]),
+        $pass ? () : (stderr => [ "Got: " . $result->line, "Wanted: $number" ]),
     );
 };
 

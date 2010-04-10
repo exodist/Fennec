@@ -62,12 +62,6 @@ BEGIN {
     }
 }
 
-sub import_as_base {
-    my $class = shift;
-    return 1 if $class eq __PACKAGE__;
-    return 0;
-}
-
 sub util { goto &export }
 
 sub tester {
@@ -104,9 +98,9 @@ sub tester {
             # Try to provide a minimum diag for failed tests that do not provide
             # their own.
             if ( !$outresult->{ pass }
-            && ( !$outresult->{ stdout } || !@{ $outresult->{ stdout }})) {
+            && ( !$outresult->{ stderr } || !@{ $outresult->{ stderr }})) {
                 my @diag;
-                $outresult->{ stdout } = \@diag;
+                $outresult->{ stderr } = \@diag;
                 for my $i ( 0 .. (@args - 1)) {
                     my $arg = $args[$i];
                     $arg = 'undef' unless defined( $arg );
@@ -125,7 +119,7 @@ sub tester {
             result(
                 pass => 0,
                 %caller,
-                stdout => [ "$name died: $_" ],
+                stderr => [ "$name died: $_" ],
             );
         };
     };
@@ -140,7 +134,7 @@ sub tester {
 sub diag {
     shift( @_ ) if blessed( $_[0] )
                 && blessed( $_[0] )->isa( __PACKAGE__ );
-    Fennec::Output::Diag->new( stdout => \@_ )->write;
+    Fennec::Output::Diag->new( stderr => \@_ )->write;
 }
 
 sub result {
@@ -169,7 +163,7 @@ sub tb_wrapper(&) {
             pass      => $TB_RESULT->[0],
             name      => $TB_RESULT->[1],
             benchmark => $benchmark,
-            stdout    => [@TB_DIAGS],
+            stderr    => [@TB_DIAGS],
         );
     };
     return $wrapper unless $proto;

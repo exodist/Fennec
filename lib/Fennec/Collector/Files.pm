@@ -19,10 +19,12 @@ sub cull {
     for my $file ( readdir( $handle )) {
         next if -d $file;
         next if $file =~ m/^\.+$/;
+        next unless $file =~ m/\.res$/;
         next if $BADFILES{ $file };
         my ($obj) = $self->read_and_unlink( $file );
         unless( $obj ) {
-            warn "Error procesing file: $file\n";
+            require Fennec::Debug;
+            Fennec::Debug->debug( "Error procesing file: $file" );
             next;
         }
         $_->handle( $obj ) for @{ $self->handlers };
@@ -73,7 +75,8 @@ sub read {
         eval "require $bless" || die( $@ );
         return bless( $data, $bless );
     }
-    warn( "bad file: '$file' - $! - $@" );
+    require Fennec::Debug;
+    Fennec::Debug->debug( "bad file: '$file' - $! - $@" );
     $BADFILES{$file} = [ $!, $@ ];
     return;
 }
@@ -82,10 +85,13 @@ sub write {
     my $self = shift;
     my ( $output ) = @_;
     my $out = $output->serialize;
-    my $file = $self->testdir . "/$$-" . $SEMI_UNIQ++ . '.res';
+    my $file = $self->testdir . "/$$-" . $SEMI_UNIQ++;
     open( my $HANDLE, '>', $file ) || warn "Error writing output:\n\t$file\n\t$!";
     print $HANDLE Dumper( $out ) || warn "Error writing output";
     close( $HANDLE ) || die( $! );
+    # Rename file to .res after creation, that way collector does not cull it
+    # until it is finished writing.
+    rename ( $file, "$file.res" );
 }
 
 sub testdir { Fennec::FileLoader->root . "/_test" }

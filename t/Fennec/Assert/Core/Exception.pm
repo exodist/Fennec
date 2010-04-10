@@ -1,20 +1,51 @@
-package Fennec::Assert::Core::Exception;
+package TEST::Fennec::Assert::Core::Exception;
 use strict;
 use warnings;
 
-use Fennec::Assert;
-use Fennec::Output::Result;
-use Try::Tiny;
-use Carp;
+use Fennec;
+
+our $CLASS = 'Fennec::Assert::Core::Exception';
+
+tests use_test_exception => sub {
+    use_ok $CLASS;
+    my $self = shift;
+    can_ok( $self, qw/lives_ok dies_ok throws_ok lives_and/ );
+    my $ac = anonclass( use => $CLASS );
+    can_ok( $ac->class, qw/lives_ok dies_ok throws_ok lives_and/ );
+};
+
+tests lives_ok => sub {
+    my $results = capture {
+        lives_ok { 1 } 'lives';
+        lives_ok { die ( 'xxx' )} 'dies';
+        lives_ok { 1 };
+    };
+    is( @$results, 3, "3 results" );
+    is( $results->[0]->name, "lives", "correct name" );
+    is( $results->[0]->pass, 1, "passed" );
+    is( $results->[1]->name, "dies", "correct name" );
+    is( $results->[1]->pass, 0, "failed" );
+    is( @{ $results->[1]->stderr }, 1, "1 message" );
+    like(
+        $results->[1]->stderr->[0],
+        qr/xxx at/,
+        "useful message"
+    );
+
+
+};
+
+1;
+
+__END__
 
 tester 'lives_ok';
 sub lives_ok(&;$) {
     my ( $code, $name ) = @_;
-    my ($ok, $msg) = live_or_die( $code );
+    my $ok = live_or_die( $code );
     result(
         pass => $ok ? 1 : 0,
         name => $name || 'nameless test',
-        $msg ? (stderr => [ $msg ]) : (),
     );
 }
 
@@ -25,7 +56,6 @@ sub dies_ok(&;$) {
     result(
         pass => !$ok ? 1 : 0,
         name => $name || 'nameless test',
-        $ok ? ( stderr => 'Did not die as expected' ) : (),
     );
 }
 
@@ -39,7 +69,7 @@ sub throws_ok(&$;$) {
     return result(
         pass => !$ok ? 1 : 0,
         name => $name || 'nameless test',
-        stderr => ["Test did not die as expected at $file line $number"],
+        stdout => ["Test did not die as expected at $file line $number"],
     ) if $ok;
 
     my $match = $msg =~ $reg ? 1 : 0;
@@ -49,7 +79,7 @@ sub throws_ok(&$;$) {
     return result(
         pass => $match ? 1 : 0,
         name => $name || 'nameless test',
-        stderr => \@diag,
+        stdout => \@diag,
     );
 }
 
@@ -65,7 +95,7 @@ sub lives_and(&;$) {
     return result(
         pass => 0,
         name => $name || 'nameless test',
-        stderr => ["Test unexpectedly died: '$msg' at $file line $number"],
+        stdout => ["Test unexpectedly died: '$msg' at $file line $number"],
     );
 }
 
@@ -75,6 +105,7 @@ sub live_or_die {
     my $msg = $@;
 
     if ( $return eq 'did not die' ) {
+        return ( 1, $return ) if wantarray;
         return 1;
     }
     else {

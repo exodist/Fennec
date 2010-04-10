@@ -7,7 +7,10 @@ use Fennec;
 tests hello_world_group => sub {
     my $self = shift;
     ok( 1, "Hello world" );
-    diag "Hello Message";
+    my $result = capture {
+        diag "Hello Message";
+    };
+    is( $result->[0]->stderr->[0], "Hello Message", "Got diag" );
 
     my $output = capture {
         ok( 0, "Should fail" );

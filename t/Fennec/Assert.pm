@@ -68,7 +68,7 @@ tests declare_exports => sub {
     is( $cap->[0]->file, __FILE__, "Set file name" );
     ok( $cap->[0]->benchmark, "Added benchmark" );
     is_deeply(
-        $cap->[1]->stdout,
+        $cap->[1]->stderr,
         ['$_[0] = \'0\''],
         "Added diag when missing"
     );
@@ -82,7 +82,7 @@ tests export_exceptions => sub {
     my $ac = anonclass( use => $CLASS );
     my $acinst = $ac->new;
     throws_ok { $acinst->tester( 'fake' )}
-        qr/No code found in 'Fennec::Assert::Core::More::__ANON__::AAAA' for exported sub 'fake'/,
+        qr/No code found in 'Fennec::Assert::Core::Anonclass::__ANON__::AAAA' for exported sub 'fake'/,
         "Must provide sub for tester";
 
     my $res = capture {
@@ -91,7 +91,7 @@ tests export_exceptions => sub {
     };
     is( @$res, 1, "1 result" );
     ok( !$res->[0]->pass, "result failed" );
-    like( $res->[0]->stdout->[0], qr/I died/, "diag for fail" );
+    like( $res->[0]->stderr->[0], qr/I died/, "diag for fail" );
 };
 
 tests tb_wrapper => (
@@ -105,14 +105,14 @@ tests tb_wrapper => (
         my $res = capture { $wrapped->( 1, 'name' ) };
         is( @$res, 1, "1 output" );
         ok( $res->[0]->pass, "passed" );
-        is( $res->[0]->stdout->[0], "a message", "message" );
+        is( $res->[0]->stderr->[0], "a message", "message" );
         $wrapped = Fennec::Assert::tb_wrapper( sub {
             Test::Builder->new->diag( 'a message' );
         });
         ok( !prototype( $wrapped ), "No prototype" );
         $res = capture { $wrapped->( 1, 'name' ) };
         ok( !$res->[0]->isa('Fennec::Output::Result'), "Not a result" );
-        is( $res->[0]->stdout->[0], "a message", "message" );
+        is( $res->[0]->stderr->[0], "a message", "message" );
     },
 );
 

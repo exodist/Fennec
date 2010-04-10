@@ -32,7 +32,7 @@ tests 'todo tests' => sub {
         TODO { die( 'I dies badly' )} "This will die";
     };
     like(
-        $output->[0]->stdout->[0],
+        $output->[0]->stderr->[0],
         qr/Caught error in todo block\n  Error: I dies badly.*\n  todo: This will die/s,
         "Convey problem"
     );
@@ -45,7 +45,7 @@ tests 'utils' => sub {
     is( @$output, 1, "1 output" );
     is_deeply(
         $output->[0],
-        { stdout => [ "hi there", "blah" ]},
+        { stderr => [ "hi there", "blah" ]},
         "Proper diag"
     );
 };
