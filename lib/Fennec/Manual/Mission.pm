@@ -16,7 +16,7 @@ Fennec::Manual::Mission - Why Fennec is here
 
 Perl testing frameworks currently leave a lot to be desired. There are several
 projects in the works to try and improve how perl testing is done. These
-projects usually focus on solving one or 2 of the problems, sometimes these
+projects usually focus on solving one or two of the problems, sometimes these
 solutions are incompatible with eachother, or current testing packages. Fennec
 is an attempt to make a testing framework upon which intercompatible solutions
 to these problems can be built.
@@ -29,9 +29,10 @@ objects. L<Fennec> also solves the forking problem, thats it, forking just
 plain works.
 
 L<Fennec> tries to play nicely with L<Test::Builder>. It will not interfer with
-tests that are written using Test::Builder bases tools. There is also a wrapper
-that makes it possible to use L<Test::Builder> based asset packages (like
-L<Test::Warn>) within Fennec tests.
+tests that are written using Test::Builder based tools. There is also a wrapper
+that makes it possible to use L<Test::Builder> based assert packages (like
+L<Test::Warn>) within Fennec tests. Many Test::Builder tools will work as
+expected even without the wrapper.
 
 L<Fennec> core does not attempt to solve all the current problems. However it
 does take them all under consideration and tries to provide extendability to
@@ -92,7 +93,7 @@ TODO: Link to projects
 
 =item Alternate Workflows
 
-Alternate workflows include RSPEC like testing.
+Alternate workflows including RSPEC like testing.
 
 =item Alternate Output
 
