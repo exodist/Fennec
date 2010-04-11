@@ -87,6 +87,38 @@ plain works.
 L<Fennec> is still under active development, many features are untested or even
 unimplemented. Please give it a try and report any bugs or suggestions.
 
+=head1 FEATURES
+
+Fennec offers the following features, among others.
+
+=over 4
+
+=item Large library of core test functions
+
+=item Plays nicely with L<Test::Builder> tools
+
+=item Better diagnostics
+
+=item Highly Extendable
+
+=item Lite benchmarking for free
+
+=item Works with prove
+
+=item Full-Suite management
+
+=item Standalone test support
+
+=item Support for SPEC and other test workflows
+
+=item Forking works
+
+=item Run only specific test sets within test files (for development)
+
+=item Intercept or hook into most steps or components by design
+
+=back
+
 =head1 DOCUMENTATION
 
 =over 4
