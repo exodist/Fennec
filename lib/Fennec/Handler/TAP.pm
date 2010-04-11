@@ -55,8 +55,26 @@ sub result {
     return unless $result;
 
     my $out = (($result->pass || $result->skip) ? 'ok ' : 'not ok ' ) . $self->count . " -";
-    $out .= $result->benchmark ? sprintf( " [%7.2f]", $result->benchmark->[0])
+    my $bm = $result->benchmark->[0] || 'N/A  ';
+    my $template = '[% 6s]';
+
+    # If we got a number (including -e notation)
+    if ( $bm =~ m/^[\d\.e\-]+$/ ) {
+        if ( $bm >= 100 ) {
+            $bm = int( $bm );
+            $template = '[%06s]';
+        }
+        elsif ($bm < 10) {
+            $template = '[%1.4f]';
+        }
+        elsif ( $bm < 100 ) {
+            $template = '[%2.3f]';
+        }
+    }
+
+    $out .= $bm ? sprintf( " $template", $bm >= 100 ? int($bm) : $bm )
                                : " [  N/A  ]";
+
     $out .= " " . $result->name if $result->name;
     if ( my $todo = $result->todo ) {
         $out .= " # TODO $todo";

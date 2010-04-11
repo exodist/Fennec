@@ -10,6 +10,9 @@ use Fennec::Workflow;
 use Try::Tiny;
 
 use Scalar::Util qw/blessed/;
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+/;
 
 our @ANY_ACCESSORS = qw/ skip todo name file line/;
 our @SIMPLE_ACCESSORS = qw/ pass benchmark /;
@@ -40,6 +43,7 @@ sub new {
             $TODO ? ( todo => $TODO ) : (),
             %proto,
             pass => $pass ? 1 : 0,
+            $proto{'benchmark'} ? () : (benchmark => Runner->benchmark() || undef),
         },
         $class
     );

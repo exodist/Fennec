@@ -74,6 +74,7 @@ sub run_tests {
             my $benchmark = timeit( 1, sub {
                 for my $set ( @sets ) {
                     $self->testfile->threader->run(sub {
+                        Runner->reset_benchmark;
                         $set->run()
                     });
                 }

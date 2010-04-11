@@ -23,7 +23,7 @@ use List::Util qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search default_asserts default_workflows/;
+Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search default_asserts default_workflows _benchmark_time/;
 
 our $SINGLETON;
 
@@ -141,6 +141,19 @@ sub run_with_collector {
     my ( $collector, $code ) = @_;
     local $self->{ collector } = $collector;
     return $code->();
+}
+
+sub reset_benchmark {
+    my $self = shift;
+    return $self->_benchmark_time( time )
+}
+
+sub benchmark {
+    my $self = shift;
+    my $old = $self->_benchmark_time;
+    return unless $old;
+    my $new = $self->reset_benchmark;
+    return [( $new - $old )];
 }
 
 1;

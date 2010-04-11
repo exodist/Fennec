@@ -22,7 +22,7 @@ util ln => sub {
     return $line + $diff;
 };
 
-util result_line_numbers_are => sub {
+tester result_line_numbers_are => sub {
     my ( $results, @numbers ) = @_;
     result(
         pass => 0,

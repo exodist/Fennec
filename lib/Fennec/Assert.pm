@@ -80,8 +80,7 @@ sub tester {
 
     my $wrapsub = sub {
         my @args = @_;
-        my $outresult;
-        my $benchmark;
+        my @outresults;
         my ( $caller, $file, $line ) = caller;
         my %caller = test_caller();
         try {
@@ -89,31 +88,30 @@ sub tester {
             no strict 'refs';
             local *{ $assert_class . '::result' } = sub {
                 shift( @_ ) if blessed( $_[0] );
-                croak( "tester functions can only generate a single result." )
-                    if $outresult;
-                $outresult = { @_ };
+                push @outresults => { @_ };
             };
-            $benchmark = timeit( 1, sub { $sub->( @args )});
+            $sub->( @args );
 
             # Try to provide a minimum diag for failed tests that do not provide
             # their own.
-            if ( !$outresult->{ pass }
-            && ( !$outresult->{ stderr } || !@{ $outresult->{ stderr }})) {
-                my @diag;
-                $outresult->{ stderr } = \@diag;
-                for my $i ( 0 .. (@args - 1)) {
-                    my $arg = $args[$i];
-                    $arg = 'undef' unless defined( $arg );
-                    next if "$arg" eq $outresult->{ name } || "";
-                    push @diag => "\$_[$i] = '$arg'";
+            for my $outresult ( @outresults ) {
+                if ( !$outresult->{ pass }
+                && ( !$outresult->{ stderr } || !@{ $outresult->{ stderr }})) {
+                    my @diag;
+                    $outresult->{ stderr } = \@diag;
+                    for my $i ( 0 .. (@args - 1)) {
+                        my $arg = $args[$i];
+                        $arg = 'undef' unless defined( $arg );
+                        next if "$arg" eq $outresult->{ name } || "";
+                        push @diag => "\$_[$i] = '$arg'";
+                    }
                 }
-            }
 
-            result(
-                %caller,
-                benchmark => $benchmark || undef,
-                %$outresult
-            ) if $outresult;
+                result(
+                    %caller,
+                    %$outresult
+                ) if $outresult;
+            }
         }
         catch {
             result(
@@ -157,12 +155,11 @@ sub tb_wrapper(&) {
         my @args = @_;
         local $TB_OK = 1;
         local ( $TB_RESULT, @TB_DIAGS );
-        my $benchmark = timeit( 1, sub { $orig->( @args )});
+        $orig->( @args );
         return diag( @TB_DIAGS ) unless $TB_RESULT;
         return result(
             pass      => $TB_RESULT->[0],
             name      => $TB_RESULT->[1],
-            benchmark => $benchmark,
             stderr    => [@TB_DIAGS],
         );
     };
@@ -293,7 +290,7 @@ also have the ($$) prototype.
 
 =item tester( name => sub { ... })
 
-In the first form you export a package sub as a tester by name. Int he second
+In the first form you export a package sub as a tester by name. In the second
 form you create a new export with an anonymous sub. Note: Your function will be
 wrapped inside another function that provides extra information such as
 diagnostics, benchmarking, and scope/caller information to generated results.
@@ -302,11 +299,6 @@ The wrapper function will be defined with the same prototype as the function
 being wrapped. If the original was defined as sub($$) {...} then $newsub will
 also have the ($$) prototype.
 
-***NOTE: Only one result may be generated from a tester method, if you attempt
-to generate more it will throw an exception. If you want to generate multiple
-results you will have to write a util function and add benchmarking/caller/etc.
-manually.
-
 =item util( 'name' )
 
 =item util( name => sub { ... })
@@ -314,8 +306,8 @@ manually.
 In the first form you export a package sub as a util by name. In the second
 form you create a new export with an anonymous sub. Note: Utility functions are
 not wrapped like tester functions are, this means no free diagnostics, scope,
-caller, or benchmarking. However unlike tester() a util can produce any number
-of results, or no results at all.
+or caller. However unlike tester() a util can produce any number of results, or
+no results at all.
 
 =item %line_and_filename = test_caller()
 
