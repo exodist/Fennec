@@ -38,11 +38,18 @@ sub warnings_are(&$;$) {
 sub warning_like(&$;$) {
     my ( $sub, $match, $name ) = @_;
     my @warns = capture_warnings( \&$sub );
+
     return result(
         pass => 0,
         name => $name,
         stderr => [ "Too many warnings:", map { "\t$_" } @warns ],
     ) if @warns > 1;
+
+    return result(
+        pass => 0,
+        name => $name,
+        stderr => [ "Did not warn as expected" ],
+    ) if !@warns;
 
     return like( $warns[0], $match, $name );
 }

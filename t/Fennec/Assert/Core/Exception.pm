@@ -113,71 +113,36 @@ tests throws_ok => sub {
     );
 };
 
-
-
-
-1;
-
-__END__
-
-tester 'throws_ok';
-sub throws_ok(&$;$) {
-    my ( $code, $reg, $name ) = @_;
-    my ( $ok, $msg ) = live_or_die( $code );
-    my ( $pkg, $file, $number ) = caller;
-
-    # If we lived
-    return result(
-        pass => !$ok ? 1 : 0,
-        name => $name || 'nameless test',
-        stderr => ["Test did not die as expected"],
-    ) if $ok;
-
-    my $match = $msg =~ $reg ? 1 : 0;
-    my @diag = ("Wanted: $reg", "Got: $msg" )
-        unless( $match );
-
-    return result(
-        pass => $match ? 1 : 0,
-        name => $name || 'nameless test',
-        stderr => \@diag,
+tests lives_and => sub {
+    my $results = capture {
+        lives_and { 1 } "transparent";
+        lives_and { die 'xxx' } "Will fail";
+    };
+    my $ln = ln( -2 );
+    is( @$results, 1, "one result, other is transparent" );
+    is( $results->[0]->name, 'Will fail', "proper one failed" );
+    is( $results->[0]->pass, 0, "Did not pass" );
+    is_deeply(
+        $results->[0]->stderr,
+        [ "Test unexpectedly died: 'xxx at " . __FILE__ . " line $ln.'" ],
+        "Proper diag"
     );
-}
+};
 
-tester 'lives_and';
-sub lives_and(&;$) {
-    my ( $code, $name ) = @_;
-    my ( $ok, $msg )= live_or_die( $code );
-    my ( $pkg, $file, $number ) = caller;
-    chomp( $msg );
-    $msg =~ s/\n/ /g;
-    return if $ok;
+tests 'masked $@' => sub {
+    warning_like {
+        my ($ret, $error) = Fennec::Assert::Core::Exception::live_or_die( sub {
+            my $obj = anonclass( subs => { DESTROY => sub { eval { 1 }}})->new;
+            die( 'apple' );
+            $obj->can( 'a' );
+        });
+    } qr/
+        code \s died \s as \s expected, \s however \s the \s error \s is \s
+        masked\. \s This \s can \s occur \s when \s an \s object's \s
+        DESTROY\(\) \s method \s calls \s eval
+    /x,
+    "got warning when masked \$@";
+};
 
-    return result(
-        pass => 0,
-        name => $name || 'nameless test',
-        stderr => ["Test unexpectedly died: '$msg'"],
-    );
-}
-
-sub live_or_die {
-    my ( $code ) = @_;
-    my $return = eval { $code->(); 'did not die' } || "died";
-    my $msg = $@;
-
-    if ( $return eq 'did not die' ) {
-        return 1;
-    }
-    else {
-        return 0 unless wantarray;
-
-        if ( !$msg ) {
-            carp "code died as expected, however the error is masked. This"
-               . " can occur when an object's DESTROY() method calls eval";
-        }
-
-        return ( 0, $msg );
-    }
-}
 
 1;

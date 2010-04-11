@@ -33,7 +33,6 @@ tester 'throws_ok';
 sub throws_ok(&$;$) {
     my ( $code, $reg, $name ) = @_;
     my ( $ok, $msg ) = live_or_die( $code );
-    my ( $pkg, $file, $number ) = caller;
 
     # If we lived
     return result(
@@ -53,14 +52,16 @@ sub throws_ok(&$;$) {
     );
 }
 
-tester 'lives_and';
+util 'lives_and';
 sub lives_and(&;$) {
     my ( $code, $name ) = @_;
-    my ( $ok, $msg )= live_or_die( $code );
-    my ( $pkg, $file, $number ) = caller;
-    chomp( $msg );
-    $msg =~ s/\n/ /g;
+    my ( $ok, $msg ) = live_or_die( $code );
     return if $ok;
+
+    if ( $msg ) {
+        chomp( $msg );
+        $msg =~ s/\n/ /g;
+    }
 
     return result(
         pass => 0,
@@ -81,8 +82,8 @@ sub live_or_die {
         return 0 unless wantarray;
 
         if ( !$msg ) {
-            carp "code died as expected, however the error is masked. This"
-               . " can occur when an object's DESTROY() method calls eval";
+            warn "code died as expected, however the error is masked. This"
+               . " can occur when an object's DESTROY() method calls eval\n";
         }
 
         return ( 0, $msg );
