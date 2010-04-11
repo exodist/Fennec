@@ -52,6 +52,4 @@ sub result_line_number_is {
     );
 };
 
-
-
 1;

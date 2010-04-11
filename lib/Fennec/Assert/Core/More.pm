@@ -6,6 +6,8 @@ use Fennec::Assert;
 use Fennec::Output::Result;
 use Scalar::Util qw/blessed reftype/;
 use Carp;
+our $DIFF;
+BEGIN { $DIFF = eval 'require String::Diff; 1' ? 1 : 0 }
 
 tester( $_ ) for qw/is isnt like unlike can_ok isa_ok is_deeply advanced_is/;
 
@@ -106,6 +108,8 @@ sub compare($$;$) {
     return ("Not enough arguments")
         unless @_ > 1;
 
+    return if !defined( $have ) && !defined( $want );
+
     if ( !defined( $have ) || !defined( $want )) {
         return (
             "Expected: '"
@@ -116,12 +120,13 @@ sub compare($$;$) {
         ) if defined( $have ) || defined( $want );
     }
 
+    return SCALAR_compare( \$have, \$want, $specs )
+        unless ref( $want ) || ref( $have );
+
     my $haveref = reftype( $have ) || $have || "undef";
     my $wantref = reftype( $want ) || $want || "undef";
     return ( "Expected: '$wantref' Got: '$haveref'" )
         unless( "$haveref" eq "$wantref" );
-
-    return unless ref( $have ) && ref( $want );
 
     my @err;
     push @err => compare_bless( $have, $want )
@@ -171,6 +176,9 @@ sub SCALAR_compare {
     my $bad = (!$have && $want) || (!$want && $have);
     return if !$bad && "$have" eq "$want";
 
+    if ( $DIFF && defined( $want ) && defined( $have )) {
+        ( $want, $have ) = String::Diff::diff( $want, $have );
+    }
     $want = 'undef' unless defined( $want );
     $have = 'undef' unless defined( $have );
     return ( "Expected: '$want' Got: '$have'" );
@@ -179,6 +187,7 @@ sub SCALAR_compare {
 sub CODE_compare {
     my ( $have, $want, $specs ) = @_;
     return if $specs->{ no_code_checks };
+    print STDERR "C\n";
     my $msg = "Expected: '$want' Got: '$have'";
     return $msg unless $have == $want;
 }

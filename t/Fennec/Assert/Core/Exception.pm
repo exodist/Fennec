@@ -32,32 +32,93 @@ tests lives_ok => sub {
         "useful message"
     );
 
-
+    is( $results->[2]->name, 'nameless test', "Automatic test name" );
 };
+
+tests dies_ok => sub {
+    my $results = capture {
+        dies_ok { die 'xxx' } 'pass';
+        dies_ok { 1 } 'fail';
+        dies_ok { die 'xxx' };
+    };
+
+    is( @$results, 3, '3 results' );
+    is( $results->[0]->name, 'pass', "pass name" );
+    is( $results->[0]->pass, 1, "result 1 pass" );
+    is( $results->[1]->name, 'fail', "name - fail" );
+    is( $results->[1]->pass, 0, "second result fail" );
+    is(
+        $results->[1]->stderr->[0],
+        "Did not die as expected",
+        "Got error"
+    );
+    is( $results->[2]->name, "nameless test", "automatic name" );
+};
+
+tests throws_ok => sub {
+    my $results = capture {
+        throws_ok { die 'xxx' } qr/xxx at/, "pass";
+        throws_ok { 1 } qr/xxx/, "no die";
+        throws_ok { die 'aaa' } qr/xxx at/, "wrong throw";
+
+        throws_ok { die 'xxx' } qr/xxx at/;
+        throws_ok { 1 } qr/xxx/;
+        throws_ok { die 'aaa' } qr/xxx at/;
+    };
+    my $ln_a = ln(-6);
+    my $ln_b = ln(-3);
+
+    is( @$results, 6, "6 results" );
+    is( $results->[0]->pass, 1, "pass" );
+    is( $results->[0]->name, "pass", "name" );
+
+    is( $results->[1]->pass, 0, "fail" );
+    is( $results->[1]->name, "no die", "name" );
+    is_deeply(
+        $results->[1]->stderr,
+        [ "Test did not die as expected" ],
+        "Proper error"
+    );
+
+    is( $results->[2]->pass, 0, "fail" );
+    is( $results->[2]->name, "wrong throw", "name" );
+    is_deeply(
+        $results->[2]->stderr,
+        [
+            "Wanted: " . qr/xxx at/,
+            "Got: aaa at " . __FILE__ . " line $ln_a.\n"
+        ],
+        "Proper error"
+    );
+
+    is( $results->[3]->pass, 1, "pass" );
+    is( $results->[3]->name, "nameless test", "name" );
+    is( $results->[4]->pass, 0, "fail" );
+    is( $results->[4]->name, "nameless test", "name" );
+    is_deeply(
+        $results->[4]->stderr,
+        [ "Test did not die as expected" ],
+        "Proper error"
+    );
+
+    is( $results->[5]->pass, 0, "fail" );
+    is( $results->[5]->name, "nameless test", "name" );
+    is_deeply(
+        $results->[5]->stderr,
+        [
+            "Wanted: " . qr/xxx at/,
+            "Got: aaa at " . __FILE__ . " line $ln_b.\n"
+        ],
+        "Proper error"
+    );
+};
+
+
+
 
 1;
 
 __END__
-
-tester 'lives_ok';
-sub lives_ok(&;$) {
-    my ( $code, $name ) = @_;
-    my $ok = live_or_die( $code );
-    result(
-        pass => $ok ? 1 : 0,
-        name => $name || 'nameless test',
-    );
-}
-
-tester 'dies_ok';
-sub dies_ok(&;$) {
-    my ( $code, $name ) = @_;
-    my $ok = live_or_die( $code );
-    result(
-        pass => !$ok ? 1 : 0,
-        name => $name || 'nameless test',
-    );
-}
 
 tester 'throws_ok';
 sub throws_ok(&$;$) {
@@ -69,17 +130,17 @@ sub throws_ok(&$;$) {
     return result(
         pass => !$ok ? 1 : 0,
         name => $name || 'nameless test',
-        stdout => ["Test did not die as expected at $file line $number"],
+        stderr => ["Test did not die as expected"],
     ) if $ok;
 
     my $match = $msg =~ $reg ? 1 : 0;
-    my @diag = ("$file line $number:\n  Wanted: $reg\n  Got: $msg" )
+    my @diag = ("Wanted: $reg", "Got: $msg" )
         unless( $match );
 
     return result(
         pass => $match ? 1 : 0,
         name => $name || 'nameless test',
-        stdout => \@diag,
+        stderr => \@diag,
     );
 }
 
@@ -95,7 +156,7 @@ sub lives_and(&;$) {
     return result(
         pass => 0,
         name => $name || 'nameless test',
-        stdout => ["Test unexpectedly died: '$msg' at $file line $number"],
+        stderr => ["Test unexpectedly died: '$msg'"],
     );
 }
 
@@ -105,7 +166,6 @@ sub live_or_die {
     my $msg = $@;
 
     if ( $return eq 'did not die' ) {
-        return ( 1, $return ) if wantarray;
         return 1;
     }
     else {

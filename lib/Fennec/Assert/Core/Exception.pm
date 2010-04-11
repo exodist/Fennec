@@ -25,7 +25,7 @@ sub dies_ok(&;$) {
     result(
         pass => !$ok ? 1 : 0,
         name => $name || 'nameless test',
-        $ok ? ( stderr => 'Did not die as expected' ) : (),
+        $ok ? ( stderr => ['Did not die as expected'] ) : (),
     );
 }
 
@@ -39,11 +39,11 @@ sub throws_ok(&$;$) {
     return result(
         pass => !$ok ? 1 : 0,
         name => $name || 'nameless test',
-        stderr => ["Test did not die as expected at $file line $number"],
+        stderr => ["Test did not die as expected"],
     ) if $ok;
 
     my $match = $msg =~ $reg ? 1 : 0;
-    my @diag = ("$file line $number:\n  Wanted: $reg\n  Got: $msg" )
+    my @diag = ("Wanted: $reg", "Got: $msg" )
         unless( $match );
 
     return result(
@@ -65,7 +65,7 @@ sub lives_and(&;$) {
     return result(
         pass => 0,
         name => $name || 'nameless test',
-        stderr => ["Test unexpectedly died: '$msg' at $file line $number"],
+        stderr => ["Test unexpectedly died: '$msg'"],
     );
 }
 
