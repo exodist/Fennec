@@ -15,6 +15,22 @@ EARLY VERSION WARNING
     even unimplemented. Please give it a try and report any bugs or
     suggestions.
 
+FEATURES
+    Fennec offers the following features, among others.
+
+    Large library of core test functions
+    Plays nicely with Test::Builder tools
+    Better diagnostics
+    Highly Extendable
+    Lite benchmarking for free
+    Works with prove
+    Full-Suite management
+    Standalone test support
+    Support for SPEC and other test workflows
+    Forking works
+    Run only specific test sets within test files (for development)
+    Intercept or hook into most steps or components by design
+
 DOCUMENTATION
     QUICK START
         Fennec::Manual::Quickstart - Drop Fennec standalone tests into an
