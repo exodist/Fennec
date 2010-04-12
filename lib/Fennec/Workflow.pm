@@ -45,6 +45,8 @@ export build_hook => sub(&) {
     push @BUILD_HOOKS => @_;
 };
 
+export export => sub { goto &export };
+
 sub import {
     my $class = shift;
     my $caller = caller;

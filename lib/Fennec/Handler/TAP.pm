@@ -45,7 +45,14 @@ sub handle {
         return;
     }
     return $self->result( $item ) if $item->isa( 'Fennec::Output::Result' );
-    return $self->stderr( @{ $item->stderr }) if $item->isa( 'Fennec::Output::Diag' );
+    if ( $item->isa( 'Fennec::Output::Diag' )) {
+        $self->stderr( @{ $item->stderr }) if $item->stderr;
+        if ( $item->stdout ) {
+            $self->stdout( @{ $item->stdout });
+            warn "Diag with stdout is deprecated\n";
+        }
+        return;
+    }
     warn "Unhandled output type: $item";
 }
 
@@ -55,7 +62,8 @@ sub result {
     return unless $result;
 
     my $out = (($result->pass || $result->skip) ? 'ok ' : 'not ok ' ) . $self->count . " -";
-    my $bm = $result->benchmark->[0] || 'N/A  ';
+    my $bma = $result->benchmark;
+    my $bm = $bma ? $bma->[0] : "N/A  ";
     my $template = '[% 6s]';
 
     # If we got a number (including -e notation)
@@ -72,8 +80,7 @@ sub result {
         }
     }
 
-    $out .= $bm ? sprintf( " $template", $bm >= 100 ? int($bm) : $bm )
-                               : " [  N/A  ]";
+    $out .= sprintf( " $template", $bm );
 
     $out .= " " . $result->name if $result->name;
     if ( my $todo = $result->todo ) {

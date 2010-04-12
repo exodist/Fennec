@@ -33,6 +33,14 @@ Example:
     package MyTest;
     use Fennec;
 
+    # Export a function that is used to create an instance of the workflow.
+    export my_workflow => sub {
+        my ( $name, $sub ) = @_
+        Fennec::Workflow->current->add_item(
+            __PACKAGE__->new( $name, $sub )
+        );
+    };
+
     my_workflow parent => sub {
         tests 'parent tests' => {
             ...

@@ -19,7 +19,7 @@ use Fennec::Util::Alias qw/
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/ workflow /;
+Accessors qw/ workflow no_result /;
 
 export 'tests' => sub {
     my $name = shift;
@@ -42,7 +42,7 @@ sub run {
         my $benchmark = timeit( 1, sub {
             $self->run_on( $self->testfile );
         });
-        Result->pass_testset( $self, $benchmark );
+        Result->pass_testset( $self, $benchmark ) unless $self->no_result;
     }
     catch {
         Result->fail_testset( $self, $_ );

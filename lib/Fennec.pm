@@ -3,6 +3,12 @@ use strict;
 use warnings;
 
 use Carp;
+#BEGIN {
+#    $SIG{ __DIE__ } = sub {
+#        confess "\n\n===========================\n\n$@\n\n";
+#    };
+#}
+
 use Fennec::Util::Alias qw/
     Fennec::Runner
     Fennec::TestFile
@@ -61,7 +67,10 @@ sub import {
 
 sub export_package_to {
     my ( $from, $to ) = @_;
-    eval "require $from; 1" || die( $@ );
+    unless ( eval "require $from; 1" ) {
+        warn( "Failed to load workflow '$from'\n$@" );
+        die( $@ );
+    }
     $from->export_to( $to );
 }
 

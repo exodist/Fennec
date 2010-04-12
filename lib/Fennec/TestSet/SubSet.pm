@@ -94,7 +94,7 @@ sub run_tests {
                 $set->run()
             }
         });
-        Result->pass_testset( $self, $benchmark );
+        Result->pass_testset( $self, $benchmark ) unless $self->no_result;
     }
     catch {
         Result->fail_testset( $self, $_ );
