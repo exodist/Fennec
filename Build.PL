@@ -23,7 +23,7 @@ my $build = Module::Build->new(
         'Try::Tiny'         => 0,
 
         # Made for Fennec
-        'Parallel::Runner'  => 0.003,
+        'Parallel::Runner'  => 0.004,
         'Exporter::Declare' => 0.003,
     },
     no_index => {

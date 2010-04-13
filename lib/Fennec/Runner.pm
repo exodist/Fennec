@@ -56,6 +56,7 @@ sub init {
 
     $proto{ p_files } = 2 unless defined $proto{ p_files };
     $proto{ p_tests } = 2 unless defined $proto{ p_tests };
+    $proto{ cull_delay } = 0.1 unless $proto{ cull_delay };
 
     $SINGLETON = bless(
         {
@@ -69,6 +70,7 @@ sub init {
         },
         $class
     );
+    $SINGLETON->threader->iteration_delay( $proto{ cull_delay });
 }
 
 sub start {
