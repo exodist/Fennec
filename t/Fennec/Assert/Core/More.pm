@@ -24,9 +24,50 @@ cases 'String::Diff' => sub {
         $Fennec::Assert::Core::More::DIFF = 1;
     } if $sd;
 
-    tests SCALAR_compare => sub {
-
+    tests 'SCALAR_compare undef' => sub {
+        local *scomp = \&Fennec::Assert::Core::More::SCALAR_compare;
+        ok( !scomp( \undef, \undef ), "Nothing when comparing nothing" );
+        ok( my $err = scomp( \undef, \'a' ), "error when have is nothing" );
+        ok( $err eq "Expected: 'a' Got: undef", "Correct error" ) || diag( $err );
+        ok( $err = scomp( \'a', \undef ), "error when expected is nothing" );
+        ok( $err eq "Expected: undef Got: 'a'", "Correct error" ) || diag( $err );
+        ok( $err = scomp( \'undef', \undef ), "error when undef and string 'undef'" );
+        ok( $err eq "Expected: undef Got: 'undef'", "Correct error" ) || diag( $err );
+        ok( $err = scomp( \undef, \'undef' ), "error when 'undef' and undef" );
+        ok( $err eq "Expected: 'undef' Got: undef", "Correct error" ) || diag( $err );
     };
+
+    tests 'SCALAR_compare same' => sub {
+        local *scomp = \&Fennec::Assert::Core::More::SCALAR_compare;
+        ok( !scomp( \1, \1 ), "Same number");
+        ok( !scomp( \0, \0 ), "Same number");
+        ok( !scomp( \"aaa", \"aaa" ), "Same string" );
+        ok( !scomp( qr/a/, qr/a/ ), "Same regex" );
+    };
+
+    tests 'SCALAR_compare different' => sub {
+        my $self = shift;
+        local *scomp = \&Fennec::Assert::Core::More::SCALAR_compare;
+        local *msg = sub {
+            my ( $h, $w ) = @_;
+            ( $w, $h ) = String::Diff::diff( $w, $h )
+                if $self->sd;
+            $h = "'$h'";
+            $w = "'$w'";
+            return "Expected: $w Got: $h";
+        };
+        ok( my $err = scomp( \1, \2 ), "Different number");
+        ok( $err eq msg( 1, 2 ), "Correct msg" ) || diag( $err );
+        ok( $err = scomp( \1, \0 ), "Different number");
+        ok( $err eq msg( 1, 0 ), "Correct msg" );
+        ok( $err = scomp( \0, \1 ), "Different number");
+        ok( $err eq msg( 0, 1 ), "Correct msg" );
+        ok( $err = scomp( \"aaa", \"bbb" ), "Different string" );
+        ok( $err eq msg( 'aaa', 'bbb' ), "Correct msg" );
+        ok( $err = scomp( qr/a/, qr/b/ ), "Different regex" );
+        ok( $err eq msg( qr/a/, qr/b/ ), "Correct msg" );
+    };
+
 };
 
 describe 'Primary tests' => sub {
@@ -35,15 +76,49 @@ describe 'Primary tests' => sub {
         $self->sd( 0 );
         $Fennec::Assert::Core::More::DIFF = 0;
     };
+
+    it is_fail => sub {
+        my $fail = capture {
+            is( 'a', 'b', 'ab' );
+            is( 0, 1, '01' );
+            is( 1, 0, '10' );
+            is( 1, 2, '12' );
+            is( undef, 'a', 'ua' );
+            is( 'a', undef, 'au' );
+            is( qr/a/, qr/b/, 'regex' );
+        };
+        ok( @$fail == 7, 'num failed' );
+        ok( !$fail->[$_]->pass, "$_ failed" ) for 0 .. @$fail - 1;
+        ok(
+            "ab-01-10-12-ua-au-regex"
+            eq
+            join('-', map { $_->name } @$fail ),
+            "fail names"
+        );
+    };
+
+    it is_pass => sub {
+        my $pass = capture {
+            is( 'a', 'a', 'a' );
+            is( 1, 1, 'one' );
+            is( 0, 0, 'zero' );
+            is( undef, undef, 'undef' );
+            is( qr/a/, qr/a/, 'regex' );
+        };
+        ok( @$pass == 5, 'num passed' );
+        ok( $pass->[$_]->pass, "$_ passed" ) for 0 .. @$pass - 1;
+        ok(
+            "a-one-zero-undef-regex"
+            eq
+            join('-', map { $_->name } @$pass),
+            "pass names"
+        ) || diag( "a-1-0-undef-regex", join('-', map { $_->name } @$pass));
+    };
 };
 
 1;
 
 __END__
-
-BEGIN { $DIFF = eval 'require String::Diff; 1' ? 1 : 0 }
-
-tester( $_ ) for qw/is isnt like unlike can_ok isa_ok is_deeply advanced_is/;
 
 sub is($$;$) {
     my ( $got, $want, $name ) = @_;
@@ -61,7 +136,7 @@ sub isnt($$;$) {
     result(
         pass => $err ? 1 : 0,
         name => $name,
-        $err ? () : ( stderr => [ "Got: $got", "Wanted: Anything else" ]),
+        $err ? () : ( stderr => [ "Got: '$got' Wanted: Anything else" ]),
     );
 }
 
@@ -203,8 +278,8 @@ sub HASH_compare {
 
 sub SCALAR_compare {
     my ( $have, $want, $specs ) = @_;
-    $have = $$have unless blessed( $have ) || '' eq 'Regexp';
-    $want = $$want unless blessed( $want ) || '' eq 'Regexp';
+    $have = $$have unless (blessed( $have ) || '') eq 'Regexp';
+    $want = $$want unless (blessed( $want ) || '') eq 'Regexp';
 
     return if !defined( $have ) && !defined( $want );
     my $bad = (!$have && $want) || (!$want && $have);
@@ -213,9 +288,9 @@ sub SCALAR_compare {
     if ( $DIFF && defined( $want ) && defined( $have )) {
         ( $want, $have ) = String::Diff::diff( $want, $have );
     }
-    $want = 'undef' unless defined( $want );
-    $have = 'undef' unless defined( $have );
-    return ( "Expected: '$want' Got: '$have'" );
+    $want = defined( $want ) ? "'$want'" : 'undef';
+    $have = defined( $have ) ? "'$have'" : 'undef';
+    return ( "Expected: $want Got: $have" );
 }
 
 sub CODE_compare {

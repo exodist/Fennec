@@ -27,7 +27,7 @@ sub isnt($$;$) {
     result(
         pass => $err ? 1 : 0,
         name => $name,
-        $err ? () : ( stderr => [ "Got: $got", "Wanted: Anything else" ]),
+        $err ? () : ( stderr => [ "Got: '$got' Wanted: Anything else" ]),
     );
 }
 
@@ -169,8 +169,8 @@ sub HASH_compare {
 
 sub SCALAR_compare {
     my ( $have, $want, $specs ) = @_;
-    $have = $$have unless blessed( $have ) || '' eq 'Regexp';
-    $want = $$want unless blessed( $want ) || '' eq 'Regexp';
+    $have = $$have unless (blessed( $have ) || '') eq 'Regexp';
+    $want = $$want unless (blessed( $want ) || '') eq 'Regexp';
 
     return if !defined( $have ) && !defined( $want );
     my $bad = (!$have && $want) || (!$want && $have);
@@ -179,9 +179,9 @@ sub SCALAR_compare {
     if ( $DIFF && defined( $want ) && defined( $have )) {
         ( $want, $have ) = String::Diff::diff( $want, $have );
     }
-    $want = 'undef' unless defined( $want );
-    $have = 'undef' unless defined( $have );
-    return ( "Expected: '$want' Got: '$have'" );
+    $want = defined( $want ) ? "'$want'" : 'undef';
+    $have = defined( $have ) ? "'$have'" : 'undef';
+    return ( "Expected: $want Got: $have" );
 }
 
 sub CODE_compare {

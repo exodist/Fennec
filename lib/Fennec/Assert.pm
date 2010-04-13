@@ -83,6 +83,7 @@ sub tester {
         my @outresults;
         my ( $caller, $file, $line ) = caller;
         my %caller = test_caller();
+        my $return = 1;
         try {
             no warnings 'redefine';
             no strict 'refs';
@@ -107,7 +108,7 @@ sub tester {
                     }
                 }
 
-                result(
+                $return &&= result(
                     %caller,
                     %$outresult
                 ) if $outresult;
@@ -119,7 +120,9 @@ sub tester {
                 %caller,
                 stderr => [ "$name died: $_" ],
             );
+            $return = 0;
         };
+        return $return;
     };
 
     my $proto = prototype( $sub );
@@ -140,10 +143,12 @@ sub result {
                 && blessed( $_[0] )->isa( __PACKAGE__ );
     return unless @_;
     my %proto = @_;
-    Result->new(
+    my $res = Result->new(
         @proto{qw/file line/} ? () : test_caller(),
         %proto,
-    )->write;
+    );
+    $res->write;
+    return $res->pass;
 }
 
 sub tb_wrapper(&) {

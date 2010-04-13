@@ -20,11 +20,19 @@ use List::Util   qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/setups teardowns tests lines/;
+Accessors qw/setups teardowns tests/;
 
 sub new {
     my $class = shift;
-    return bless( { @_ }, $class );
+    return bless(
+        {
+            setups => [],
+            teardowns => [],
+            tests => [],
+            @_,
+        },
+        $class
+    );
 }
 
 sub lines_for_filter {
@@ -46,9 +54,6 @@ sub run {
 sub add_testset {
     my $self = shift;
     my ( $name, $sub ) = @_;
-    # Subtract 1, the line number is the first statement, not the 'sub {' line.
-    # For one-line subs it will return the line before defenition, but in most
-    # cases this is what we want.
     my $line = B::svref_2object( $sub )->START->line;
     my $ts = TestSet->new( $name, method => $sub, line => $line );
     $ts->workflow( $self->workflow );
