@@ -69,18 +69,18 @@ sub run_tests {
                 @sets = $self->search_filter( Runner->search, \@sets );
             }
 
-            @sets = shuffle @sets if $self->testfile->random;
+            @sets = shuffle @sets if $self->testfile->fennec_meta->random;
             @sets = sort { $a->name cmp $b->name } @sets
-                if $self->testfile->sort;
+                if $self->testfile->fennec_meta->sort;
 
             my $benchmark = timeit( 1, sub {
                 for my $set ( @sets ) {
-                    $self->testfile->threader->run(sub {
+                    $self->testfile->fennec_meta->threader->run(sub {
                         Runner->reset_benchmark;
                         $set->run()
                     });
                 }
-                $self->testfile->threader->finish
+                $self->testfile->fennec_meta->threader->finish
             });
             Result->pass_workflow( $self, $benchmark );
         }
@@ -181,10 +181,15 @@ sub build {
 sub _build_as_root {
     my $self = shift;
     my $tclass = $self->run_method_as_current( $self->method );
-    $self->parent( $tclass->new(
-        Fennec->test_class_args,
-        workflow => $self,
-        file => $self->file,
+    my %args = Fennec->test_class_args;
+    my $constructor = delete $args{ constructor };
+    $self->parent( $tclass->fennec_new(
+        constructor => $constructor,
+        meta => {
+            workflow => $self,
+            file => $self->file,
+            %args,
+        },
     ));
     return $self;
 }
@@ -219,14 +224,24 @@ sub testfile {
 
 sub skip {
     my $self = shift;
-    return $self->SUPER::skip( @_ )
-        || $self->parent->skip;
+    if ( my $skip = $self->SUPER::skip( @_ )) {
+        return $skip;
+    }
+    my $parent = $self->parent;
+    $parent->isa( 'Fennec::TestFile' )
+        ? $parent->fennec_meta->skip
+        : $parent->skip;
 }
 
 sub todo {
     my $self = shift;
-    return $self->SUPER::todo()
-        || $self->parent->todo;
+    if ( my $todo = $self->SUPER::todo( @_ )) {
+        return $todo;
+    }
+    my $parent = $self->parent;
+    $parent->isa( 'Fennec::TestFile' )
+        ? $parent->fennec_meta->todo
+        : $parent->todo;
 }
 
 sub run_method_as_current {

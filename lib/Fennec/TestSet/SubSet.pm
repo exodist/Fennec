@@ -85,9 +85,9 @@ sub run_tests {
             @sets = $self->workflow->search_filter( Runner->search, \@sets );
         }
 
-        @sets = shuffle @sets if $self->testfile->random;
+        @sets = shuffle @sets if $self->testfile->fennec_meta->random;
         @sets = sort { $a->name cmp $b->name } @sets
-            if $self->testfile->sort;
+            if $self->testfile->fennec_meta->sort;
 
         my $benchmark = timeit( 1, sub {
             for my $set ( @sets ) {

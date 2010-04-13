@@ -2,63 +2,28 @@ package Fennec::TestFile;
 use strict;
 use warnings;
 
-use Fennec::Util::Accessors;
-use Parallel::Runner;
-use Try::Tiny;
-use Carp;
+use Fennec::TestFile::Meta;
 
-use Fennec::Util::Alias qw/
-    Fennec::Runner
-/;
-
-use Scalar::Util qw/blessed/;
-
-our $NEW;
-
-Accessors qw/ workflow threader todo skip file sort /;
-
-sub new {
+sub fennec_new {
     my $class = shift;
     my %proto = @_;
-    my ( $todo, $skip, $workflow, $file, $random, $sort ) = @proto{qw/ todo skip workflow file random sort /};
+    my $meta = Fennec::TestFile::Meta->new( %{ $proto{ meta }});
+    my $new;
+    if ( $class->can( 'new' )) {
+        $new = $class->new( @{ $proto{ constructor }});
+    }
+    else {
+        $new = bless( {}, $class );
+        $new->init if $new->can( 'init' );
+    }
 
-    my $self = bless(
-        {
-            workflow    => $workflow,
-            file        => $file,
-            threader    => Parallel::Runner->new(
-                $proto{ no_fork } ? 1 : Runner->p_tests
-            ),
-            skip        => $skip || undef,
-            todo        => $todo || undef,
-            defined( $random ) || $sort
-                ? (
-                    random => $random || 0,
-                    sort => $sort || undef,
-                )
-                : (),
-        },
-        $class
-    );
-    my $init = $class->can( 'init' ) || $class->can( 'initialize' );
-    $self->$init( @_ ) if $init;
-    return $self;
+    Fennec::TestFile::Meta->set( $new, $meta );
+    return $new;
 }
 
-sub random {
+sub fennec_meta {
     my $self = shift;
-    ( $self->{ random }) = @_ if @_;
-    return defined $self->{ random }
-        ? $self->{ random }
-        : Runner->random;
-}
-
-sub name { shift->file->filename }
-
-sub parent {
-    my $self = shift;
-    return unless $self->workflow;
-    return $self->workflow->parent;
+    Fennec::TestFile::Meta->get( $self );
 }
 
 1;

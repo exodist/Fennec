@@ -96,7 +96,7 @@ sub start {
 
                 my $testfile = $workflow->testfile;
                 return Result->skip_workflow( $testfile )
-                    if $testfile->skip;
+                    if $testfile->fennec_meta->skip;
 
                 try {
                     $workflow->build_children;
@@ -105,7 +105,7 @@ sub start {
                     });
                 }
                 catch {
-                    $testfile->threader->finish;
+                    $testfile->fennec_meta->threader->finish;
                     Result->fail_workflow( $testfile, $_ );
                 };
             }
