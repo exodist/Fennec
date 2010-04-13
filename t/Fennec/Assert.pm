@@ -81,8 +81,9 @@ tests declare_exports => sub {
 tests export_exceptions => sub {
     my $ac = anonclass( use => $CLASS );
     my $acinst = $ac->new;
+    my $instclass = $ac->class;
     throws_ok { $acinst->tester( 'fake' )}
-        qr/No code found in 'Fennec::Assert::Core::Anonclass::__ANON__::AAAA' for exported sub 'fake'/,
+        qr/No code found in '$instclass' for exported sub 'fake'/,
         "Must provide sub for tester";
 
     my $res = capture {
