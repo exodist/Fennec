@@ -95,6 +95,19 @@ describe 'Primary tests' => sub {
             join('-', map { $_->name } @$fail ),
             "fail names"
         );
+        is_deeply(
+            [ map { @{ $_->stderr }} @$fail ],
+            [
+                qq/Expected: 'b' Got: 'a'/,
+                qq/Expected: '1' Got: '0'/,
+                qq/Expected: '0' Got: '1'/,
+                qq/Expected: '2' Got: '1'/,
+                qq/Expected: 'a' Got: undef/,
+                qq/Expected: undef Got: 'a'/,
+                "Expected: '" . qr/b/ . "' Got: '" . qr/a/ . "'",
+            ],
+            "Correct errors"
+        );
     };
 
     it is_pass => sub {
@@ -114,31 +127,39 @@ describe 'Primary tests' => sub {
             "pass names"
         ) || diag( "a-1-0-undef-regex", join('-', map { $_->name } @$pass));
     };
+
+    it isnt => sub {
+        my $pass = capture {
+            isnt( 'a', 'b', 'ab' );
+            isnt( 0, 1, 'zero-one' );
+            isnt( 1, 2, 'one-two' );
+            isnt( undef, 1, "und-one" );
+            isnt( qr/a/, qr/b/, 'regex' );
+        };
+        my $fail = capture {
+            isnt( 'a', 'a', 'aa' );
+            isnt( qr/a/, qr/a/, 'regex2' );
+        };
+        is( @$pass, 5, "5 passes" );
+        is( @$fail, 2, "2 fails" );
+        ok( $pass->[$_]->pass, "$_ passed" ) for 0 .. @$pass - 1;
+        ok( !$fail->[$_]->pass, "$_ failed" ) for 0 .. @$fail - 1;
+        is_deeply(
+            [ map { @{ $_->stderr }} @$fail ],
+            [
+                "Got: 'a' Wanted: Anything else",
+                "Got: '" . qr/a/ . "' Wanted: Anything else",
+            ],
+            "Correct errors"
+        );
+    };
+
+
 };
 
 1;
 
 __END__
-
-sub is($$;$) {
-    my ( $got, $want, $name ) = @_;
-    my ($err) = SCALAR_compare( \$got, \$want );
-    result(
-        pass => !$err,
-        name => $name,
-        $err ? ( stderr => [ $err ]) : (),
-    );
-}
-
-sub isnt($$;$) {
-    my ( $got, $nowant, $name ) = @_;
-    my ($err) = SCALAR_compare( \$got, \$nowant );
-    result(
-        pass => $err ? 1 : 0,
-        name => $name,
-        $err ? () : ( stderr => [ "Got: '$got' Wanted: Anything else" ]),
-    );
-}
 
 sub like($$;$) {
     my ( $thing, $check, $name ) = @_;
