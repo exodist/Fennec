@@ -38,7 +38,7 @@ sub like($$;$) {
     result(
         pass => $ok,
         name => $name,
-        $ok ? () : ( stderr => [ "$thing does not match $check" ]),
+        $ok ? () : ( stderr => [ "'$thing' does not match $check" ]),
     );
 }
 
@@ -49,19 +49,19 @@ sub unlike($$;$) {
     result(
         pass => $ok,
         name => $name,
-        $ok ? () : ( stderr => [ "$thing matches $check (it shouldn't)" ]),
+        $ok ? () : ( stderr => [ "'$thing' matches $check (it shouldn't)" ]),
     );
 }
 
 sub can_ok(*;@) {
     my ( $thing, @stuff ) = @_;
-    my $name = "$thing\->can(...)";
+    my $name = defined($thing) ? "$thing\->can(...)" : "undef\->can(...)";
     return result(
         pass => 0,
         name => $name,
-        stderr => ["$thing is an unblessed reference"],
-    ) if ref( $thing ) && !blessed( $thing );
-    my @err = map { $thing->can( $_ ) ? () : "$thing cannot $_"} @stuff;
+        stderr => [ (defined($thing) ? "'$thing'" : 'undef') . " is not blessed or class name"],
+    ) if !blessed( $thing ) && !eval { $thing->can( 'can' ) ? 1 : 0 };
+    my @err = map { $thing->can( $_ ) ? () : "'$thing' cannot '$_'"} @stuff;
     result(
         pass => @err ? 0 : 1,
         name => $name,
@@ -71,13 +71,13 @@ sub can_ok(*;@) {
 
 sub isa_ok(*@) {
     my ( $thing, @stuff ) = @_;
-    my $name = "$thing\->isa(...)";
+    my $name = defined($thing) ? "$thing\->isa(...)" : "undef\->isa(...)";
     return result(
         pass => 0,
         name => $name,
-        stderr => ["$thing is an unblessed reference"],
-    ) if ref( $thing ) && !blessed( $thing );
-    my @err = map { $thing->isa( $_ ) ? () : "$thing is not a $_"} @stuff;
+        stderr => [ (defined($thing) ? "'$thing'" : 'undef') . " is not blessed or class name"],
+    ) if !blessed( $thing ) && !eval { $thing->can( 'can' ) ? 1 : 0 };
+    my @err = map { $thing->isa( $_ ) ? () : "'$thing' is not a '$_'"} @stuff;
     result(
         pass => @err ? 0 : 1,
         name => $name,
@@ -92,7 +92,7 @@ sub is_deeply($$;$) {
 
 sub advanced_is {
     my %proto = @_;
-    croak( "You must specify got and want" ) unless exists $proto{ got }
+    croak( "You must specify 'got' and 'want'" ) unless exists $proto{ got }
                                                  && exists $proto{ want };
     my ( $have, $want, $name ) = @proto{qw/got want name/};
     my @err = compare( $have, $want, \%proto );
@@ -142,7 +142,7 @@ sub ARRAY_compare {
     my $max = @$have > @$want ? @$have : @$want;
     my @err;
     for my $i ( 0 .. ($max - 1)) {
-        push @err => map { "[$i] $_" }
+        push @err => map { "[$i]" . ($_ =~ m/^[\[\{]/ ? "$_" : " $_") }
             compare(
                 $have->[$i] || undef,
                 $want->[$i] || undef,
@@ -157,7 +157,7 @@ sub HASH_compare {
     my %keyholder = map {( $_ => 1 )} keys %$have, keys %$want;
     my @err;
     for my $key ( keys %keyholder ) {
-        push @err => map { "{'$key'} $_" }
+        push @err => map { "{$key}" . ($_ =~ m/^[\[\{]/ ? "$_" : " $_") }
             compare(
                 $have->{$key} || undef,
                 $want->{$key} || undef,
@@ -186,10 +186,8 @@ sub SCALAR_compare {
 
 sub CODE_compare {
     my ( $have, $want, $specs ) = @_;
-    return if $specs->{ no_code_checks };
-    print STDERR "C\n";
-    my $msg = "Expected: '$want' Got: '$have'";
-    return $msg unless $have == $want;
+    return if $specs->{ no_code_checks } || $have == $want;
+    return ( "Expected: '$want' Got: '$have'" );
 }
 
 1;

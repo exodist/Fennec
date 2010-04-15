@@ -8,7 +8,7 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
 /;
 
-Accessors qw/ stdout stderr _workflow testset /;
+Accessors qw/ stdout stderr _workflow testset timestamp /;
 
 sub workflow_stack {
     my $self = shift;
@@ -39,6 +39,7 @@ sub serialize {
 
 sub write {
     my $self = shift;
+    $self->timestamp( time ) unless $self->timestamp;
     Runner->collector->write( $self );
 }
 

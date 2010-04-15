@@ -9,6 +9,7 @@ use Fennec::Runner;
 use Fennec::Workflow;
 use Try::Tiny;
 
+use Time::HiRes qw/time/;
 use Scalar::Util qw/blessed/;
 use Fennec::Util::Alias qw/
     Fennec::Runner
@@ -43,6 +44,7 @@ sub new {
             $TODO ? ( todo => $TODO ) : (),
             %proto,
             pass => $pass ? 1 : 0,
+            timestamp => time,
             $proto{'benchmark'} ? () : (benchmark => Runner->benchmark() || undef),
         },
         $class

@@ -45,7 +45,11 @@ tests 'utils' => sub {
     is( @$output, 1, "1 output" );
     is_deeply(
         $output->[0],
-        { stderr => [ "hi there", "blah" ]},
+        {
+            stderr => [ "hi there", "blah" ],
+            #Can't really predict
+            timestamp => $output->[0]->timestamp,
+        },
         "Proper diag"
     );
 };

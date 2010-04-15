@@ -154,75 +154,254 @@ describe 'Primary tests' => sub {
         );
     };
 
+    tests like => sub {
+        my $pass = capture {
+            like( 'abcd', qr/^abcd$/, 'full' );
+            like( 'efgh', qr/^efgh/, 'start' );
+            like( 'ijkl', qr/ijkl$/, 'end' );
+        };
+        my $fail = capture {
+            like( 'abcd', qr/efgh/, 'fail' );
+            like( 'apple', qr/pear/, 'fail 2' );
+        };
+        ok( $pass->[$_]->pass, "$_ passed" ) for 0 .. ( @$pass - 1 );
+        ok( !$fail->[$_]->pass, "$_ failed" ) for 0 .. ( @$fail - 1 );
+        is( $fail->[0]->stderr->[0], "'abcd' does not match (?-xism:efgh)", "Correct error" );
+        is( $fail->[1]->stderr->[0], "'apple' does not match (?-xism:pear)", "Correct error" );
+    };
 
+    tests unlike => sub {
+        my $fail = capture {
+            unlike( 'abcd', qr/^abcd$/, 'full' );
+            unlike( 'efgh', qr/^efgh/, 'start' );
+            unlike( 'ijkl', qr/ijkl$/, 'end' );
+        };
+        my $pass = capture {
+            unlike( 'abcd', qr/efgh/, 'a' );
+            unlike( 'apple', qr/pear/, 'b' );
+        };
+        ok( $pass->[$_]->pass, "$_ passed" ) for 0 .. ( @$pass - 1 );
+        ok( !$fail->[$_]->pass, "$_ failed" ) for 0 .. ( @$fail - 1 );
+        is( $fail->[0]->stderr->[0], "'abcd' matches (?-xism:^abcd\$) (it shouldn't)", "Correct error" );
+        is( $fail->[1]->stderr->[0], "'efgh' matches (?-xism:^efgh) (it shouldn't)", "Correct error" );
+        is( $fail->[2]->stderr->[0], "'ijkl' matches (?-xism:ijkl\$) (it shouldn't)", "Correct error" );
+    };
+
+    tests can_ok => sub {
+        my $self = shift;
+        my $res = capture {
+            $self->can_ok( 'ok' );
+            $self->can_ok( 'fake name' );
+            can_ok( [], 'apple' );
+            can_ok( 'a', 'pear' );
+            can_ok( $self, 'ok', 'can_ok' );
+            can_ok( Fennec::Assert, 'import' );
+            can_ok( undef, 'import' );
+        };
+        ok( $res->[0]->pass, "pass first" );
+        ok( !$res->[1]->pass, "fail second" );
+        is( $res->[1]->stderr->[0], "'$self' cannot 'fake name'", "Can't" );
+        ok( !$res->[2]->pass, "fail third" );
+        like( $res->[2]->stderr->[0], qr/'ARRAY.*' is not blessed/, "unblessed" );
+        ok( !$res->[3]->pass, "fail fourth" );
+        like( $res->[3]->stderr->[0], qr/'a' is not blessed/, "unblessed 2" );
+        ok( $res->[4]->pass, "pass last" );
+        like( $_->name, qr/->can(...)/, "name is correct" ) for @$res;
+        ok( $res->[5]->pass, "pass post last - bareword" );
+        ok( !$res->[6]->pass, "fail post post last - bareword" );
+    };
+
+    tests isa_ok => sub {
+        my $self = shift;
+        {
+            package XXX::A;
+            package XXX::B;
+            package XXX::C;
+            package XXX::Test::Package;
+            use strict;
+            use warnings;
+            our @ISA = qw/ XXX::A XXX::B XXX::C /;
+        }
+        my $one = bless( [], 'XXX::Test::Package' );
+        my $pass = capture {
+            isa_ok( $one, 'XXX::Test::Package' );
+            isa_ok( $one, 'XXX::A' );
+            isa_ok( $one, 'XXX::B' );
+            isa_ok( $one, 'XXX::C' );
+            isa_ok( $one, 'XXX::A', 'XXX::B', 'XXX::C' );
+            isa_ok( XXX::Test::Package, 'XXX::A', 'XXX::B', 'XXX::C' );
+        };
+        my $fail = capture {
+            isa_ok( XXX::Test::Package, 'XXX::A', 'XXX::B', 'XXX::C', 'XXX::D' );
+            isa_ok( $one, 'XXX::A', 'XXX::B', 'XXX::C', 'XXX::D' );
+            isa_ok( $one, 'Fake' );
+            isa_ok( 'a', 'Fake' );
+            isa_ok( [], 'Fake' );
+            isa_ok( undef, 'Fake' );
+        };
+
+        ok( $pass->[$_]->pass, "$_ passed" ) for 0 .. ( @$pass - 1 );
+        ok( !$fail->[$_]->pass, "$_ failed" ) for 0 .. ( @$fail - 1 );
+
+        is(
+            $fail->[0]->stderr->[0],
+            "'XXX::Test::Package' is not a 'XXX::D'",
+            "error msg"
+        );
+        is(
+            $fail->[1]->stderr->[0],
+            "'$one' is not a 'XXX::D'",
+            "error msg"
+        );
+        is(
+            $fail->[2]->stderr->[0],
+            "'$one' is not a 'Fake'",
+            "error msg"
+        );
+        is(
+            $fail->[3]->stderr->[0],
+            "'a' is not blessed or class name",
+            "error msg"
+        );
+        like(
+            $fail->[4]->stderr->[0],
+            qr/'ARRAY.*' is not blessed or class name/,
+            "error msg"
+        );
+        is(
+            $fail->[5]->stderr->[0],
+            "undef is not blessed or class name",
+            "error msg"
+        );
+    };
+
+    tests is_deeply => sub {
+        my $samesub = sub {1};
+        my $pass = capture {
+            is_deeply( [], [], "array" );
+            is_deeply( {}, {}, 'hash' );
+            is_deeply( "", "", "empty string" );
+            is_deeply( undef, undef, 'undef' );
+            is_deeply( 0, 0, 'zero' );
+            is_deeply( 1, 1, 'number' );
+            is_deeply( $samesub, $samesub, "subs direct" );
+            is_deeply( qr/a/, qr/a/, "direct array" );
+            is_deeply( [[]], [[]], "nested array" );
+            is_deeply( [{}], [{}], "hash in array" );
+            is_deeply(
+                { a => ['a'], h => { t => 't' }},
+                { a => ['a'], h => { t => 't' }},
+                "Structure"
+            );
+            is_deeply(
+                bless( { a => 'a' }, 'XXX' ),
+                { a => 'a' },
+                "object is hash"
+            );
+            is_deeply(
+                { a => $samesub },
+                { a => $samesub },
+                "subs depth"
+            );
+            is_deeply(
+                { a => qr/apple/ },
+                { a => qr/apple/ },
+                "Regex",
+            );
+            is_deeply(
+                { obj => bless( { a => 'a' }, 'XXX' )},
+                { obj => { a => 'a' }},
+                "object at depth",
+            );
+            is_deeply(
+                {
+                    'a' .. 'f',
+                    g => { 'x' => { 'y' => { z => [qw/a b c/]}}},
+                },
+                {
+                    'a' .. 'f',
+                    g => { 'x' => { 'y' => { z => [qw/a b c/]}}},
+                },
+                "Deep Same"
+            );
+        };
+        my $fail = capture {
+            is_deeply( 0, 1, "numeric mismatch zero" );
+            is_deeply( 2, 1, "numeric mismatch 1-2" );
+            is_deeply( undef, 0, "different false's" );
+            is_deeply( [], {}, "hash and array" );
+            is_deeply( [{}], [[]], "nesting" );
+            is_deeply( ['a'], ['b'], "array element" );
+            is_deeply( ['x', 'a', 'b'], ['x', 'c', 'd'], "multi-array-element" );
+            is_deeply(
+                { a => 'b', c => 'd', x => 'y' },
+                { e => 'f', g => 'h', x => 'y' },
+                "multi-element-hash"
+            );
+            is_deeply(
+                bless( { a => 'b' }, 'XXX' ),
+                bless( { c => 'd' }, 'YYY' ),
+                "Objects that are different",
+            );
+            is_deeply(
+                {
+                    'a' .. 'f',
+                    g => { 'x' => { 'y' => { z => [qw/a b c/]}}},
+                },
+                {
+                    'a' .. 'f',
+                    g => { 'x' => { 'y' => { z => [qw/e f g/]}}},
+                },
+                "Deep multi difference"
+            );
+            is_deeply( qr/a/, qr/b/, 'regex' );
+            is_deeply( [qr/a/], [qr/b/], 'nested regex' );
+        };
+
+        ok( $_->pass, $_->name . " passed" ) for @$pass;
+        ok( !$_->pass, $_->name . " failed" ) for @$fail;
+
+        my @errors = map { @{ $_->stderr }} @$fail;
+
+        is( $errors[0], "Expected: '1' Got: '0'", "error msg" );
+
+        is( $errors[1], "Expected: '1' Got: '2'", "error msg" );
+
+        is( $errors[2], "Expected: '0' Got: 'undef'", "error msg" );
+
+        is( $errors[3], "Expected: 'HASH' Got: 'ARRAY'", "error msg" );
+
+        is( $errors[4], "[0] Expected: 'ARRAY' Got: 'HASH'", "error msg" );
+
+        is( $errors[5], "[0] Expected: 'b' Got: 'a'", "error msg" );
+
+        is( $errors[6], "[1] Expected: 'c' Got: 'a'", "error msg 1" );
+        is( $errors[7], "[2] Expected: 'd' Got: 'b'", "error msg 2" );
+
+        is( $errors[8], "{e} Expected: 'f' Got: 'undef'", "error msg 1" );
+        is( $errors[9], "{c} Expected: 'undef' Got: 'd'", "error msg 2" );
+        is( $errors[10], "{a} Expected: 'undef' Got: 'b'", "error msg 3" );
+        is( $errors[11], "{g} Expected: 'h' Got: 'undef'", "error msg 4" );
+
+        is( $errors[12], "{c} Expected: 'd' Got: 'undef'", "error msg 1" );
+        is( $errors[13], "{a} Expected: 'undef' Got: 'b'", "error msg 2" );
+
+        is( $errors[14], "{g}{x}{y}{z}[0] Expected: 'e' Got: 'a'", "error msg 1" );
+        is( $errors[15], "{g}{x}{y}{z}[1] Expected: 'f' Got: 'b'", "error msg 2" );
+        is( $errors[16], "{g}{x}{y}{z}[2] Expected: 'g' Got: 'c'", "error msg 3" );
+
+        is( $errors[17], "Expected: '(?-xism:b)' Got: '(?-xism:a)'", "error msg" );
+        is( $errors[18], "[0] Expected: '(?-xism:b)' Got: '(?-xism:a)'", "error msg" );
+    };
 };
 
 1;
 
 __END__
 
-sub like($$;$) {
-    my ( $thing, $check, $name ) = @_;
-    my $regex = ref $check eq 'Regexp' ? $check : qr{$check};
-    my $ok = $thing =~ $check;
-    result(
-        pass => $ok,
-        name => $name,
-        $ok ? () : ( stderr => [ "$thing does not match $check" ]),
-    );
-}
-
-sub unlike($$;$) {
-    my ( $thing, $check, $name ) = @_;
-    my $regex = ref $check eq 'Regexp' ? $check : qr{$check};
-    my $ok = $thing !~ $check;
-    result(
-        pass => $ok,
-        name => $name,
-        $ok ? () : ( stderr => [ "$thing matches $check (it shouldn't)" ]),
-    );
-}
-
-sub can_ok(*;@) {
-    my ( $thing, @stuff ) = @_;
-    my $name = "$thing\->can(...)";
-    return result(
-        pass => 0,
-        name => $name,
-        stderr => ["$thing is an unblessed reference"],
-    ) if ref( $thing ) && !blessed( $thing );
-    my @err = map { $thing->can( $_ ) ? () : "$thing cannot $_"} @stuff;
-    result(
-        pass => @err ? 0 : 1,
-        name => $name,
-        stderr => \@err,
-    );
-}
-
-sub isa_ok(*@) {
-    my ( $thing, @stuff ) = @_;
-    my $name = "$thing\->isa(...)";
-    return result(
-        pass => 0,
-        name => $name,
-        stderr => ["$thing is an unblessed reference"],
-    ) if ref( $thing ) && !blessed( $thing );
-    my @err = map { $thing->isa( $_ ) ? () : "$thing is not a $_"} @stuff;
-    result(
-        pass => @err ? 0 : 1,
-        name => $name,
-        stderr => \@err,
-    );
-}
-
-sub is_deeply($$;$) {
-    my ( $have, $want, $name ) = @_;
-    return advanced_is( got => $have, want => $want, name => $name );
-}
-
 sub advanced_is {
     my %proto = @_;
-    croak( "You must specify got and want" ) unless exists $proto{ got }
+    croak( "You must specify 'got' and 'want'" ) unless exists $proto{ got }
                                                  && exists $proto{ want };
     my ( $have, $want, $name ) = @proto{qw/got want name/};
     my @err = compare( $have, $want, \%proto );
