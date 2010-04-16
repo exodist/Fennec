@@ -92,13 +92,17 @@ sub is_deeply($$;$) {
 
 sub advanced_is {
     my %proto = @_;
-    croak( "You must specify 'got' and 'want'" ) unless exists $proto{ got }
-                                                 && exists $proto{ want };
+    my @err;
+    push @err => "You must specify 'got' and 'want'" unless exists $proto{ got }
+                                                         && exists $proto{ want };
+    use Data::Dumper;
     my ( $have, $want, $name ) = @proto{qw/got want name/};
-    my @err = compare( $have, $want, \%proto );
+    unless( @err ) {
+        @err = compare( $have, $want, \%proto );
+    }
     result(
         pass => @err ? 0 : 1,
-        name => $name || undef,
+        name => $name || 'unnamed test',
         stderr => \@err,
     );
 }
@@ -110,15 +114,8 @@ sub compare($$;$) {
 
     return if !defined( $have ) && !defined( $want );
 
-    if ( !defined( $have ) || !defined( $want )) {
-        return (
-            "Expected: '"
-            . (defined( $want ) ? $want : 'undef')
-            . "' Got: '"
-            . (defined( $have ) ? $have : 'undef')
-            . "'"
-        ) if defined( $have ) || defined( $want );
-    }
+    return SCALAR_compare( \$have, \$want, $specs )
+        if ( !defined( $have ) || !defined( $want ));
 
     return SCALAR_compare( \$have, \$want, $specs )
         unless ref( $want ) || ref( $have );
@@ -129,12 +126,19 @@ sub compare($$;$) {
         unless( "$haveref" eq "$wantref" );
 
     my @err;
-    push @err => compare_bless( $have, $want )
+    push @err => _compare_bless( $have, $want )
         if $specs->{ bless };
 
     no strict 'refs';
     push @err => &{ "$haveref\_compare" }( $have, $want, $specs );
     return @err;
+}
+
+sub _compare_bless {
+    my ( $have, $want ) = @_;
+    $have = blessed( $have ) ? 'bless( $obj, "' . blessed( $have ) . '" )' : 'not blessed';
+    $want = blessed( $want ) ? 'bless( $obj, "' . blessed( $want ) . '" )' : 'not blessed';
+    return SCALAR_compare( \$have, \$want );
 }
 
 sub ARRAY_compare {
@@ -168,12 +172,12 @@ sub HASH_compare {
 }
 
 sub SCALAR_compare {
-    my ( $have, $want, $specs ) = @_;
+    my ( $have, $want ) = @_;
     $have = $$have unless (blessed( $have ) || '') eq 'Regexp';
     $want = $$want unless (blessed( $want ) || '') eq 'Regexp';
 
     return if !defined( $have ) && !defined( $want );
-    my $bad = (!$have && $want) || (!$want && $have);
+    my $bad = (defined($have) && !defined($want)) || (defined($want) && !defined($have));
     return if !$bad && "$have" eq "$want";
 
     if ( $DIFF && defined( $want ) && defined( $have )) {
@@ -191,3 +195,138 @@ sub CODE_compare {
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Fennec::Assert::Core::More - Assertion library that mirrors L<Test::More>'s
+functionality.
+
+=head1 DESCRIPTION
+
+This assertion library exports testers nearly identical to those in
+L<Test::More>. There have been a couple changes in output, and some have been
+expanded to be more flexible, however they should be almost completely
+compatible with L<Test::More>'s.
+
+=head1 TESTERS
+
+These are exported for use within tests, each one generates at least 1 result.
+
+=over 4
+
+=item is($got, $want; $name)
+
+Tests that $got == $want. Works for any scalar value, references must be the
+same reference or they will fail, if an argument is an array it will compare
+its size to the other argument.
+
+=item isnt($got, $want; $name)
+
+The inverse of is, test passes if $got and $want are not the same.
+
+=item like($got, $want; $name)
+
+Checks $got against $want, $want can be a qr// style regex, or a string which
+will be used inside a regex.
+
+=item unlike($got, $want; $name)
+
+Inverse of like, true if $got does not match $want.
+
+=item can_ok(*thing; @list )
+
+Tests that *thing is a class name, or object that implements the listed
+methods. *thing can be a bareword, the name of a class in a string, or a
+blessed object.
+
+=item isa_ok(*thing; @list )
+
+Tests that *thing is a class name, or object that has each item from @list in
+its inheritance. *thing can be a bareword, the name of a class in a string, or
+a blessed object.
+
+=item is_deeply($got, $want; $name)
+
+Compare one data structure to another. It will ignore blessed status of any
+objects. ['a'] and bless(['a'], 'XXX') will be considered the same, as will
+bless(['a'], 'XXX') and bless(['a'], 'YYY' ). CODE refs must be the same
+reference or they will fail, there is not currently a (good) way to verify 2
+CODE references are identical.
+
+=item advanced_is(got => $got, want => $want, name => $name, %options)
+
+Like is_deeply except you can pass in extra options to control comparisons.
+
+Options:
+
+    advanced_is(
+        ...
+        # Verify blessed things are blessed in both datastructures, and blessed
+        # as the same class.
+        bless => 1,
+
+        # Do not compare codereferences, just ensure both datastructures have a
+        # coderef at the same point.
+        no_code_checks => 1,
+    )
+
+=back
+
+=head1 INTERNAL API FUNCTIONS
+
+These are functions that work behind the scenes to do the tests. They may be
+useful in other assertion libraries, they are documented here for that reason,
+none are exported, you must manually import them, or use them with the fully
+qualified package name.
+
+=over 4
+
+=item @errors = compare($got, $want; $specs)
+
+Used by is_deeply() and is_advanced(). Compares the datastructures $got and
+$want and returns any differences in error form. The messages will take the
+form of a location identifier '{a}[1]{b}[4]...' showing the point in the
+datastructure that differs, followed by what was expected and what was found.
+
+$specs is a hashref containing extra arguments available to is_advanced().
+
+=item @errors = ARRAY_compare($got, $want; $specs)
+
+Used buy compare() to compare 2 arrays. Datastructures nested within the array
+will also be compared.
+
+=item @errors = HASH_compare($got, $want; $specs)
+
+Used by compare() to compare 2 hashes. Datastructures nested within the array
+will also be compared.
+
+=item @errors = SCALAR_compare(\$got, \$want)
+
+NOTE: $got and $want must be references to scalars being compared, not the
+scalars themselves.
+
+Used anywhere 2 scalars are compared, that includes qr// style regex's.
+
+=item @errors = CODE_compare($got, $want; $specs)
+
+Used by compare() to compare 2 CODE refs.
+
+=back
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

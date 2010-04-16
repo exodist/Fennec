@@ -159,6 +159,7 @@ describe 'Primary tests' => sub {
             like( 'abcd', qr/^abcd$/, 'full' );
             like( 'efgh', qr/^efgh/, 'start' );
             like( 'ijkl', qr/ijkl$/, 'end' );
+            like( 'abcd', 'abcd', 'string-not-regex' );
         };
         my $fail = capture {
             like( 'abcd', qr/efgh/, 'fail' );
@@ -179,6 +180,7 @@ describe 'Primary tests' => sub {
         my $pass = capture {
             unlike( 'abcd', qr/efgh/, 'a' );
             unlike( 'apple', qr/pear/, 'b' );
+            unlike( 'apple', 'pear', 'c' );
         };
         ok( $pass->[$_]->pass, "$_ passed" ) for 0 .. ( @$pass - 1 );
         ok( !$fail->[$_]->pass, "$_ failed" ) for 0 .. ( @$fail - 1 );
@@ -367,7 +369,7 @@ describe 'Primary tests' => sub {
 
         is( $errors[1], "Expected: '1' Got: '2'", "error msg" );
 
-        is( $errors[2], "Expected: '0' Got: 'undef'", "error msg" );
+        is( $errors[2], "Expected: '0' Got: undef", "error msg" );
 
         is( $errors[3], "Expected: 'HASH' Got: 'ARRAY'", "error msg" );
 
@@ -378,13 +380,13 @@ describe 'Primary tests' => sub {
         is( $errors[6], "[1] Expected: 'c' Got: 'a'", "error msg 1" );
         is( $errors[7], "[2] Expected: 'd' Got: 'b'", "error msg 2" );
 
-        is( $errors[8], "{e} Expected: 'f' Got: 'undef'", "error msg 1" );
-        is( $errors[9], "{c} Expected: 'undef' Got: 'd'", "error msg 2" );
-        is( $errors[10], "{a} Expected: 'undef' Got: 'b'", "error msg 3" );
-        is( $errors[11], "{g} Expected: 'h' Got: 'undef'", "error msg 4" );
+        is( $errors[8], "{e} Expected: 'f' Got: undef", "error msg 1" );
+        is( $errors[9], "{c} Expected: undef Got: 'd'", "error msg 2" );
+        is( $errors[10], "{a} Expected: undef Got: 'b'", "error msg 3" );
+        is( $errors[11], "{g} Expected: 'h' Got: undef", "error msg 4" );
 
-        is( $errors[12], "{c} Expected: 'd' Got: 'undef'", "error msg 1" );
-        is( $errors[13], "{a} Expected: 'undef' Got: 'b'", "error msg 2" );
+        is( $errors[12], "{c} Expected: 'd' Got: undef", "error msg 1" );
+        is( $errors[13], "{a} Expected: undef Got: 'b'", "error msg 2" );
 
         is( $errors[14], "{g}{x}{y}{z}[0] Expected: 'e' Got: 'a'", "error msg 1" );
         is( $errors[15], "{g}{x}{y}{z}[1] Expected: 'f' Got: 'b'", "error msg 2" );
@@ -393,112 +395,138 @@ describe 'Primary tests' => sub {
         is( $errors[17], "Expected: '(?-xism:b)' Got: '(?-xism:a)'", "error msg" );
         is( $errors[18], "[0] Expected: '(?-xism:b)' Got: '(?-xism:a)'", "error msg" );
     };
+
+    tests advanced_is => sub {
+        my $fail = capture {
+            advanced_is( name => 'no want or got' );
+            advanced_is( want => 'a', name => 'no got' );
+            advanced_is( got => 'a', name => 'no want' );
+            advanced_is( got => 'a', want => 'b', name => 'mismatch' );
+            advanced_is(
+                got => bless( [1], 'XXX' ),
+                want => bless( [1], 'YYY' ),
+                name => "blessed differently",
+                bless => 1,
+            );
+            advanced_is(
+                got => bless( [1], 'XXX' ),
+                want => [],
+                name => "want not blessed",
+                bless => 1,
+            );
+            advanced_is(
+                want => bless( [1], 'XXX' ),
+                got => [],
+                name => "got not blessed",
+                bless => 1,
+            );
+            advanced_is(
+                want => sub {1},
+                got => sub {1},
+                name => "diff sub ref",
+                no_code_checks => 0,
+            );
+            advanced_is(
+                want => sub {1},
+                got => {},
+                name => "sub and hash",
+                no_code_checks => 0,
+            );
+        };
+        my $pass = capture {
+            advanced_is( got => 'a', want => 'a', name => 'scalar' );
+            advanced_is(
+                got => bless( [1], 'XXX' ),
+                want => bless( [1], 'XXX' ),
+                name => "blessed same",
+                bless => 1,
+            );
+            advanced_is(
+                got => 'a',
+                want => 'a',
+                name => "not blessed",
+                bless => 1,
+            );
+            advanced_is(
+                want => sub {1},
+                got => sub {1},
+                name => "diff sub ref",
+                no_code_checks => 1,
+            );
+            my $sub = sub {1};
+            advanced_is(
+                want => $sub,
+                got => $sub,
+                name => "same sub ref",
+                no_code_checks => 0,
+            );
+        };
+
+        ok( $_->pass, $_->name . " passed" ) for @$pass;
+        ok( !$_->pass, $_->name . " failed" ) for @$fail;
+
+        is(
+            $fail->[0]->stderr->[0],
+            "You must specify 'got' and 'want'",
+            "correct error"
+        );
+        is(
+            $fail->[1]->stderr->[0],
+            "You must specify 'got' and 'want'",
+            "correct error"
+        );
+        is(
+            $fail->[2]->stderr->[0],
+            "You must specify 'got' and 'want'",
+            "correct error"
+        );
+        is(
+            $fail->[3]->stderr->[0],
+            "Expected: 'b' Got: 'a'",
+            "correct error"
+        );
+        is(
+            $fail->[4]->stderr->[0],
+            "Expected: 'bless( \$obj, \"YYY\" )' Got: 'bless( \$obj, \"XXX\" )'",
+            "correct error"
+        );
+        is(
+            $fail->[5]->stderr->[0],
+            "Expected: 'not blessed' Got: 'bless( \$obj, \"XXX\" )'",
+            "correct error"
+        );
+        is(
+            $fail->[5]->stderr->[1],
+            "[0] Expected: undef Got: '1'",
+            "correct error"
+        );
+        is(
+            $fail->[6]->stderr->[0],
+            "Expected: 'bless( \$obj, \"XXX\" )' Got: 'not blessed'",
+            "correct error"
+        );
+        is(
+            $fail->[6]->stderr->[1],
+            "[0] Expected: '1' Got: undef",
+            "correct error"
+        );
+        like(
+            $fail->[7]->stderr->[0],
+            qr/Expected: 'CODE\(.*\)' Got: 'CODE\(.*\)'/,
+            "correct error"
+        );
+        is(
+            $fail->[8]->stderr->[0],
+            "Expected: 'CODE' Got: 'HASH'",
+            "correct error"
+        );
+    };
+
+    tests compare_args => sub {
+        no strict 'refs';
+        my @err = &{ $CLASS . '::compare'}( 1 );
+        is( $err[0], "Not enough arguments", "Not enough arguments" );
+    };
 };
-
-1;
-
-__END__
-
-sub advanced_is {
-    my %proto = @_;
-    croak( "You must specify 'got' and 'want'" ) unless exists $proto{ got }
-                                                 && exists $proto{ want };
-    my ( $have, $want, $name ) = @proto{qw/got want name/};
-    my @err = compare( $have, $want, \%proto );
-    result(
-        pass => @err ? 0 : 1,
-        name => $name || undef,
-        stderr => \@err,
-    );
-}
-
-sub compare($$;$) {
-    my ( $have, $want, $specs ) = @_;
-    return ("Not enough arguments")
-        unless @_ > 1;
-
-    return if !defined( $have ) && !defined( $want );
-
-    if ( !defined( $have ) || !defined( $want )) {
-        return (
-            "Expected: '"
-            . (defined( $want ) ? $want : 'undef')
-            . "' Got: '"
-            . (defined( $have ) ? $have : 'undef')
-            . "'"
-        ) if defined( $have ) || defined( $want );
-    }
-
-    return SCALAR_compare( \$have, \$want, $specs )
-        unless ref( $want ) || ref( $have );
-
-    my $haveref = reftype( $have ) || $have || "undef";
-    my $wantref = reftype( $want ) || $want || "undef";
-    return ( "Expected: '$wantref' Got: '$haveref'" )
-        unless( "$haveref" eq "$wantref" );
-
-    my @err;
-    push @err => compare_bless( $have, $want )
-        if $specs->{ bless };
-
-    no strict 'refs';
-    push @err => &{ "$haveref\_compare" }( $have, $want, $specs );
-    return @err;
-}
-
-sub ARRAY_compare {
-    my ( $have, $want, $specs ) = @_;
-    my $max = @$have > @$want ? @$have : @$want;
-    my @err;
-    for my $i ( 0 .. ($max - 1)) {
-        push @err => map { "[$i] $_" }
-            compare(
-                $have->[$i] || undef,
-                $want->[$i] || undef,
-                $specs
-            );
-    }
-    return @err;
-}
-
-sub HASH_compare {
-    my ( $have, $want, $specs ) = @_;
-    my %keyholder = map {( $_ => 1 )} keys %$have, keys %$want;
-    my @err;
-    for my $key ( keys %keyholder ) {
-        push @err => map { "{'$key'} $_" }
-            compare(
-                $have->{$key} || undef,
-                $want->{$key} || undef,
-                $specs,
-            );
-    }
-    return @err;
-}
-
-sub SCALAR_compare {
-    my ( $have, $want, $specs ) = @_;
-    $have = $$have unless (blessed( $have ) || '') eq 'Regexp';
-    $want = $$want unless (blessed( $want ) || '') eq 'Regexp';
-
-    return if !defined( $have ) && !defined( $want );
-    my $bad = (!$have && $want) || (!$want && $have);
-    return if !$bad && "$have" eq "$want";
-
-    if ( $DIFF && defined( $want ) && defined( $have )) {
-        ( $want, $have ) = String::Diff::diff( $want, $have );
-    }
-    $want = defined( $want ) ? "'$want'" : 'undef';
-    $have = defined( $have ) ? "'$have'" : 'undef';
-    return ( "Expected: $want Got: $have" );
-}
-
-sub CODE_compare {
-    my ( $have, $want, $specs ) = @_;
-    return if $specs->{ no_code_checks };
-    print STDERR "C\n";
-    my $msg = "Expected: '$want' Got: '$have'";
-    return $msg unless $have == $want;
-}
 
 1;
