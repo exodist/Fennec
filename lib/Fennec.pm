@@ -9,7 +9,7 @@ use Fennec::Util::Alias qw/
     Fennec::TestFile
 /;
 
-our $VERSION = "0.013";
+our $VERSION = "0.014";
 our $TEST_CLASS;
 our @TEST_CLASS_ARGS;
 
