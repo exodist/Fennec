@@ -22,11 +22,13 @@ tests 'todo tests' => sub {
                 "Fail"
             );
         } "Havn't gotten to it yet";
+        TODO { ok( 0, 'fail' )};
     };
-    is( @$output, 4, "4 results" );
+    is( @$output, 5, "5 results" );
+    is( pop(@$output)->todo, "no reason given", "auto-todo reason" );
     is( $_->todo, "Havn't gotten to it yet", "Result has todo" )
         for @$output;
-    result_line_numbers_are( $output, map { ln($_) } -17, -16, -15, -10 );
+    result_line_numbers_are( $output, map { ln($_) } -19, -18, -17, -12 );
 
     $output = capture {
         TODO { die( 'I dies badly' )} "This will die";
@@ -74,68 +76,3 @@ tests 'ok' => sub {
 };
 
 1;
-
-__END__
-
-tester 'require_ok';
-sub require_ok(*) {
-    my ( $package ) = @_;
-    try {
-        eval "require $package" || die( $@ );
-        result(
-            pass => 1,
-            name => "require $package",
-        );
-    }
-    catch {
-        result(
-            pass => 0,
-            name => "require $package",
-            stdout => [ $_ ],
-        );
-    };
-};
-
-tester 'use_into_ok';
-sub use_into_ok(**;@) {
-    my ( $from, $to, @importargs ) = @_;
-    my $run = "package $to; $from->import";
-    $run .= '(@_)' if @importargs;
-    try {
-        eval "require $from; 1" || die( $@ );
-        eval "$run; 1" || die( $@ );
-        result(
-            pass => 1,
-            name => "$from\->import(...)",
-        );
-    }
-    catch {
-        return result(
-            pass => 0,
-            name => "$from\->import(...)",
-            stdout => [ $_ ],
-        );
-    }
-};
-
-tester use_ok => sub(*) {
-    my( $from, @importargs ) = @_;
-    my $caller = caller;
-    use_into_ok( $from, $caller, @importargs );
-};
-
-1;
-
-=head1 AUTHORS
-
-Chad Granum L<exodist7@gmail.com>
-
-=head1 COPYRIGHT
-
-Copyright (C) 2010 Chad Granum
-
-Fennec is free software; Standard perl licence.
-
-Fennec is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the license for more details.

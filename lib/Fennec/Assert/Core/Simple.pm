@@ -33,54 +33,55 @@ tester ok => sub {
     );
 };
 
-tester 'require_ok';
-sub require_ok(*) {
-    my ( $package ) = @_;
-    try {
-        eval "require $package" || die( $@ );
-        result(
-            pass => 1,
-            name => "require $package",
-        );
-    }
-    catch {
-        result(
-            pass => 0,
-            name => "require $package",
-            stderr => [ $_ ],
-        );
-    };
-};
-
-tester 'use_into_ok';
-sub use_into_ok(**;@) {
-    my ( $from, $to, @importargs ) = @_;
-    my $run = "package $to; $from->import";
-    $run .= '(@_)' if @importargs;
-    try {
-        eval "require $from; 1" || die( $@ );
-        eval "$run; 1" || die( $@ );
-        result(
-            pass => 1,
-            name => "$from\->import(...)",
-        );
-    }
-    catch {
-        return result(
-            pass => 0,
-            name => "$from\->import(...)",
-            stderr => [ $_ ],
-        );
-    }
-};
-
-tester use_ok => sub(*) {
-    my( $from, @importargs ) = @_;
-    my $caller = caller;
-    use_into_ok( $from, $caller, @importargs );
-};
-
 1;
+
+=pod
+
+=head1 NAME
+
+Fennec::Assert::Core::Simple - Assertion library that mirrors L<Test::Simple>'s
+functionality.
+
+=head1 DESCRIPTION
+
+This assertion library exports testers nearly identical to those in
+L<Test::Simple>. they should be almost completely compatible with
+L<Test::Simple>'s.
+
+=head1 TESTERS
+
+These are exported for use within tests, each one generates at least 1 result.
+
+=over 4
+
+=item ok($bool; $name)
+
+Generates a pass result if $bool is true, fail if $bool is false, $name is
+optional but recommended.
+
+=back
+
+=head1 UTILS
+
+These utils are exported in addition to the testers, they do not produce any
+results.
+
+=over 4
+
+=item TODO(sub { ... }; $reason)
+
+=item TODO { ... } $reason
+
+=item TODO { ... }
+
+Run the code block, any results generated within will be marked as todo. This
+means any failures will not lead to an overall suite failure.
+
+=item diag( @messages )
+
+Generate a diagnostics message.
+
+=back
 
 =head1 AUTHORS
 
