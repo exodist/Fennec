@@ -171,6 +171,8 @@ sub HASH_compare {
     return @err;
 }
 
+sub REGEXP_compare { goto &SCALAR_compare }
+
 sub SCALAR_compare {
     my ( $have, $want ) = @_;
     $have = $$have unless (blessed( $have ) || '') eq 'Regexp';

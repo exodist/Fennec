@@ -32,7 +32,7 @@ tests error_tests => sub {
     ok( !eval 'package main; use Fennec; 1', "Fail in main" );
     like( $@, qr/You must put your tests into a package, not main/, "Proper error" );
 
-    throws_ok { Fennec::export_package_to( 'FAKEPACKAGE' )}
+    throws_ok { Fennec::_export_package_to( 'FAKEPACKAGE' )}
         qr/Can't locate FAKEPACKAGE\.pm in \@INC/,
         "Cannot export from invalid package";
 };

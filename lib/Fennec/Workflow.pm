@@ -181,7 +181,7 @@ sub build {
 sub _build_as_root {
     my $self = shift;
     my $tclass = $self->run_method_as_current( $self->method );
-    my %args = Fennec->test_class_args;
+    my %args = Fennec->_test_class_args;
     my $constructor = delete $args{ constructor };
     $self->parent( $tclass->fennec_new(
         constructor => $constructor,

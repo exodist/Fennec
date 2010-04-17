@@ -13,9 +13,9 @@ our $VERSION = "0.014";
 our $TEST_CLASS;
 our @TEST_CLASS_ARGS;
 
-sub clear_test_class { $TEST_CLASS = undef }
-sub test_class { $TEST_CLASS }
-sub test_class_args { @TEST_CLASS_ARGS }
+sub _clear_test_class { $TEST_CLASS = undef }
+sub _test_class { $TEST_CLASS }
+sub _test_class_args { @TEST_CLASS_ARGS }
 
 sub import {
     my $class = shift;
@@ -47,20 +47,20 @@ sub import {
         push @{ $caller . '::ISA' } => TestFile;
     }
 
-    export_package_to( 'Fennec::TestSet', $caller );
+    _export_package_to( 'Fennec::TestSet', $caller );
 
     $workflows ||= Runner->default_workflows || [];
-    export_package_to( 'Fennec::Workflow::' . $_, $caller )
+    _export_package_to( 'Fennec::Workflow::' . $_, $caller )
         for @$workflows;
 
     $asserts ||= Runner->default_asserts || [ qw/ Core / ];
-    export_package_to( 'Fennec::Assert::' . $_, $caller )
+    _export_package_to( 'Fennec::Assert::' . $_, $caller )
         for @$asserts;
 
     1;
 }
 
-sub export_package_to {
+sub _export_package_to {
     my ( $from, $to ) = @_;
     die( $@ ) unless eval "require $from; 1";
     $from->export_to( $to );
