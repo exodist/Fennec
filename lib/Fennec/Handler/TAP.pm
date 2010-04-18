@@ -24,19 +24,6 @@ sub init {
     }
 }
 
-sub count {
-    my $self = shift;
-    $self->{ count } ||= 1;
-    my $num = $self->{ count }++;
-    sprintf( "%.4d", $num );
-}
-
-sub output {
-    my $self = shift;
-    my $type = shift;
-    $self->{ $type }->( @_ );
-}
-
 sub handle {
     my $self = shift;
     my ( $item ) = @_;
@@ -61,8 +48,56 @@ sub result {
     my ( $result ) = @_;
     return unless $result;
 
-    my $out = (($result->pass || $result->skip) ? 'ok ' : 'not ok ' ) . $self->count . " -";
-    my $bma = $result->benchmark;
+    $self->_result_line( $result );
+    $self->_result_diag( $result );
+}
+
+sub stdout {
+    my $self = shift;
+    for my $msg ( @_ ) {
+        chomp( my $out = $msg );
+        $self->_output( 'out_std', "# $out" );
+    }
+}
+
+sub stderr {
+    my $self = shift;
+    for my $msg ( @_ ) {
+        chomp( my $out = $msg );
+        $self->_output( 'out_err', "# $out" );
+    }
+}
+
+sub finish {
+    my $self = shift;
+    $self->_output( 'out_std', '1..' . ($self->_count - 1));
+}
+
+sub fennec_error {
+    my $self = shift;
+    $self->output(
+        'out_std',
+        "not ok " . $self->_count . " - Fennec Internal error"
+    );
+    $self->stderr( $_ ) for ( @_ );
+}
+
+sub _count {
+    my $self = shift;
+    $self->{ count } ||= 1;
+    my $num = $self->{ count }++;
+    sprintf( "%.4d", $num );
+}
+
+sub _output {
+    my $self = shift;
+    my $type = shift;
+    $self->{ $type }->( @_ );
+}
+
+sub _benchmark {
+    my $self = shift;
+    my ( $bma ) = @_;
     my $bm = $bma ? $bma->[0] : "N/A  ";
     my $template = '[% 6s]';
 
@@ -80,16 +115,47 @@ sub result {
         }
     }
 
-    $out .= sprintf( " $template", $bm );
+    return sprintf( $template, $bm );
+}
 
-    $out .= " " . $result->name if $result->name;
+sub _status {
+    my $self = shift;
+    my ( $result ) = @_;
+    return ($result->pass || $result->skip) ? 'ok' : 'not ok';
+}
+
+sub _postfix {
+    my $self = shift;
+    my ( $result ) = @_;
+
     if ( my $todo = $result->todo ) {
-        $out .= " # TODO $todo";
+        return "# TODO $todo";
     }
     elsif ( my $skip = $result->skip ) {
-        $out .= " # SKIP $skip";
+        return "# SKIP $skip";
     }
-    $self->output( 'out_std', $out );
+
+    return "";
+}
+
+sub _result_line {
+    my $self = shift;
+    my ( $result ) = @_;
+
+    my $status = $self->_status( $result );
+    my $count = $self->_count;
+    my $benchmark = $self->_benchmark( $result->benchmark );
+    my $name = $result->name || "[UNNAMED TEST]";
+    my $postfix = $self->_postfix( $result );
+    my $out = join( ' ', $status, $count, $benchmark, '-', $name, $postfix );
+
+    $self->_output( 'out_std', $out );
+}
+
+sub _result_diag {
+    my $self = shift;
+    my ( $result ) = @_;
+
     if ( $result->fail && !$result->todo && !$result->skip ) {
         if ( $result->file ) {
             my $error = "Test failure at " . $result->file;
@@ -99,41 +165,13 @@ sub result {
         $self->stderr( "Workflow Stack: " . join( ', ', @{ $result->workflow_stack }))
             if $result->workflow_stack;
     }
+
     if( my $stdout = $result->stdout ) {
         $self->stdout( $_ ) for @$stdout;
     }
+
     if( my $stderr = $result->stderr ) {
         $self->stderr( $_ ) for @$stderr;
-    }
-}
-
-sub stdout {
-    my $self = shift;
-    for my $msg ( @_ ) {
-        chomp( my $out = $msg );
-        $self->output( 'out_std', "# $out" );
-    }
-}
-
-sub stderr {
-    my $self = shift;
-    for my $msg ( @_ ) {
-        chomp( my $out = $msg );
-        $self->output( 'out_err', "# $out" );
-    }
-}
-
-sub finish {
-    my $self = shift;
-    $self->output( 'out_std', '1..' . ($self->count - 1));
-}
-
-sub fennec_error {
-    my $self = shift;
-    for my $msg ( @_ ) {
-        my $out = "not ok " . $self->count . " - Fennec Internal error";
-        $self->stdout( $out );
-        $self->stderr( $msg );
     }
 }
 

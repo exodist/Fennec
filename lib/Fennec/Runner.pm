@@ -153,7 +153,10 @@ sub reset_benchmark {
 sub benchmark {
     my $self = shift;
     my $old = $self->_benchmark_time;
-    return unless $old;
+    unless ($old) {
+        $self->reset_benchmark;
+        return;
+    }
     my $new = $self->reset_benchmark;
     return [( $new - $old )];
 }

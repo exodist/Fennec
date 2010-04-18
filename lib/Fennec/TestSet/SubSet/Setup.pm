@@ -24,7 +24,7 @@ sub run {
         $self->run_on( $self->testfile );
     }
     catch {
-        Diag->new( stdout => [ $self->name . " error: $_" ])->write
+        Diag->new( stderr => [ $self->name . " error: $_" ])->write
     };
 }
 

@@ -100,7 +100,7 @@ sub warnings_exist(&$;$) {
         stderr => [
             @missing ? ( "Missing warnings:", map { "\t$_" } @missing )
                      : (),
-            @extra ? ( "Extra warnings (not an error):", map { "\t$_" } @extra )
+            (@missing && @extra) ? ( "Extra warnings (not an error):", map { "\t$_" } @extra )
                    : (),
         ]
     );
