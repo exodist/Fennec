@@ -1,14 +1,8 @@
-package Fennec::Manual::Handlers;
-use strict;
-use warnings;
-
-1;
-
-__END__
+=pod
 
 =head1 NAME
 
-Fennec::Manual::Handlers - Writing Custom Result Handlers.
+Fennec::Manual::Files - Writing Custom File Loaders.
 
 =head1 EARLY VERSION WARNING
 

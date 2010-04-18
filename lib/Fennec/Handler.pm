@@ -11,7 +11,8 @@ sub new {
 }
 
 sub handle {
-    my $class = shift;
+    my $in = shift;
+    my $class = ref( $in ) || $in;
     die( "$class does not implement result()" );
 }
 

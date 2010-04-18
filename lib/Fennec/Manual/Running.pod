@@ -1,14 +1,8 @@
-package Fennec::Manual::Files;
-use strict;
-use warnings;
-
-1;
-
-__END__
+=pod
 
 =head1 NAME
 
-Fennec::Manual::Files - Writing Custom File Loaders.
+Fennec::Manual::Running - Tips for running fennec
 
 =head1 EARLY VERSION WARNING
 

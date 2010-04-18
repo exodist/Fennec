@@ -110,114 +110,109 @@ tests 'finish' => sub {
     $one->_count for 1 .. 5;
     $one->finish;
     is( $out, '1..5', "Test count" );
+};
 
+tests 'internal error' => sub {
+    my ( $err, $out );
+    my $one = $CLASS->new( out_std => sub { ($out) = @_ }, out_err => sub { ($err) = @_ });
+    $one->fennec_error( 'a' );
+    is( $out, "not ok 0001 - Fennec Internal error", "Internal error is not ok" );
+    is( $err, '# a', "Show error" );
+};
+
+tests 'benchmark string' => sub {
+    my $one = $CLASS->new;
+    is( $one->_benchmark(), '[ N/A  ]', "no benchmark" );
+    is( $one->_benchmark([0.0002]), '[0.0002]', "fraction of a second" );
+    is( $one->_benchmark([0.1]), '[0.1000]', "10'th of a second" );
+    is( $one->_benchmark([1]), '[1.0000]', "second" );
+    is( $one->_benchmark([10]), '[10.000]', "10 seconds" );
+    is( $one->_benchmark([99]), '[99.000]', "> 10 seconds" );
+    is( $one->_benchmark([100]), '[000100]', "100 seconds" );
+    is( $one->_benchmark([999]), '[000999]', "> 100 seconds" );
+    is( $one->_benchmark([100000]), '[100000]', "6 digits" );
+    is( $one->_benchmark([1000000]), '[1000000]', "7 digits" );
+};
+
+tests status => sub {
+    my $one = $CLASS->new;
+    is(
+        $one->_status( Result->new( pass => 1 )),
+        "ok",
+        "Pass is 'ok'"
+    );
+    is(
+        $one->_status( Result->new( pass => 0 )),
+        "not ok",
+        "Fail is 'not ok'"
+    );
+    is(
+        $one->_status( Result->new( pass => 0, skip => 1 )),
+        "ok",
+        "skip is 'ok'"
+    );
+    is(
+        $one->_status( Result->new( pass => 0, todo => 1 )),
+        "not ok",
+        "Skip is 'not ok'"
+    );
+    is(
+        $one->_status( Result->new( pass => 1, todo => 1 )),
+        "ok",
+        "Pass todo is 'ok'"
+    );
+};
+
+tests postfix => sub {
+    my $one = $CLASS->new;
+    is(
+        $one->_postfix( Result->new( todo => "aaa" )),
+        "# TODO aaa",
+        "TODO"
+    );
+    is(
+        $one->_postfix( Result->new( skip => "aaa" )),
+        "# SKIP aaa",
+        "skip"
+    );
+    is(
+        $one->_postfix( Result->new()),
+        "",
+        "none is empty string"
+    );
+};
+
+tests result_line => sub {
+    my ( $err, $out );
+    my $one = $CLASS->new( out_std => sub { ($out) = @_ }, out_err => sub { ($err) = @_ });
+    $one->_result_line( Result->new( pass => 1, name => 'hello world' )),
+    like(
+        $out,
+        qr/ok 0001 \[[\d.]+\] - hello world/,
+        "result line"
+    );
+};
+
+tests 'result diag' => sub {
+    my ( $err, $out );
+    my $one = $CLASS->new( out_std => sub { ($out) = @_ }, out_err => sub { ($err) = @_ });
+    $one->_result_diag( Result->new( pass => 1, stderr => [ 'a' ], stdout => [ 'b' ] ));
+    is( $err, '# a', "stderr" );
+    is( $out, '# b', "stdout" );
+
+    $one->_result_diag( Result->new( pass => 0, file => 'a', line => 1 ));
+    is( $err, "# Test failure at a line 1", "failure diag" );
+
+    $err = undef;
+    $one->_result_diag( Result->new( pass => 0, file => 'a', line => 1, todo => 1 ));
+    is( $err, undef, "failure diag todo" );
+
+    $err = undef;
+    $one->_result_diag( Result->new( pass => 0, file => 'a', line => 1, skip => 1 ));
+    is( $err, undef, "failure diag skip" );
+
+    $one->_result_diag( Result->new( pass => 0, workflow_stack => [ 'a', 'b', 'c' ]));
+    is( $err, "# Workflow Stack: a, b, c", "workflow stack" );
 };
 
 1;
-
-__END__
-
-sub fennec_error {
-    my $self = shift;
-    for my $msg ( @_ ) {
-        my $out = "not ok " . $self->_count . " - Fennec Internal error";
-        $self->stdout( $out );
-        $self->stderr( $msg );
-    }
-}
-
-sub _benchmark {
-    my $self = shift;
-    my ( $bma ) = @_;
-    my $bm = $bma ? $bma->[0] : "N/A  ";
-    my $template = '[% 6s]';
-
-    # If we got a number (including -e notation)
-    if ( $bm =~ m/^[\d\.e\-]+$/ ) {
-        if ( $bm >= 100 ) {
-            $bm = int( $bm );
-            $template = '[%06s]';
-        }
-        elsif ($bm < 10) {
-            $template = '[%1.4f]';
-        }
-        elsif ( $bm < 100 ) {
-            $template = '[%2.3f]';
-        }
-    }
-
-    return sprintf( $template, $bm );
-}
-
-sub _status {
-    my $self = shift;
-    my ( $result ) = @_;
-    return ($result->pass || $result->skip) ? 'ok' : 'not ok';
-}
-
-sub _postfix {
-    my $self = shift;
-    my ( $result ) = @_;
-
-    if ( my $todo = $result->todo ) {
-        return "# TODO $todo";
-    }
-    elsif ( my $skip = $result->skip ) {
-        return "# SKIP $skip";
-    }
-
-    return "";
-}
-
-sub _result_line {
-    my $self = shift;
-    my ( $result ) = @_;
-
-    my $status = $self->_status( $result );
-    my $count = $self->_count;
-    my $benchmark = $self->_benchmark( $result->benchmark );
-    my $name = $result->name || "[UNNAMED TEST]";
-    my $postfix = $self->_postfix( $result );
-    my $out = join( ' ', $status, $count, $benchmark, '-', $name, $postfix );
-
-    $self->_output( 'out_std', $out );
-}
-
-sub _result_diag {
-    my $self = shift;
-    my ( $result ) = @_;
-
-    if ( $result->fail && !$result->todo && !$result->skip ) {
-        if ( $result->file ) {
-            my $error = "Test failure at " . $result->file;
-            $error .= " line " . $result->line if $result->line;
-            $self->stderr( $error );
-        }
-        $self->stderr( "Workflow Stack: " . join( ', ', @{ $result->workflow_stack }))
-            if $result->workflow_stack;
-    }
-
-    if( my $stdout = $result->stdout ) {
-        $self->stdout( $_ ) for @$stdout;
-    }
-
-    if( my $stderr = $result->stderr ) {
-        $self->stderr( $_ ) for @$stderr;
-    }
-}
-
-1;
-
-=head1 AUTHORS
-
-Chad Granum L<exodist7@gmail.com>
-
-=head1 COPYRIGHT
-
-Copyright (C) 2010 Chad Granum
-
-Fennec is free software; Standard perl licence.
-
-Fennec is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the license for more details.

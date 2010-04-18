@@ -1,0 +1,31 @@
+package TEST::Fennec::Handler::TAP;
+use strict;
+use warnings;
+
+use Fennec;
+use Fennec::Util::Alias qw/
+    Fennec::Output::Result
+    Fennec::Output::Diag
+/;
+
+our $CLASS = 'Fennec::Handler';
+use_ok $CLASS;
+
+tests 'create' => sub {
+    my $one = $CLASS->new( out_std => sub {}, out_err => sub {} );
+    isa_ok( $one, $CLASS );
+    can_ok( $one, qw/handle fennec_error finish/ );
+    lives_ok {
+        $one->$_ for qw/finish start bail_out fennec_error/;
+    } "stubs";
+    throws_ok {
+        $one->handle
+    } "$CLASS does not implement result()",
+      "handle is abstract";
+    throws_ok {
+        $CLASS->handle
+    } "$CLASS does not implement result()",
+      "handle is abstract";
+};
+
+1;

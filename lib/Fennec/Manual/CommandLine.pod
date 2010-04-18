@@ -1,14 +1,8 @@
-package Fennec::Manual::Vim;
-use strict;
-use warnings;
-
-1;
-
-__END__
+=pod
 
 =head1 NAME
 
-Fennec::Manual::Vim - Vim rc files and tools provided with Fennec.
+Fennec::Manual::CommandLine - Fennec Command Line Tools.
 
 =head1 EARLY VERSION WARNING
 

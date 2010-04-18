@@ -1,14 +1,8 @@
-package Fennec::Manual::TBAssertions;
-use strict;
-use warnings;
-
-1;
-
-__END__
+=pod
 
 =head1 NAME
 
-Fennec::Manual - Wrapping Test::Builder based tools for use in Fennec.
+Fennec::Manual::Handlers - Writing Custom Result Handlers.
 
 =head1 EARLY VERSION WARNING
 

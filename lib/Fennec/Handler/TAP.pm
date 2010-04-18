@@ -75,7 +75,7 @@ sub finish {
 
 sub fennec_error {
     my $self = shift;
-    $self->output(
+    $self->_output(
         'out_std',
         "not ok " . $self->_count . " - Fennec Internal error"
     );
@@ -110,7 +110,7 @@ sub _benchmark {
         elsif ($bm < 10) {
             $template = '[%1.4f]';
         }
-        elsif ( $bm < 100 ) {
+        else { # ( $bm < 100 )
             $template = '[%2.3f]';
         }
     }
