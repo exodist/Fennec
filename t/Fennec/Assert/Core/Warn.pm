@@ -77,15 +77,15 @@ tests 'warnings like' => sub {
     ok( !$res->[2]->pass, "Third fails" );
     is(
         $res->[1]->stderr->[0],
-        "'abble at /home/exodist/Projects/Fennec/t/Fennec/Assert/Core/Warn.pm line 58.\n' does not match '(?-xism:^apple)'",
+        "'abble at " . __FILE__ . " line 58.\n' does not match '(?-xism:^apple)'",
         "msg"
     );
     is_deeply(
         $res->[2]->stderr,
         [
             "Wrong number of warnings:",
-            "\tbear at /home/exodist/Projects/Fennec/t/Fennec/Assert/Core/Warn.pm line 67.\n",
-            "\tcapooza at /home/exodist/Projects/Fennec/t/Fennec/Assert/Core/Warn.pm line 68.\n",
+            "\tbear at " . __FILE__ . " line 67.\n",
+            "\tcapooza at " . __FILE__ . " line 68.\n",
         ],
         "messages",
     );
