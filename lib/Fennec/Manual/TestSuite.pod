@@ -7,7 +7,7 @@ Fennec::Manual::TestSuite - Quick guide to managing a test suite with L<Fennec>
 =head1 DESCRIPTION
 
 This guide will get you started writing a L<Fennec> based test suite for your
-dist. The first step is to generate the boilerplate t/fennec.t file. I suitable
+dist. The first step is to generate the boilerplate t/fennec.t file. A suitable
 default can be generated using the fennec_init command within your project
 directory.
 
@@ -24,14 +24,20 @@ This should have created t/Fennec.t, here is an example:
     use Cwd;
     use Fennec::Runner;
     'Fennec::Runner'->init(
+        random     => 1,
+        cull_delay => .01,
+
         parallel_files => 2,
         parallel_tests => 2,
-        handlers => [qw/ TAP /],
-        random => 1,
+
         Collector => 'Files',
-        ignore => undef,
-        filetypes => [qw/ Module /],
-        default_asserts => [qw/ Core /],
+
+        default_asserts   => [qw/ Core /],
+        default_workflows => [qw/ Spec Case /],
+        handlers          => [qw/ TAP /],
+        filetypes         => [qw/ Module /],
+        ignore            => undef,
+
         $ENV{ FENNEC_FILE } ? ( files => [ cwd() . '/' . $ENV{ FENNEC_FILE }]) : (),
         $ENV{ FENNEC_ITEM } ? ( search => $ENV{ FENNEC_ITEM }) : (),
     );
@@ -47,6 +53,8 @@ This file serves multiple purposes:
 This is where you configure the Runner than runs all the fennec tests. Other
 fennec tools will look for this file and use the configuration it provides.
 fennec_prove is one example of a tool that uses this config.
+
+See the section CONFIGURATION DETAILS, or the docs for L<Fennec::Runner> for more details on arguments for Fennec::Runner->init;
 
 =item Works with prove
 
@@ -79,9 +87,30 @@ t/MyPackage/MyThing.pm:
 
     use Fennec;
 
+    # Tests can be placed outside of groups
+    # (It is recommended that most if not all your tests go into groups)
+    use_ok( 'MyPackage::MyThing' );
+
+    # Define a test group:
     tests 'load MyThing' => sub {
         my $self = shift;
         require_ok MyPackage::MyThing;
+    };
+
+    # Use the Spec workflow:
+    describe 'my group' => sub {
+        my $self = shift;
+
+        before_each { $self->reset };
+
+        # 'it()' is an alias to 'tests()'
+        it 'my test' => sub {
+            my $self = shift;
+            ok( 1, 'spec test!' );
+        };
+
+        # Nested!
+        describe ...;
     };
 
     1;
@@ -117,10 +146,90 @@ You can also directly use assert packages:
 
 =item Choosing workflow plugins
 
+    use Fennec workflows => [ 'Spec' ]
+
+You can also directly use workflow packages:
+
+    use Fennec::Workflow::Spec;
+
 =back
 
-=head1 ADVANCED CONFIGURATION
+=head1 CONFIGURATION DETAILS
 
+=over 4
+
+=item random => $bool
+
+Set to true to randomze test file order and test group order, this can be
+overriden within test files.
+
+=item cull_delay => $float
+
+How long to wait between checking for test results. Result are generated in
+other processes and must be collected regularly, this sets how often that will
+occur. Higher numbers mean results are printed less often, but more at a time.
+
+=item Collector => $name
+
+=item default_asserts => \@names
+
+=item default_workflows => \@names
+
+=item handlers => \@names
+
+=item filetypes => \@names
+
+=item ignore => \@patterns || undef
+
+=back
+
+=head2 Parallelization
+
+Note, to calculate how many processes might run at a time you use this
+formula:
+
+    $max_processes = 1 +
+                    ( $parallel_files >= 2
+                        ? $parallel_files
+                        : 0
+                    ) +
+                    ( $parallel_tests
+                        ? $parallel_files * $parallel_tests
+                        : 0
+                    );
+
+This is because Fennec itself is a process, then it starts a process for each
+test file, then it starts a process for each test group. If one of these
+options is set to 1 then no new processes will be created for it. If both are
+set to 1 then Fennec will only ever have one process.
+
+=over
+
+=item parallel_files => $int
+
+How many files to run in parallel, do not set this too high.
+
+=item parallel_tests => $int
+
+How many test grousp to run in parallel, do not set this too high.
+
+=back
+
+=head2 Special Entities
+
+=over 4
+
+=item files => \@list
+
+$ENV{ FENNEC_FILE } ? ( files => [ cwd() . '/' . $ENV{ FENNEC_FILE }]) : (),
+
+=item item => $line_number
+
+=item item => $group_name
+
+$ENV{ FENNEC_ITEM } ? ( search => $ENV{ FENNEC_ITEM }) : (),
+
+=back
 
 =head1 SKIP AND TODO
 
