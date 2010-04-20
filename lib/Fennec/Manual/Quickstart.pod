@@ -6,6 +6,21 @@ Fennec::Manual::Quickstart - Quick guide to immediate fennec usage.
 
 =head1 DESCRIPTION
 
+=head1 NOTE ON STANDALONE
+
+This is documentation for a standalone test, that is a test that does not
+require anything outside each test file. This is perfectly acceptable, but not
+ideal. I recommend reading L<Fennec::Manual::TestSuite> to create a fennec
+config file and write tests that require less boilderplate.
+
+Another consequence of standalone tests is a loss of parallelization, and the
+overhead of loading fennec for each standlone test. When fennec is used to
+manage a suite it is loaded only once, and it can parallelize running fo both
+test files and test groups.
+
+Once again, L<Fennec::Manual::TestSuite> can get you started using Fennec to
+manage a whole suite of test files.
+
 =head1 SYNOPSIS
 
 This is a very simple test written in fennec, in fact the first test written in
@@ -19,7 +34,8 @@ t/fennec-standalone.t:
     use warnings;
     use Fennec standalone => {};
 
-    start(); #This can go anywhere, but must be called.
+    # This must go before any tests
+    start();
 
     sub Fennec {
         my $class = shift;
@@ -32,7 +48,7 @@ t/fennec-standalone.t:
 
     1;
 
-Breakdown:
+=head2 Breakdown
 
 =over 4
 
@@ -50,7 +66,8 @@ configure the fennec runner. Most of the time you can leave this hash empty.
 
 Fennec cannot start until your package has been completely loaded. As such your
 standalone must call start(). I appologise for the boilderplate, it is safer
-than an END block.
+than an END block. This is not necessary when you use Fennec to manage an
+entire suite instead of standalone files.
 
 =item sub Fennec { ... }
 

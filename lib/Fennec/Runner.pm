@@ -23,7 +23,7 @@ use List::Util qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/files p_files p_tests threader ignore random pid parent_pid collector search default_asserts default_workflows _benchmark_time/;
+Accessors qw/files parallel_files parallel_tests threader ignore random pid parent_pid collector search default_asserts default_workflows _benchmark_time/;
 
 our $SINGLETON;
 
@@ -54,8 +54,8 @@ sub init {
         unless @files;
     @files = shuffle @files if $random;
 
-    $proto{ p_files } = 2 unless defined $proto{ p_files };
-    $proto{ p_tests } = 2 unless defined $proto{ p_tests };
+    $proto{ parallel_files } = 2 unless defined $proto{ parallel_files };
+    $proto{ parallel_tests } = 2 unless defined $proto{ parallel_tests };
     $proto{ cull_delay } = 0.1 unless $proto{ cull_delay };
 
     $SINGLETON = bless(
@@ -64,7 +64,7 @@ sub init {
             random      => $random,
             files       => \@files,
             collector   => $collector,
-            threader    => Parallel::Runner->new( $proto{ p_files }) || die( "No threader" ),
+            threader    => Parallel::Runner->new( $proto{ parallel_files }) || die( "No threader" ),
             parent_pid  => $$,
             pid         => $$,
         },

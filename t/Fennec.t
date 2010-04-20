@@ -9,8 +9,8 @@ use Fennec::Util::Alias qw/
 /;
 
 'Fennec::Runner'->init(
-    p_files => 2,
-    p_tests => 2,
+    parallel_files => 2,
+    parallel_tests => 2,
     cull_delay => .01,
     handlers => [qw/ TAP /],
     random => 1,

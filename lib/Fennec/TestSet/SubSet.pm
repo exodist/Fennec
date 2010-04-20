@@ -43,7 +43,7 @@ sub lines_for_filter {
 
 sub run {
     my $self = shift;
-    return Result->skip_testset( $self, $self->skip )
+    return Result->skiparallel_testset( $self, $self->skip )
         if $self->skip;
 
     $self->run_setups;

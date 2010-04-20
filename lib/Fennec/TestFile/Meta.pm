@@ -38,7 +38,7 @@ sub new {
             workflow    => $workflow,
             file        => $file,
             threader    => Parallel::Runner->new(
-                $proto{ no_fork } ? 1 : Runner->p_tests
+                $proto{ no_fork } ? 1 : Runner->parallel_tests
             ),
             skip        => $skip || undef,
             todo        => $todo || undef,
