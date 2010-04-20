@@ -12,6 +12,7 @@ use Fennec::Util::Accessors;
 use Try::Tiny;
 use Parallel::Runner;
 use Carp;
+use Digest::MD5 qw/md5_hex/;
 
 use Fennec::Util::Alias qw/
     Fennec::FileLoader
@@ -23,7 +24,10 @@ use List::Util qw/shuffle/;
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/files parallel_files parallel_tests threader ignore random pid parent_pid collector search default_asserts default_workflows _benchmark_time/;
+Accessors qw/
+    files parallel_files parallel_tests threader ignore random pid parent_pid
+    collector search default_asserts default_workflows _benchmark_time seed
+/;
 
 our $SINGLETON;
 
@@ -32,6 +36,8 @@ sub alias { $SINGLETON }
 sub init {
     my $class = shift;
     my %proto = @_;
+    my $seed = $ENV{ FENNEC_SEED } || (( unpack "%L*", md5_hex( time * $$ )) ^ $$ );
+    srand( $seed );
 
     croak( 'Fennec::Runner has already been initialized' )
         if $SINGLETON;
@@ -67,10 +73,12 @@ sub init {
             threader    => Parallel::Runner->new( $proto{ parallel_files }) || die( "No threader" ),
             parent_pid  => $$,
             pid         => $$,
+            seed        => $seed,
         },
         $class
     );
     $SINGLETON->threader->iteration_delay( $proto{ cull_delay });
+    srand( $SINGLETON->seed );
 }
 
 sub start {
@@ -80,8 +88,10 @@ sub start {
     $self->threader->iteration_callback( sub { $self->collector->cull });
 
     for my $file ( @{ $self->files }) {
+        srand( $self->seed );
         $self->threader->run( sub {
             try {
+                $self->reset_benchmark;
                 my $workflow = Fennec::Workflow->new(
                     $file->filename,
                     method => sub { shift->file->load },
@@ -103,6 +113,7 @@ sub start {
                 try {
                     $workflow->build_children;
                     my $benchmark = timeit( 1, sub {
+                        $self->reset_benchmark;
                         $workflow->run_tests( $self->search )
                     });
                 }
@@ -159,6 +170,21 @@ sub benchmark {
     }
     my $new = $self->reset_benchmark;
     return [( $new - $old )];
+}
+
+sub DESTROY {
+    my $self = shift;
+    return if $self->is_subprocess;
+    print STDERR <<EOT
+
+
+=====================================
+The ordering of this run can be reproduced using the seed: @{[ $self->seed ]}
+Example: \$ FENNEC_SEED='@{[ $self->seed ]}' prove -I lib t/Fennec.t
+=====================================
+
+
+EOT
 }
 
 1;

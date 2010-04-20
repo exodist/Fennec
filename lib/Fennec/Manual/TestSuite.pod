@@ -54,7 +54,8 @@ This is where you configure the Runner than runs all the fennec tests. Other
 fennec tools will look for this file and use the configuration it provides.
 fennec_prove is one example of a tool that uses this config.
 
-See the section CONFIGURATION DETAILS, or the docs for L<Fennec::Runner> for more details on arguments for Fennec::Runner->init;
+See the section CONFIGURATION DETAILS, or the docs for L<Fennec::Runner> for
+more details on arguments for Fennec::Runner->init;
 
 =item Works with prove
 
@@ -146,7 +147,7 @@ You can also directly use assert packages:
 
 =item Choosing workflow plugins
 
-    use Fennec workflows => [ 'Spec' ]
+    use Fennec workflows => [ 'Spec' ];
 
 You can also directly use workflow packages:
 
@@ -171,15 +172,32 @@ occur. Higher numbers mean results are printed less often, but more at a time.
 
 =item Collector => $name
 
+Fennec::Collector::$name, Choose which collector to use.
+
 =item default_asserts => \@names
+
+Arrayref of assert librarys to use by default. Include only the portion of the
+package name following Fennec::Assert.
 
 =item default_workflows => \@names
 
+Arrayref of workflow librarys to use by default. Include only the portion of
+the package name following Fennec::Workflow.
+
 =item handlers => \@names
+
+Arrayref of handler packages to which results should be sent. Every result will
+be sent to every handler. Include only the portion of the package name
+following Fennec::Handler.
 
 =item filetypes => \@names
 
+Arrayref of filetypes to load. Include only the portion of the name following
+Fennec::Fileloader.
+
 =item ignore => \@patterns || undef
+
+Arrayref of regexes or complete names of files to ignore.
 
 =back
 
@@ -221,15 +239,57 @@ How many test grousp to run in parallel, do not set this too high.
 
 =item files => \@list
 
-$ENV{ FENNEC_FILE } ? ( files => [ cwd() . '/' . $ENV{ FENNEC_FILE }]) : (),
+    $ENV{ FENNEC_FILE } ? ( files => [ cwd() . '/' . $ENV{ FENNEC_FILE }]) : (),
+
+This specifies which files should be loaded, all others will be ignored. This
+is not generalyl useful, however the environment logic allows you to specify
+filenames in an environment variable. In this way you can run prove on
+t/Fennec.t but only run the test file on which you are currently working.
 
 =item item => $line_number
 
 =item item => $group_name
 
-$ENV{ FENNEC_ITEM } ? ( search => $ENV{ FENNEC_ITEM }) : (),
+    $ENV{ FENNEC_ITEM } ? ( search => $ENV{ FENNEC_ITEM }) : (),
+
+This lets you isolate and run only a specific workflow, or testgroup. Item may
+be either the name of a group, name of a workflow, or line number. The L<B>
+module is used to find *rough* line numbers for defined workflows and test
+groups. Specifying a line number within that group will usually run that group.
+Sometimes the line numbers returned using L<B> are subject to strange behavior
+so this may not always work exactly.
 
 =back
+
+=head3 Line number gotchas
+
+Fennec maps groups and workflows based on their starting line number. If you
+specify a line number before the number returned by L<B> then the group or
+workflow defined before it will be chosen.
+
+A general rule is that the first non-codeblock statement within the item will
+be the first line number for the group/workflow.
+
+In this example line 2 will be considered the first line of the 'example a'
+test group.
+
+    1: tests 'example a' => sub {
+    2:     my $x = 'x';
+    2: };
+
+In this example line 5 is the line returned by L<B> when checking the line
+number for the test group 'example b'.
+
+    1: tests 'example b' => sub {
+    2:    thing_that_takes_code_block {
+    3:        ...
+    4:    };
+    5:    my $x = 'x';
+    6: };
+
+=head3 Future fixes
+
+See L<http://github.com/exodist/Fennec/issues#issue/39>
 
 =head1 SKIP AND TODO
 
