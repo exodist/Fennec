@@ -18,6 +18,8 @@ use Fennec::Util::Alias qw/
     Fennec::FileLoader
     Fennec::Output::Result
     Fennec::Output::Diag
+    Fennec::Config
+    Fennec::Runner::Proto
 /;
 
 use List::Util qw/shuffle/;
@@ -35,52 +37,19 @@ sub alias { $SINGLETON }
 
 sub init {
     my $class = shift;
-    my %proto = @_;
-    my $seed = $ENV{ FENNEC_SEED } || (( unpack "%L*", md5_hex( time * $$ )) ^ $$ );
-    srand( $seed );
-
     croak( 'Fennec::Runner has already been initialized' )
         if $SINGLETON;
 
-    my $random = defined $proto{ random } ? $proto{ random } : 1;
-    my $handlers = delete $proto{ handlers } || [ 'TAP' ];
+    my $seed = $ENV{ FENNEC_SEED } || (( unpack "%L*", md5_hex( time * $$ )) ^ $$ );
+    srand( $seed );
 
-    my $collector_class = delete $proto{ collector } || 'Files';
-    $collector_class = 'Fennec::Collector::' . $collector_class;
-    eval "require $collector_class; 1" || die( $@ );
-    my $collector = $collector_class->new( @$handlers );
+    $SINGLETON = Proto->new( @_, seed => $seed )
+                      ->rebless($class);
 
-    my $ignore = delete $proto{ ignore };
-    my @files = FileLoader->find_types( delete $proto{ filetypes }, delete $proto{ files });
-    @files = grep {
-        my $file = $_;
-        !grep { $file =~ $_ } @$ignore
-    } @files if $ignore and @$ignore;
-    die ( "No Fennec files found" )
-        unless @files;
-    @files = shuffle @files if $random;
-
-    $proto{ parallel_files } = 2 unless defined $proto{ parallel_files };
-    $proto{ parallel_tests } = 2 unless defined $proto{ parallel_tests };
-    $proto{ cull_delay } = 0.1 unless $proto{ cull_delay };
-
-    $SINGLETON = bless(
-        {
-            %proto,
-            random      => $random,
-            files       => \@files,
-            collector   => $collector,
-            threader    => Parallel::Runner->new( $proto{ parallel_files }) || die( "No threader" ),
-            parent_pid  => $$,
-            pid         => $$,
-            seed        => $seed,
-        },
-        $class
-    );
-    $SINGLETON->threader->iteration_delay( $proto{ cull_delay });
-    srand( $SINGLETON->seed );
+    return $SINGLETON;
 }
 
+#TODO Break this into smaller pieces.
 sub start {
     my $self = shift;
 

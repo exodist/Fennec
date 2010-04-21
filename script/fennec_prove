@@ -5,7 +5,7 @@ use warnings;
 if ( grep { m/^-+h(elp)?$/ } @ARGV ) {
     print <<EOT;
 
-USAGE: $0 file item|-- prove args
+USAGE: $0 (file|-) (item|-) prove args
 
 Fennec test file item is optional, use -- for none
 
@@ -19,8 +19,9 @@ EOT
 
 my ( $file, $item, @prove_args ) = @ARGV;
 
-my $run = "FENNEC_FILE='$file' ";
-$run .= "FENNEC_ITEM='$item' " if $item and $item ne '--';
+my $run = "";
+$run = "FENNEC_FILE='$file' " if $file and $file ne '-';
+$run .= "FENNEC_ITEM='$item' " if $item and $item ne '-';
 my $runner = 't/Fennec.t';
 $runner = -e 't/Fennec.t' ? 't/Fennec.t' : `fennec_run.pl`;
 $run .= "prove " . join(' ', @prove_args) . " $runner";

@@ -27,7 +27,7 @@ sub import {
     if ( $standalone ) {
         'Fennec::Runner'->init(
             %$standalone,
-            files => [ [ $caller, $file, $line ] ],
+            files => [[ $caller, $file, $line ]],
             filetypes => [ 'Standalone' ]
         );
         no strict 'refs';
