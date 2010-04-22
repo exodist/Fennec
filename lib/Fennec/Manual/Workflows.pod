@@ -25,15 +25,7 @@ and workflows by defining them inside a parent workflow method.
 Example:
 
     package MyTest;
-    use Fennec;
-
-    # Export a function that is used to create an instance of the workflow.
-    export my_workflow => sub {
-        my ( $name, $sub ) = @_
-        Fennec::Workflow->current->add_item(
-            __PACKAGE__->new( $name, $sub )
-        );
-    };
+    use Fennec workflows => [ 'MyWorkflow' ];
 
     my_workflow parent => sub {
         tests 'parent tests' => {
@@ -76,25 +68,28 @@ tests grouped within.
     # Code that should be executed just before running the tests
     build_hook { ... };
 
-    # Method that returns an array of TestSet objects.
+    # Export a function that builds an instance of the workflow
+    build_with 'my_workflow';
+
+    # Method that returns a list of TestSet objects.
     sub testsets {
-        my $self = shift;
-            my $subset = SubSet->new(
-                name => 'My Workflow Subset',
-                workflow  => $self,
-                file => $self->file,
-            );
-            $subset->add_setup( MySetup => sub { ... })
-            $subset->add_testset( MyTest => sub { ... })
-            $subset->add_teardown( MyTeardown => sub { ... })
+        ...
+        return @testsets;
     }
 
-    # You should always provide line numbers for where your tests were defined.
-    sub lines {
+    # Override add_item() to do whatever you want with testsets and workflows
+    # that are children of your workflow.
+    sub add_item {
         my $self = shift;
-        return 0 unless wantarray;
-        my $subset = $self->testsets;
-        return $subset->lines;
+        my ($item) = @_;
+
+        if ( we_handle( $item )) {
+            ...
+        }
+        else {
+            # Let super handle items we don't care about.
+            $self->SUPER::add_item( $item )
+        }
     }
 
     1;
@@ -129,6 +124,8 @@ override this to reflect the change.
 
 Add $item to the workflow. The inherited method will add workflows or testsets,
 it will throw an exception for anything else.
+
+You can access the added items via $self->_workflows() and $self->_testsets().
 
 =back
 

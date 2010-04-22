@@ -47,6 +47,18 @@ export build_hook => sub(&) {
 
 export export => sub { goto &export };
 
+export build_with => sub {
+    my ( $name, $build ) = @_;
+    my ($class) = caller;
+    $build ||= $class;
+
+    $class->export( $name, sub {
+        Fennec::Workflow->current->add_item(
+            $build->new( @_ )
+        );
+    });
+};
+
 sub import {
     my $class = shift;
     my $caller = caller;

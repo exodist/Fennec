@@ -1,0 +1,17 @@
+=pod
+
+=head1 FEATURES
+
+=over 4
+
+=item No large dependancy chains
+
+=item No method attributes
+
+=item No use of END blocks
+
+=item No Devel::Declare magic
+
+=item No source filters
+
+=back

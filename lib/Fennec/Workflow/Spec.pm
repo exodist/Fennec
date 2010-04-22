@@ -20,16 +20,12 @@ sub init {
     $self->$_([]) for qw/ before_each before_all after_each after_all /;
 }
 
+build_with 'describe';
+
 export it => sub {
     my $caller = caller;
     no strict 'refs';
     goto &{ $caller . '::tests' };
-};
-
-export describe => sub {
-    Fennec::Workflow->current->add_item(
-        __PACKAGE__->new( @_ )
-    );
 };
 
 for my $name ( qw/ before_each before_all after_each after_all /) {

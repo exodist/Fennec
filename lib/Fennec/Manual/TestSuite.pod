@@ -21,28 +21,21 @@ This should have created t/Fennec.t, here is an example:
     use strict;
     use warnings;
 
-    use Cwd;
     use Fennec::Runner;
     'Fennec::Runner'->init(
-        random     => 1,
+        collector => 'Files',
         cull_delay => .01,
-
+        default_asserts => [qw/Core Interceptor/],
+        default_workflows => [],
+        filetypes => [qw/ Module /],
+        handlers => [qw/ TAP /],
+        ignore => undef,
         parallel_files => 2,
         parallel_tests => 2,
-
-        Collector => 'Files',
-
-        default_asserts   => [qw/ Core /],
-        default_workflows => [qw/ Spec Case /],
-        handlers          => [qw/ TAP /],
-        filetypes         => [qw/ Module /],
-        ignore            => undef,
-
-        $ENV{ FENNEC_FILE } ? ( files => [ cwd() . '/' . $ENV{ FENNEC_FILE }]) : (),
-        $ENV{ FENNEC_ITEM } ? ( search => $ENV{ FENNEC_ITEM }) : (),
+        random => 1,
     );
 
-    Runner->start;
+    Runner->run_tests;
 
 This file serves multiple purposes:
 
@@ -233,34 +226,6 @@ How many test grousp to run in parallel, do not set this too high.
 
 =back
 
-=head2 Special Entities
-
-=over 4
-
-=item files => \@list
-
-    $ENV{ FENNEC_FILE } ? ( files => [ cwd() . '/' . $ENV{ FENNEC_FILE }]) : (),
-
-This specifies which files should be loaded, all others will be ignored. This
-is not generalyl useful, however the environment logic allows you to specify
-filenames in an environment variable. In this way you can run prove on
-t/Fennec.t but only run the test file on which you are currently working.
-
-=item item => $line_number
-
-=item item => $group_name
-
-    $ENV{ FENNEC_ITEM } ? ( search => $ENV{ FENNEC_ITEM }) : (),
-
-This lets you isolate and run only a specific workflow, or testgroup. Item may
-be either the name of a group, name of a workflow, or line number. The L<B>
-module is used to find *rough* line numbers for defined workflows and test
-groups. Specifying a line number within that group will usually run that group.
-Sometimes the line numbers returned using L<B> are subject to strange behavior
-so this may not always work exactly.
-
-=back
-
 =head3 Line number gotchas
 
 Fennec maps groups and workflows based on their starting line number. If you
@@ -304,6 +269,7 @@ a failure in the grand scheme.
     package TEST::MyTest;
     use strict;
     use warnings;
+    use Fennec;
 
     # This will run, but failures will not count.
     tests not_yet_implemented => (

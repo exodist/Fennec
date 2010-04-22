@@ -29,6 +29,7 @@ use Benchmark qw/timeit :hireswallclock/;
 Accessors qw/
     files parallel_files parallel_tests threader ignore random pid parent_pid
     collector search default_asserts default_workflows _benchmark_time seed
+    _started _finished finish_hooks
 /;
 
 our $SINGLETON;
@@ -49,12 +50,9 @@ sub init {
     return $SINGLETON;
 }
 
-#TODO Break this into smaller pieces.
-sub start {
+sub run_tests {
     my $self = shift;
-
-    $self->collector->start;
-    $self->threader->iteration_callback( sub { $self->collector->cull });
+    $self->start;
 
     for my $file ( @{ $self->files }) {
         srand( $self->seed );
@@ -67,37 +65,65 @@ sub start {
                     file => $file,
                 )->_build_as_root;
 
-                try {
-                    $workflow->run_sub_as_current( $_ )
-                        for Fennec::Workflow->build_hooks();
-                }
-                catch {
-                    Diag->new( "build_hook error: $_" )->write
-                };
-
-                my $testfile = $workflow->testfile;
-                return Result->skip_workflow( $testfile )
-                    if $testfile->fennec_meta->skip;
-
-                try {
-                    $workflow->build_children;
-                    my $benchmark = timeit( 1, sub {
-                        $self->reset_benchmark;
-                        $workflow->run_tests( $self->search )
-                    });
-                }
-                catch {
-                    $testfile->fennec_meta->threader->finish;
-                    Result->fail_workflow( $testfile, $_ );
-                };
+                $self->process_workflow( $workflow );
             }
             catch {
                 Result->fail_testfile( $file, $_ );
             };
         }, 1 );
     }
+
+    $self->finish;
+}
+
+sub process_workflow {
+    my $self = shift;
+    my ( $workflow ) = @_;
+
+    $self->reset_benchmark;
+    try {
+        $workflow->run_sub_as_current( $_ )
+            for Fennec::Workflow->build_hooks();
+    }
+    catch {
+        Diag->new( "build_hook error: $_" )->write
+    };
+
+    my $testfile = $workflow->testfile;
+    return Result->skip_workflow( $testfile )
+        if $testfile->fennec_meta->skip;
+
+    try {
+        $workflow->build_children;
+        my $benchmark = timeit( 1, sub {
+            $self->reset_benchmark;
+            $workflow->run_tests( $self->search )
+        });
+    }
+    catch {
+        $testfile->fennec_meta->threader->finish;
+        Result->fail_workflow( $testfile, $_ );
+    };
+}
+
+sub start {
+    my $self = shift;
+    $self->collector->start;
+    $self->threader->iteration_callback( sub { $self->collector->cull });
+    $self->_started(1);
+}
+
+sub finish {
+    my $self = shift;
+    $self->$_() for @{ $self->finish_hooks || []};
     $self->threader->finish;
     $self->collector->finish;
+    $self->_finished(1);
+}
+
+sub add_finish_hook {
+    my $self = shift;
+    push @{ $self->{ finish_hooks }} => @_;
 }
 
 sub pid_changed {
@@ -144,6 +170,12 @@ sub benchmark {
 sub DESTROY {
     my $self = shift;
     return if $self->is_subprocess;
+    if( $self->_started && !$self->_finished ) {
+        warn <<EOT;
+Runner never finished!
+Did you forget to run finish() in a standalone test file?
+EOT
+    }
     print STDERR <<EOT
 
 

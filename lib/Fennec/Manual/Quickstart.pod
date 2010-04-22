@@ -11,11 +11,11 @@ Fennec::Manual::Quickstart - Quick guide to immediate fennec usage.
 This is documentation for a standalone test, that is a test that does not
 require anything outside each test file. This is perfectly acceptable, but not
 ideal. I recommend reading L<Fennec::Manual::TestSuite> to create a fennec
-config file and write tests that require less boilderplate.
+config file.
 
 Another consequence of standalone tests is a loss of parallelization, and the
 overhead of loading fennec for each standlone test. When fennec is used to
-manage a suite it is loaded only once, and it can parallelize running fo both
+manage a suite it is loaded only once, and it can parallelize running of both
 test files and test groups.
 
 Once again, L<Fennec::Manual::TestSuite> can get you started using Fennec to
@@ -23,28 +23,25 @@ manage a whole suite of test files.
 
 =head1 SYNOPSIS
 
-This is a very simple test written in fennec, in fact the first test written in
-fennec for fennec.
-
 t/fennec-standalone.t:
 
     #!/usr/bin/perl;
     package TEST::MyStandaloneTest;
     use strict;
     use warnings;
-    use Fennec standalone => {};
+    use Fennec::Standalone;
 
-    # This must go before any tests
-    start();
+    # Tests can be made script style, but you loose parallelization:
+    ok( 1, "Not grouped" );
 
-    sub Fennec {
-        my $class = shift;
+    # It is much better to put tests into parallelizable groups:
+    tests hello_world_group => sub {
+        my $self = shift;
+        ok( 1, "Hello world" );
+    };
 
-        tests hello_world_group => sub {
-            my $self = shift;
-            ok( 1, "Hello world" );
-        };
-    }
+    #This must be called at the end of your workflow declarations
+    finish();
 
     1;
 
@@ -52,28 +49,23 @@ t/fennec-standalone.t:
 
 =over 4
 
+=item
+
 =item package TEST::MyStandaloneTest;
 
 Fennec tests must all be contained inside test packages, they will be used as
 objects.
 
-=item use Fennec standalone => {};
+=item use Fennec::Standalone;
 
-This tells fennec that this will be a standalone test. The hash can be used to
-configure the fennec runner. Most of the time you can leave this hash empty.
+Use the standalone fennec package.
 
-=item start()
+=item ok( 1, "Not grouped" )
 
-Fennec cannot start until your package has been completely loaded. As such your
-standalone must call start(). I appologise for the boilderplate, it is safer
-than an END block. This is not necessary when you use Fennec to manage an
-entire suite instead of standalone files.
-
-=item sub Fennec { ... }
-
-Usually fennec tests are declared in the main package and not in a sub, however
-standalone tests must implement the Fennec() class method and declare the tests
-within.
+Tests can be anywhere between 'use Fennec::Standalone' and 'finish()'. This
+means you can write Test::Builder style tests using fennec. The problem with
+this is that the tests are run as they are encountered. When you put tests into
+groups and workflows they can be parallelized, and are run later.
 
 =item tests hello_world_group => sub { ... }
 
@@ -81,6 +73,13 @@ This declares a test group named hello_world_group. All results should be
 generated within test groups. Tests groups will be run in random order (unless
 randomization disabled), and can even be run in parallel, so it makes sense to
 seperate your tests into small groups.
+
+=item finish()
+
+Fennec runs your test groups and workflows after the package is loaded. In
+normal Fennec tests finish() is not necessary. However in Standalone tests
+fennec needs a trigger to tell it that the workflows are ready to be run. I
+appologise for this boilderplate, but it is safer than an END block.
 
 =back
 
@@ -97,40 +96,36 @@ a failure in the grand scheme.
     package TEST::MyStandaloneTest;
     use strict;
     use warnings;
-    use Fennec standalone => {};
+    use Fennec::Standalone;
 
-    # Don't forget this
-    start();
+    # This will run, but failures will not count.
+    tests not_yet_implemented => (
+        todo => "This will fail",
+        method => sub {
+            my $self = shift;
+            ok( 0, "Hello world" );
+        },
+    );
 
-    sub Fennec {
-        my $class = shift;
+    # This will be skipped completely
+    tests 'would die' => (
+        skip => "This will die",
+        method => sub {
+            my $self = shift;
+            die( "I eat you" );
+        },
+    );
 
-        # This will run, but failures will not count.
-        tests not_yet_implemented => (
-            todo => "This will fail",
-            method => sub {
-                my $self = shift;
-                ok( 0, "Hello world" );
-            },
-        );
-
-        # This will be skipped completely
-        tests 'would die' => (
-            skip => "This will die",
-            method => sub {
-                my $self = shift;
-                die( "I eat you" );
-            },
-        );
-
-        # You can also TODO specific asserts.
-        tests 'some pass' => sub {
-            ok( 1, 'pass' );
-            TODO {
-                ok( 0, 'fail' );
-            } "This will fail, I will fix it later";
-        }
+    # You can also TODO specific asserts.
+    tests 'some pass' => sub {
+        ok( 1, 'pass' );
+        TODO {
+            ok( 0, 'fail' );
+        } "This will fail, I will fix it later";
     }
+
+    # Do not forget this!
+    finish();
 
     1;
 

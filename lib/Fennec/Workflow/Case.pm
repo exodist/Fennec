@@ -20,17 +20,8 @@ sub init {
     $self->$_([]) for qw/ cases /;
 }
 
-export cases => sub {
-    Fennec::Workflow->current->add_item(
-        __PACKAGE__->new( @_ )
-    );
-};
-
-export case => sub {
-    Fennec::Workflow->current->add_item(
-        Setup->new( @_ )
-    );
-};
+build_with 'cases';
+build_with( 'case', Setup );
 
 sub testsets {
     my $self = shift;
