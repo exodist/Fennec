@@ -42,9 +42,10 @@ This is the only boilerplate:
 
     use Fennec::Assert;
 
-This will add make your class a subclass of 'Fennec::Assert'.
+This will add make your class a subclass of 'Fennec::Assert'. This will also
+give you the following functions:
 
-This will also give you the following functions:
+=head1 EXPORTED FUNCTIONS
 
 =over 4
 

@@ -9,6 +9,24 @@ Fennec::Manual::Workflows - Writing custom workflow plugins for Fennec.
 L<Fennec> is still under active development, many features are untested or even
 unimplemented. Please give it a try and report any bugs or suggestions.
 
+=head1 WHY WRITE A WORKFLOW
+
+In fennec a workflow is a way to structure tests. There are many popular
+testing frameworks that owe their popularity to how they structure their tests.
+A notable example is Ruby's RSPEC. Structured tests can simplify your job as a
+tester.
+
+Within a workflow you can define child workflows, and groups of tests.
+Ultimately your workflow will return a list of testset objects. You can be as
+creative as you want in designing your workflow. You can also subclass
+L<Fennec::TestSet> or use L<Fennec::TestSet::SubSet> to wrap groups with
+buildup or teardown functions.
+
+Using the L<Fennec::Workflow> system it was a minimal effort to write an RSPEC
+like workflow. Less than 100 lines of code in SPEC.pm at the time this was
+written. If you do not like how Fennec implements SPEC you can probably
+implement it your own way easily.
+
 =head1 OVERVIEW
 
 When a test file is loaded L<Fennec::Runner> creates a root workflow, this root
@@ -85,7 +103,7 @@ that acts just like the root workflow.
 testsets() should return an array with 0 or more testset objects, or objects
 that subclass testset. It is also responsible for returning the testsets from
 child workflows. If this method does not get testsets from child workflows they
-will not be run.
+will not be run (which will generate a warning).
 
 =item $wf->build()
 
@@ -103,15 +121,23 @@ override this to reflect the change.
 =item $wf->add_item( $item )
 
 Add $item to the workflow. The inherited method will add workflows or testsets,
-it will throw an exception for anything else.
-
-You can access the added items via $self->_workflows() and $self->_testsets().
+it will throw an exception for anything else. You can access the added items
+via $self->_workflows() and $self->_testsets().
 
 =back
 
 =head1 HELPFUL FUNCTIONS
 
 =over 4
+
+=item build_with( $name )
+
+=item build_with( $name, $class )
+
+Exports a method ($name) that when called will create an instance of $class, or
+the class frin which build_with() was called. The exported method will take a
+single codeblock as an argument. After being build the instance will be added
+to the current in which it was defined.
 
 =item build_hook { ... }
 
@@ -138,6 +164,10 @@ method will also throw a redefine warning.
 =item @wfs = $wf->workflows()
 
 Returns a list of all the workflows added as children.
+
+=item @testsets = $wf->testsets()
+
+Returns a list of all the testsets in this workflow, and all of its children.
 
 =item $tf = $wf->testfile()
 
@@ -171,7 +201,7 @@ Overriding this in your subclass will have NO EFFECT.
 
 =item $wf->add_items( @items )
 
-Bulk form of add_item().
+Calls $wf->add_item() for each item in @items.
 
 =back
 
@@ -179,8 +209,20 @@ Bulk form of add_item().
 
 =over 4
 
-=item L<Fennec::Workflow> Documentation for the root workflow object,
+=item L<Fennec::Workflow>
+
+Documentation for the root workflow object,
 documentes inherited methods.
+
+=item L<Fennec::TestSet>
+
+Your workflow would not be very useful if it didn't return TestSet objects. You
+should familiarise yourself with them.
+
+=item L<Fennec::TestSet::SubSet>
+
+This is a subclass of TestSet which lets you group TestSets together with
+setups and teardowns wrapped around them.
 
 =back
 
@@ -197,18 +239,3 @@ Fennec is free software; Standard perl licence.
 Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.
-
-
-
-
-
-The above example is fairly silly, There is no reason to put 'child tests'
-within a child workflow. The only thing that makes nested workflows useful is
-using L<Fennec::TestSet::SubSet> or writing your own subclass of
-L<Fennec::TestSet> Doing so allows you to group tests, and add setup/teardown
-functions, or do anything you can think of. The SubSet will be run in random
-order with the other TestSets, however you can do whatever you want to the
-tests grouped within.
-
-
-
