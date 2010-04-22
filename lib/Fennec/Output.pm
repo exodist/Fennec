@@ -6,20 +6,18 @@ use Fennec::Util::Accessors;
 use Fennec::Util::Abstract;
 use Fennec::Util::Alias qw/
     Fennec::Runner
+    Fennec::Util
 /;
 
 Accessors qw/ stdout stderr _workflow testset timestamp /;
 
 sub workflow_stack {
     my $self = shift;
-    unless ( $self->{ workflow_stack }) {
-        my $current = $self->workflow;
-        return undef unless $current;
-        my @out = ( $current->name );
-        while (( $current = $current->parent ) && $current->isa( 'Fennec::Workflow' )) {
-            push @out => $current->name;
-        }
-        $self->{ workflow_stack } = [ reverse @out ];
+
+    unless ( exists $self->{ workflow_stack }) {
+        my @stack = Util->workflow_stack( $self->workflow );
+        return unless @stack;
+        $self->{ workflow_stack } = \@stack;
     }
     return $self->{ workflow_stack };
 }

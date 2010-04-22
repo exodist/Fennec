@@ -14,12 +14,13 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
     Fennec::Output::Result
     Fennec::Workflow
+    Fennec::Util
 /;
 
 use Time::HiRes qw/time/;
 use Benchmark qw/timeit :hireswallclock/;
 
-Accessors qw/ workflow no_result /;
+Accessors qw/ workflow no_result observed created_in /;
 
 export 'tests' => sub {
     my $name = shift;
@@ -27,6 +28,11 @@ export 'tests' => sub {
     my ( $caller, $file, $line ) = caller;
     Workflow->add_item( __PACKAGE__->new( $name, file => $file, line => $line, %proto ));
 };
+
+sub init {
+    my $self = shift;
+    $self->created_in( $$ );
+}
 
 sub lines_for_filter {
     my $self = shift;
@@ -77,6 +83,24 @@ sub todo {
     my $self = shift;
     return $self->SUPER::todo()
         || $self->workflow->todo;
+}
+
+sub DESTROY {
+    my $self = shift;
+    return unless $self->created_in == $$;
+    return if $self->observed;
+    warn <<EOT
+Testset was never observed by the runner:
+\tName: @{[ $self->name || "UNKNOWN" ]}
+\tFile: @{[ $self->file || "UNKNOWN" ]}
+\tLine: @{[ $self->line || "UNKNOWN" ]}
+
+This is usually due to nesting a workflow within another workflow that does not
+support nesting.
+
+Workflow stack:
+@{[ scalar Util->workflow_stack( $self->workflow )]}
+EOT
 }
 
 1;

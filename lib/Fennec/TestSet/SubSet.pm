@@ -29,6 +29,7 @@ sub new {
             setups => [],
             teardowns => [],
             tests => [],
+            created_in => $$,
             @_,
         },
         $class
@@ -110,6 +111,15 @@ sub run_teardowns {
     my $self = shift;
     return unless my $teardowns = $self->teardowns;
     $_->run for reverse @$teardowns;
+}
+
+sub observed {
+    my $self = shift;
+    my ( $val ) = @_;
+    return $self->SUPER::observed unless $val;
+
+    $self->SUPER::observed( $val );
+    $_->observed( $val ) for @{ $self->tests };
 }
 
 1;

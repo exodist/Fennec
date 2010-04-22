@@ -13,14 +13,14 @@ unimplemented. Please give it a try and report any bugs or suggestions.
 
 When a test file is loaded L<Fennec::Runner> creates a root workflow, this root
 workflow is an L<Fennec::Workflow> object. Every testset or workflow defined in
-the test file is defined in the form of a method. These methods are blessed to
-the proper workflow or testset. The blessed methods are passed to the root
-workflow.
+the test file is a blessed method. The blessed methods are passed to a parent
+workflow. Those defined outside of a workflow are passed to a 'root' workflow.
 
-When a child workflow method is executed it will be possitioned as 'current',
-calling Fennec::Workflow->current will always return the current workflow, it
-will throw an exception if there is no current workflow. You can nest testsets
-and workflows by defining them inside a parent workflow method.
+Any testsets or workflows defined inside the method of a parent workflow are
+passed to that parent workflow. Each workflow object must inherit or
+imeplement the add_item() method which takes a workflow or testset. Testsets
+are retrieved from the workflows after they have been traversed to the deepest
+level.
 
 Example:
 
@@ -42,20 +42,9 @@ Example:
 
 When Fennec runs it will load the file, it will create a root workflow, the
 workflow sub named 'parent' will be blessed and passed to the root workflow as
-a child workflow. Next Fennec will set 'parent' as the current workflow. The
-workflow sub 'nested' will be blessed as a workflow and passed to 'parent' as a
-child, it will then be set as current and executed.
-
-Fennec will grab the testsets from the workflows after they have all been
-traversed and executed. They will then optionally be randomized and executed.
-
-The above example is fairly silly, There is no reason to put 'child tests'
-within a child workflow. The only thing that makes nested workflows useful is
-using L<Fennec::TestSet::SubSet> or writing your own subclass of
-L<Fennec::TestSet> Doing so allows you to group tests, and add setup/teardown
-functions, or do anything you can think of. The SubSet will be run in random
-order with the other TestSets, however you can do whatever you want to the
-tests grouped within.
+a child workflow. The workflow sub 'nested' will be blessed as a workflow and
+passed to 'parent'. While this is going on the testsets will also be blessed
+and passed into their parent workflows.
 
 =head1 CUSTOM WORKFLOW SYNOPSYS
 
@@ -65,31 +54,21 @@ tests grouped within.
 
     use Fennec::Workflow qw/:subclass/;
 
-    # Code that should be executed just before running the tests
     build_hook { ... };
 
-    # Export a function that builds an instance of the workflow
     build_with 'my_workflow';
 
-    # Method that returns a list of TestSet objects.
     sub testsets {
         ...
         return @testsets;
     }
 
-    # Override add_item() to do whatever you want with testsets and workflows
-    # that are children of your workflow.
     sub add_item {
         my $self = shift;
         my ($item) = @_;
 
-        if ( we_handle( $item )) {
-            ...
-        }
-        else {
-            # Let super handle items we don't care about.
-            $self->SUPER::add_item( $item )
-        }
+        if ( we_handle( $item )) { ... }
+        else { $self->SUPER::add_item( $item )}
     }
 
     1;
@@ -103,9 +82,10 @@ that acts just like the root workflow.
 
 =item @testsets = $wf->testsets()
 
-testsets() should return an array with 0 or more testset objects or objects
-that subclass testset. These will be run by Fennec in random order mixed with
-other testsets from other workflows.
+testsets() should return an array with 0 or more testset objects, or objects
+that subclass testset. It is also responsible for returning the testsets from
+child workflows. If this method does not get testsets from child workflows they
+will not be run.
 
 =item $wf->build()
 
@@ -217,3 +197,18 @@ Fennec is free software; Standard perl licence.
 Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the license for more details.
+
+
+
+
+
+The above example is fairly silly, There is no reason to put 'child tests'
+within a child workflow. The only thing that makes nested workflows useful is
+using L<Fennec::TestSet::SubSet> or writing your own subclass of
+L<Fennec::TestSet> Doing so allows you to group tests, and add setup/teardown
+functions, or do anything you can think of. The SubSet will be run in random
+order with the other TestSets, however you can do whatever you want to the
+tests grouped within.
+
+
+

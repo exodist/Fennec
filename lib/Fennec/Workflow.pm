@@ -77,6 +77,8 @@ sub run_tests {
     my $self = shift;
         try {
             my @sets = $self->testsets;
+            $_->observed( 1 ) for @sets;
+
             if ( Runner->search ) {
                 @sets = $self->search_filter( Runner->search, \@sets );
             }
