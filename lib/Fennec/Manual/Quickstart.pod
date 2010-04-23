@@ -6,12 +6,17 @@ Fennec::Manual::Quickstart - Quick guide to immediate fennec usage.
 
 =head1 DESCRIPTION
 
+This document is the primer for fennec. It gives a synopsys of fennec
+capabilities using a standalone test file. After this introduction you should
+move on to L<Fennec::Manual::TestSuite> For more advanced usage. Writing all
+your tests as standalone tests is not recommended.
+
 =head1 NOTE ON STANDALONE
 
 This is documentation for a standalone test, that is a test that does not
 require anything outside each test file. This is perfectly acceptable, but not
-ideal. I recommend reading L<Fennec::Manual::TestSuite> to create a fennec
-config file.
+ideal. After rading this document I recommend reading
+L<Fennec::Manual::TestSuite> to create a fennec config file.
 
 Another consequence of standalone tests is a loss of parallelization, and the
 overhead of loading fennec for each standlone test. When fennec is used to
@@ -23,7 +28,7 @@ manage a whole suite of test files.
 
 =head1 SYNOPSIS
 
-t/fennec-standalone.t:
+t/mystandalone.t:
 
     #!/usr/bin/perl;
     package TEST::MyStandaloneTest;
@@ -39,6 +44,48 @@ t/fennec-standalone.t:
         my $self = shift;
         ok( 1, "Hello world" );
     };
+
+    # Use the Spec workflow:
+    describe 'my group' => sub {
+        my $self = shift;
+
+        before_each { $self->reset };
+
+        # 'it()' is an alias to 'tests()'
+        it 'my test' => sub {
+            my $self = shift;
+            ok( 1, 'spec test!' );
+        };
+
+        # Nested!
+        describe ...;
+    };
+
+    You can run the same TestSets under multiple cases using the Case workfow
+    (loaded by default).
+    cases {
+        case a => sub { ... }
+        case b => sub { ... }
+        tests a => sub { ... }
+        tests b => sub { ... }
+    }
+
+    # You can also define test groups, setups, and teardowns as methods when
+    # the Methods workflow is loaded. (loaded by default)
+    sub setup_my_setup {
+        my $self = shift;
+        print "methods prefixed by setup_ will be run before tests defined as methods.";
+    }
+
+    sub test_method_as_test_by_prefix {
+        my $self = shift;
+        ok( 1, "methods prefixed by test_ will be run as method." );
+    }
+
+    sub teardown_my_teardown {
+        my $self = shift;
+        print "method prefixed by teardown_ will be run after tests defined as methods."
+    }
 
     #This must be called at the end of your workflow declarations
     finish();
@@ -73,6 +120,32 @@ This declares a test group named hello_world_group. All results should be
 generated within test groups. Tests groups will be run in random order (unless
 randomization disabled), and can even be run in parallel, so it makes sense to
 seperate your tests into small groups.
+
+=item describe { ... }
+
+Define an RSPEC like workflow. This is available as long as the
+L<Fennec::Workflow::SPEC> workflow is loaded. (Loaded by default)
+
+=item cases { ... }
+
+Create a case workflow using cases({...}), then define several cases and
+testsets within. Each testset will be run under each case, that is that case a
+will be run, followed by each of the tests, followed by case b and all the
+tests again, etc.
+
+=item sub setup_NAME { ... }
+
+=item sub test_NAME { ... }
+
+=item sub teardown_NAME { ... }
+
+Using the L<Fennec::Workflow::Methods> workflow you can simply define methods
+with the tests_, setup_ and teardown_ prefixes to create a subset where the
+setups are run, followed by the tests, followed by the teardowns.
+
+Note: setups and teardown defined in this manner only effects testsets also
+defined in this manner. They will not effect testsets defined using the tests
+{ ... } function.
 
 =item finish()
 

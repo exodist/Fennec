@@ -18,7 +18,7 @@ use Fennec::Util::Alias qw/
     ignore => undef,
     filetypes => [qw/ Module /],
     default_asserts => [qw/Core/],
-    default_workflows => [qw/Spec Case/],
+    default_workflows => [qw/Spec Case Methods/],
 );
 
 Runner()->run_tests;

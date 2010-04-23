@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Fennec::Manual::TestSuite - Quick guide to managing a test suite with L<Fennec>
+Fennec::Manual::TestSuite - Guide to managing a test suite with L<Fennec>
 
 =head1 DESCRIPTION
 
@@ -25,8 +25,8 @@ This should have created t/Fennec.t, here is an example:
     'Fennec::Runner'->init(
         collector => 'Files',
         cull_delay => .01,
-        default_asserts => [qw/Core Interceptor/],
-        default_workflows => [],
+        default_asserts => [qw/Core/],
+        default_workflows => [qw/Spec Case Methods/],
         filetypes => [qw/ Module /],
         handlers => [qw/ TAP /],
         ignore => undef,
@@ -65,8 +65,12 @@ to run the entire test suite every time.
 
 =head1 TEST FILES
 
-L<Fennec> has a plugins system that means test files cna be anything, but the
+L<Fennec> has a plugins system that means test files can be anything, but the
 default is perl modules placed under t/.
+
+B<NOTE> I<If you have not already done so, please read>
+L<Fennec::Manual::Quickstart>
+I<for a better introduction to tests within files.>
 
 Lets say you have a file lib/MyPackage/MyThing.pm. Lets make a Fennec test for
 it, you can name the test file anything you want, but the recommended name is
@@ -78,36 +82,16 @@ t/MyPackage/MyThing.pm:
     package TEST::MyPackage::MyThing;
     use strict;
     use warnings;
-
     use Fennec;
 
-    # Tests can be placed outside of groups
-    # (It is recommended that most if not all your tests go into groups)
-    use_ok( 'MyPackage::MyThing' );
-
-    # Define a test group:
-    tests 'load MyThing' => sub {
+    tests hello_world_group => sub {
         my $self = shift;
-        require_ok MyPackage::MyThing;
-    };
-
-    # Use the Spec workflow:
-    describe 'my group' => sub {
-        my $self = shift;
-
-        before_each { $self->reset };
-
-        # 'it()' is an alias to 'tests()'
-        it 'my test' => sub {
-            my $self = shift;
-            ok( 1, 'spec test!' );
-        };
-
-        # Nested!
-        describe ...;
+        ok( 1, "Hello world" );
     };
 
     1;
+
+B<NOTE> I<Unlike the standalone tests, you do not end the test file with finish().>
 
 The package can be anything except main, no 2 test files should implement the
 same package, and it is recommended that your package be the same as the
@@ -127,8 +111,8 @@ L<Test::More>, L<Test::Warn>, and L<Test::Exception>.
 By default L<Fennec::Assert::Core> is loaded, which in turn loads all Core
 assert modules. You can specify alternate ones as well.
 
-This will load L<Fennec::Assert::TBCore> asset libraries instead of Core
-libraries. These are wrappers around L<Test::Builder> based test modules.
+The following will load L<Fennec::Assert::TBCore> asset libraries instead of
+Core libraries. These are wrappers around L<Test::Builder> based test modules.
 
     use Fennec asserts => [ 'TBCore' ]
 
@@ -163,7 +147,7 @@ How long to wait between checking for test results. Result are generated in
 other processes and must be collected regularly, this sets how often that will
 occur. Higher numbers mean results are printed less often, but more at a time.
 
-=item Collector => $name
+=item collector => $name
 
 Fennec::Collector::$name, Choose which collector to use.
 
@@ -255,49 +239,6 @@ number for the test group 'example b'.
 =head3 Future fixes
 
 See L<http://github.com/exodist/Fennec/issues#issue/39>
-
-=head1 SKIP AND TODO
-
-Fennec has the concept of todo tests, tests which are expected to fail. You can
-also mark groups as skip if they are really bad.
-
-If an exception is thrown within a TODO block or group then a failing TODO
-result will be generated alerting you, however it is todo and will not count as
-a failure in the grand scheme.
-
-    #!/usr/bin/perl;
-    package TEST::MyTest;
-    use strict;
-    use warnings;
-    use Fennec;
-
-    # This will run, but failures will not count.
-    tests not_yet_implemented => (
-        todo => "This will fail",
-        method => sub {
-            my $self = shift;
-            ok( 0, "Hello world" );
-        },
-    );
-
-    # This will be skipped completely
-    tests 'would die' => (
-        skip => "This will die",
-        method => sub {
-            my $self = shift;
-            die( "I eat you" );
-        },
-    );
-
-    # You can also TODO specific asserts.
-    tests 'some pass' => sub {
-        ok( 1, 'pass' );
-        TODO {
-            ok( 0, 'fail' );
-        } "This will fail, I will fix it later";
-    }
-
-    1;
 
 =head1 EARLY VERSION WARNING
 

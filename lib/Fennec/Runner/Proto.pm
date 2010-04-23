@@ -188,7 +188,7 @@ sub _default_asserts {
 
 sub _default_workflows {
     my $self = shift;
-    return $self->in->{ default_workflows } || [qw/Spec Case/],
+    return $self->in->{ default_workflows } || [qw/Spec Case Methods/],
 }
 
 sub _search {

@@ -10,7 +10,7 @@ use Fennec::Util::Alias qw/
     collector => 'Files',
     cull_delay => .01,
     default_asserts => [qw/Core Interceptor/],
-    default_workflows => [qw/Spec Case/],
+    default_workflows => [qw/Spec Case Methods/],
     filetypes => [qw/ Module /],
     handlers => [qw/ TAP /],
     ignore => undef,
