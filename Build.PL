@@ -17,6 +17,8 @@ my $build = Module::Build->new(
         'List::Util'        => 0,
         'Scalar::Util'      => 0,
         'Time::HiRes'       => 0,
+        'Digest::MD5'       => 0,
+        'File::Temp'        => 0,
 
         # External
         'List::MoreUtils'   => 0,
