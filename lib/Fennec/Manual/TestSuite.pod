@@ -10,7 +10,7 @@ This guide will get you started writing a L<Fennec> based test suite for your
 dist. The first step is to generate the t/Fennec.t file. A suitable default can
 be generated using the fennec_init command within your project directory.
 
-=head1 GETTIN STARTED
+=head1 GETTING STARTED
 
     ~/my/project $ fennec_init
 
