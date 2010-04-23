@@ -9,7 +9,7 @@ use Fennec::Util::Alias qw/
     Fennec::TestFile
 /;
 
-our $VERSION = "0.016";
+our $VERSION = "0.017";
 our $TEST_CLASS;
 our @TEST_CLASS_ARGS;
 
@@ -87,6 +87,16 @@ unimplemented. Please give it a try and report any bugs or suggestions.
 Fennec offers the following features, among others.
 
 =over 4
+
+=item No large dependancy chains
+
+=item No method attributes
+
+=item No use of END blocks
+
+=item No Devel::Declare magic
+
+=item No source filters
 
 =item Large library of core test functions
 

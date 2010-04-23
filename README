@@ -18,6 +18,11 @@ EARLY VERSION WARNING
 FEATURES
     Fennec offers the following features, among others.
 
+    No large dependancy chains
+    No method attributes
+    No use of END blocks
+    No Devel::Declare magic
+    No source filters
     Large library of core test functions
     Plays nicely with Test::Builder tools
     Better diagnostics

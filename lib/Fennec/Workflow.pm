@@ -266,7 +266,6 @@ sub run_method_as_current {
 
 sub run_method_as_current_on {
     my $self = shift;
-    croak( 'xxx' ) unless blessed( $self );
     my ( $method, $obj, @args ) = @_;
     my $depth = $self->depth + 1;
 
@@ -279,7 +278,6 @@ sub run_method_as_current_on {
 
 sub run_sub_as_current {
     my $self = shift;
-    croak( 'xxx' ) unless blessed( $self );
     my ( $sub, @args ) = @_;
     my $depth = $self->depth + 1;
 

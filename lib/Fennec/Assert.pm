@@ -193,84 +193,12 @@ sub test_caller {
 
 Fennec::Assert - Assertions (tester functions) for Fennec.
 
-=head1 SYNOPSYS
+=head1 SEE ALSO
 
-    package My::Assert;
-    use Fennec::Assert;
+B<The synopsys and most of the other usage documentation has been moved, this
+doc has been reduced to API documentation.>
 
-    tester ok => sub($$) {
-        my ( $status, $name ) = @_;
-        result( pass => $status, name => $name );
-    };
-    util diag => sub {
-        # diag() is exported by Fennec::Assert
-        diag( @_ );
-    };
-
-    tester 'is';
-    sub is {
-        ...
-    }
-
-    1;
-
-=head1 WRAPPING TEST::BUILDER
-
-This is actual code from Fennec 0.11 as an example
-
-    package Fennec::Assert::TBCore::More;
-    use strict;
-    use warnings;
-
-    use Fennec::Assert;
-    use Fennec::Output::Result;
-    require Test::More;
-
-    our @LIST = qw/ ok is isnt like unlike cmp_ok can_ok isa_ok new_ok pass fail
-                    use_ok require_ok is_deeply /;
-
-    for my $name ( @LIST ) {
-        no strict 'refs';
-        next unless Test::More->can( $name );
-        tester $name => tb_wrapper \&{ 'Test::More::' . $name };
-    }
-
-    # Technically "util 'diag';" would work, but it is less clear since diag()
-    # is imported.
-    util diag => \&diag;
-
-    util note => \&diag;
-
-    1;
-
-=head1 MAGIC
-
-=over 4
-
-=item Test::Builder overrides
-
-L<Fennec::Assert> will override some subs within Test::Bulder so that it
-generates L<Fennec::Output> objects instead of printing to STDIN and STDERR.
-
-=item Subclassing
-
-When you use L<Fennec::Assert> it will automatically make your package a
-subclass of L<Fennec::Assert>.
-
-    package My::Assert;
-    use strict;
-    use warnings;
-
-    # Import functions AND add 'Fennec::Assert' to @ISA.
-    use Fennec::Assert;
-
-This is important because it gives your package an import() and some export
-helper functions that allow the 'tester' and 'util' methods to define exports
-that may not actually be subs in your package. This provides an export_to
-method that Fennec uses to provide your assert functions to tests, it also
-allows 'use My::Assert' to work as expected.
-
-=back
+L<Fennec::Manual::Assertions>
 
 =head1 EXPORTED FUNCTIONS
 
@@ -356,11 +284,7 @@ then all exported subs will be exported with that prefix.
 
 =item $class->import()
 
-=item use Fennec::Assert
-
 =item $class->import( $prefix )
-
-=item use Fennec::Assert qw/prefix/
 
 Called automatically when you use L<Fennec::Assert>. It will import all
 exported subs into the calling class. If a prefix is specified then all

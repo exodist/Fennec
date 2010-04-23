@@ -137,35 +137,16 @@ tests 'warnings exist' => sub {
 
 1;
 
-__END__
+=head1 AUTHORS
 
-sub warnings_exist(&$;$) {
-    my ( $sub, $in, $name ) = @_;
-    my $matches = ref($in) eq 'ARRAY' ? $in : [ $in ];
-    my @warns = capture_warnings( \&$sub );
-    my %found;
-    my @extra;
-    for my $warn ( @warns ) {
-        my $matched = 0;
-        for my $match ( @$matches ) {
-            if ( ref( $match ) ? $warn =~ $match : $match eq $warn ) {
-                $found{ $match }++;
-                $matched++;
-            }
-        }
-        push @extra => $warn unless $matched;
-    }
-    my @missing = grep { !$found{$_} } @$matches;
-    result(
-        pass => @missing ? 0 : 1,
-        name => $name,
-        stderr => [
-            @missing ? ( "Missing warnings:", map { "\t$_" } @missing )
-                     : (),
-            @extra ? ( "Extra warnings (not an error):", map { "\t$_" } @extra )
-                   : (),
-        ]
-    );
-}
+Chad Granum L<exodist7@gmail.com>
 
-1;
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
