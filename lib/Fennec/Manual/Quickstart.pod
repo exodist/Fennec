@@ -15,18 +15,18 @@ your tests as standalone tests is not recommended.
 
 This is documentation for a standalone test, that is a test that does not
 require anything outside each test file. This is perfectly acceptable, but not
-ideal. After rading this document I recommend reading
+ideal. After reading this document I recommend reading
 L<Fennec::Manual::TestSuite> to create a fennec config file.
 
-Another consequence of standalone tests is a loss of parallelization, and the
+A consequence of standalone tests is a loss of parallelization, and the
 overhead of loading fennec for each standlone test. When fennec is used to
 manage a suite it is loaded only once, and it can parallelize running of both
 test files and test groups.
 
-Once again, L<Fennec::Manual::TestSuite> can get you started using Fennec to
-manage a whole suite of test files.
-
 =head1 SYNOPSIS
+
+This is an example fennec standalone test with examples using all default
+workflow styles.
 
 t/mystandalone.t:
 
