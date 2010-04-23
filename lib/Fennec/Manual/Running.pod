@@ -4,6 +4,36 @@
 
 Fennec::Manual::Running - Tips for running fennec
 
+=head3 Line number gotchas
+
+Fennec maps groups and workflows based on their starting line number. If you
+specify a line number before the number returned by L<B> then the group or
+workflow defined before it will be chosen.
+
+A general rule is that the first non-codeblock statement within the item will
+be the first line number for the group/workflow.
+
+In this example line 2 will be considered the first line of the 'example a'
+test group.
+
+    1: tests 'example a' => sub {
+    2:     my $x = 'x';
+    2: };
+
+In this example line 5 is the line returned by L<B> when checking the line
+number for the test group 'example b'.
+
+    1: tests 'example b' => sub {
+    2:    thing_that_takes_code_block {
+    3:        ...
+    4:    };
+    5:    my $x = 'x';
+    6: };
+
+=head3 Future fixes
+
+See L<http://github.com/exodist/Fennec/issues#issue/39>
+
 =head1 EARLY VERSION WARNING
 
 L<Fennec> is still under active development, many features are untested or even

@@ -7,9 +7,8 @@ Fennec::Manual::TestSuite - Guide to managing a test suite with L<Fennec>
 =head1 DESCRIPTION
 
 This guide will get you started writing a L<Fennec> based test suite for your
-dist. The first step is to generate the boilerplate t/fennec.t file. A suitable
-default can be generated using the fennec_init command within your project
-directory.
+dist. The first step is to generate the t/Fennec.t file. A suitable default can
+be generated using the fennec_init command within your project directory.
 
 =head1 GETTIN STARTED
 
@@ -37,7 +36,7 @@ This should have created t/Fennec.t, here is an example:
 
     Runner->run_tests;
 
-This file serves multiple purposes:
+=head2 This file serves multiple purposes
 
 =over 4
 
@@ -91,7 +90,7 @@ t/MyPackage/MyThing.pm:
 
     1;
 
-B<NOTE> I<Unlike the standalone tests, you do not end the test file with finish().>
+B<NOTE> I<Unlike the standalone tests, you should not end the test file with finish().>
 
 The package can be anything except main, no 2 test files should implement the
 same package, and it is recommended that your package be the same as the
@@ -138,8 +137,8 @@ You can also directly use workflow packages:
 
 =item random => $bool
 
-Set to true to randomze test file order and test group order, this can be
-overriden within test files.
+Set to true to randomize test file order and test group order. Randomization of
+test groups can be overriden within test files.
 
 =item cull_delay => $float
 
@@ -149,16 +148,17 @@ occur. Higher numbers mean results are printed less often, but more at a time.
 
 =item collector => $name
 
-Fennec::Collector::$name, Choose which collector to use.
+Choose which collector to use. Include only the portion fo the package name
+following 'Fennec::Collector'.
 
 =item default_asserts => \@names
 
-Arrayref of assert librarys to use by default. Include only the portion of the
+Arrayref of assert libraries to use by default. Include only the portion of the
 package name following Fennec::Assert.
 
 =item default_workflows => \@names
 
-Arrayref of workflow librarys to use by default. Include only the portion of
+Arrayref of workflow libraries to use by default. Include only the portion of
 the package name following Fennec::Workflow.
 
 =item handlers => \@names
@@ -196,7 +196,9 @@ formula:
 This is because Fennec itself is a process, then it starts a process for each
 test file, then it starts a process for each test group. If one of these
 options is set to 1 then no new processes will be created for it. If both are
-set to 1 then Fennec will only ever have one process.
+set to 1 then Fennec will only ever have 2 process. The second process is due
+to Fennec always forking before loading a test file, this is done to prevent
+bleed between test files.
 
 =over
 
@@ -206,39 +208,9 @@ How many files to run in parallel, do not set this too high.
 
 =item parallel_tests => $int
 
-How many test grousp to run in parallel, do not set this too high.
+How many test groups to run in parallel, do not set this too high.
 
 =back
-
-=head3 Line number gotchas
-
-Fennec maps groups and workflows based on their starting line number. If you
-specify a line number before the number returned by L<B> then the group or
-workflow defined before it will be chosen.
-
-A general rule is that the first non-codeblock statement within the item will
-be the first line number for the group/workflow.
-
-In this example line 2 will be considered the first line of the 'example a'
-test group.
-
-    1: tests 'example a' => sub {
-    2:     my $x = 'x';
-    2: };
-
-In this example line 5 is the line returned by L<B> when checking the line
-number for the test group 'example b'.
-
-    1: tests 'example b' => sub {
-    2:    thing_that_takes_code_block {
-    3:        ...
-    4:    };
-    5:    my $x = 'x';
-    6: };
-
-=head3 Future fixes
-
-See L<http://github.com/exodist/Fennec/issues#issue/39>
 
 =head1 EARLY VERSION WARNING
 
