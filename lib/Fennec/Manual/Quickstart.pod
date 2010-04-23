@@ -25,8 +25,7 @@ test files and test groups.
 
 =head1 SYNOPSIS
 
-This is an example fennec standalone test with examples using all default
-workflow styles.
+This is an example fennec standalone test using all default workflow styles.
 
 t/mystandalone.t:
 
@@ -96,8 +95,6 @@ t/mystandalone.t:
 
 =over 4
 
-=item
-
 =item package TEST::MyStandaloneTest;
 
 Fennec tests must all be contained inside test packages, they will be used as
@@ -116,10 +113,9 @@ groups and workflows they can be parallelized, and are run later.
 
 =item tests hello_world_group => sub { ... }
 
-This declares a test group named hello_world_group. All results should be
-generated within test groups. Tests groups will be run in random order (unless
-randomization disabled), and can even be run in parallel, so it makes sense to
-seperate your tests into small groups.
+This declares a test group named hello_world_group. Tests groups will be run in
+random order (unless randomization is disabled), and are usually run in
+parallel, so it makes sense to seperate your tests into small groups.
 
 =item describe { ... }
 
@@ -129,9 +125,9 @@ L<Fennec::Workflow::SPEC> workflow is loaded. (Loaded by default)
 =item cases { ... }
 
 Create a case workflow using cases({...}), then define several cases and
-testsets within. Each testset will be run under each case, that is that case a
-will be run, followed by each of the tests, followed by case b and all the
-tests again, etc.
+testsets within. Each testset will be run under each case; that is that case
+'a' will be run, followed by each of the tests, followed by case 'b' and all
+the tests again, etc.
 
 =item sub setup_NAME { ... }
 
@@ -141,9 +137,11 @@ tests again, etc.
 
 Using the L<Fennec::Workflow::Methods> workflow you can simply define methods
 with the tests_, setup_ and teardown_ prefixes to create a subset where the
-setups are run, followed by the tests, followed by the teardowns.
+setups are run, followed by the tests, followed by the teardowns. (Note: The
+prefixes are case-insensitive, you can use sub tEsTs_NaMe { ... }, but please
+don't)
 
-Note: setups and teardown defined in this manner only effects testsets also
+Note: setups and teardowns defined in this manner only effects testsets also
 defined in this manner. They will not effect testsets defined using the tests
 { ... } function.
 
@@ -161,9 +159,9 @@ appologise for this boilderplate, but it is safer than an END block.
 Fennec has the concept of todo tests, tests which are expected to fail. You can
 also mark groups as skip if they are really bad.
 
-If an exception is thrown within a TODO block or group then a failing TODO
-result will be generated alerting you, however it is todo and will not count as
-a failure in the grand scheme.
+If an exception is thrown within a TODO block or set, a failing TODO result
+will be generated alerting you. This is a todo test and will not count as a
+failure in the grand scheme.
 
     #!/usr/bin/perl;
     package TEST::MyStandaloneTest;
