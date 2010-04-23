@@ -27,7 +27,9 @@ test files and test groups.
 
 This is an example fennec standalone test using all default workflow styles.
 
-t/mystandalone.t:
+=head2 t/mystandalone.t
+
+=head3 Boilerplate
 
     #!/usr/bin/perl;
     package TEST::MyStandaloneTest;
@@ -35,16 +37,33 @@ t/mystandalone.t:
     use warnings;
     use Fennec::Standalone;
 
-    # Tests can be made script style, but you loose parallelization:
-    ok( 1, "Not grouped" );
+    # Tests and workflows (See following headings)
+    ...
 
-    # It is much better to put tests into parallelizable groups:
+    #Finish must be called at the end of your workflow declarations
+    finish();
+
+    1;
+
+=head3 Tests in package space
+
+Tests can be made script style, but you loose parallelization
+
+    ok( 1, "Not grouped" );
+    is( 'a', 'a', "" );
+    ...
+
+=head3 Tests in groups
+
+It is much better to put tests into parallelizable groups.
+
     tests hello_world_group => sub {
         my $self = shift;
         ok( 1, "Hello world" );
     };
 
-    # Use the Spec workflow:
+=head3 RSPEC like testing
+
     describe 'my group' => sub {
         my $self = shift;
 
@@ -60,17 +79,26 @@ t/mystandalone.t:
         describe ...;
     };
 
+=head3 Tests under multiple cases
+
     You can run the same TestSets under multiple cases using the Case workfow
     (loaded by default).
     cases {
-        case a => sub { ... }
+        my $self = shift;
+        case a => sub {
+            my $self = shift;
+            ...
+        }
         case b => sub { ... }
         tests a => sub { ... }
         tests b => sub { ... }
     }
 
-    # You can also define test groups, setups, and teardowns as methods when
-    # the Methods workflow is loaded. (loaded by default)
+=head3 Tests as object methods
+
+You can also define test groups, setups, and teardowns as methods on your test
+object.
+
     sub setup_my_setup {
         my $self = shift;
         print "methods prefixed by setup_ will be run before tests defined as methods.";
@@ -85,11 +113,6 @@ t/mystandalone.t:
         my $self = shift;
         print "method prefixed by teardown_ will be run after tests defined as methods."
     }
-
-    #This must be called at the end of your workflow declarations
-    finish();
-
-    1;
 
 =head2 Breakdown
 
@@ -199,6 +222,12 @@ failure in the grand scheme.
     finish();
 
     1;
+
+=head1 NEXT STEPS - BETTER MANAGING YOUR TEST SUITE
+
+Next you should read the TestSuite documentation.
+
+L<Fennec::Manual::TestSuite>
 
 =head1 EARLY VERSION WARNING
 
