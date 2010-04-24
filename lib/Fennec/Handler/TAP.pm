@@ -40,6 +40,11 @@ sub handle {
         }
         return;
     }
+    elsif ( $item->isa( 'Fennec::Output::BailOut' )) {
+        $self->stderr( @{ $item->stderr }) if $item->stderr;
+        $self->_output( 'out_std', "Bail out!" );
+        return;
+    }
     warn "Unhandled output type: $item";
 }
 

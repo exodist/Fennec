@@ -29,7 +29,7 @@ use Benchmark   qw/timeit :hireswallclock/;
 Accessors qw/
     files parallel_files parallel_tests threader ignore random pid parent_pid
     collector search default_asserts default_workflows _benchmark_time seed
-    _started _finished finish_hooks
+    _started _finished finish_hooks bail_out
 /;
 
 our $SINGLETON;
@@ -109,7 +109,11 @@ sub process_workflow {
 sub start {
     my $self = shift;
     $self->collector->start;
-    $self->threader->iteration_callback( sub { $self->collector->cull });
+    $self->threader->iteration_callback( sub {
+        $self->collector->cull;
+        return unless $self->bail_out;
+        $self->threader->killall(15)
+    });
     $self->_started(1);
     Diag->new(
         stderr => [

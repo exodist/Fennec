@@ -4,6 +4,7 @@ use warnings;
 
 use Fennec::Util::Alias qw/
     Fennec::Output::Result
+    Fennec::Output::BailOut
 /;
 
 use Fennec::Assert;
@@ -31,6 +32,10 @@ tester ok => sub {
         pass => $ok ? 1 : 0,
         name => $name || 'nameless test',
     );
+};
+
+util bail_out => sub {
+    BailOut->new( stderr => [@_] )->write;
 };
 
 1;

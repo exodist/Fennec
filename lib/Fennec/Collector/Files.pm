@@ -4,7 +4,10 @@ use warnings;
 
 use base 'Fennec::Collector';
 
-use Fennec::Runner;
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+/;
+
 use Fennec::FileLoader;
 use Data::Dumper;
 use File::Temp qw/tempdir/;
@@ -19,6 +22,7 @@ sub cull {
     my $self = shift;
     my $handle = $self->dirhandle;
     my @objs;
+    my @bailouts;
     for my $file ( readdir( $handle )) {
         next if -d $file;
         next if $file =~ m/^\.+$/;
@@ -33,6 +37,8 @@ sub cull {
             next;
         }
         push @objs => $obj;
+        push @bailouts => $obj
+            if $obj->isa( 'Fennec::Output::BailOut' );
     }
     close( $handle );
     for my $obj ( sort { $a->timestamp <=> $b->timestamp } @objs ) {
@@ -40,6 +46,7 @@ sub cull {
             $handler->handle( $obj );
         }
     }
+    Runner->bail_out( \@bailouts ) if @bailouts;
 }
 
 sub dirhandle {
