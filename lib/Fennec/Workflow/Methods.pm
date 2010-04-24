@@ -32,6 +32,10 @@ sub testsets {
     unless( $self->subset ) {
         my $testfile = $self->testfile;
         my $tclass = blessed( $testfile );
+
+        my @tests = Fennec::Util->package_sub_map( $tclass, qr/^test_/i );
+        return unless @tests;
+
         my $subset = SubSet->new(
             name => 'Test Methods',
             workflow  => $self,
@@ -41,8 +45,7 @@ sub testsets {
             for sort { $a->[0] cmp $b->[0] }
                 Fennec::Util->package_sub_map( $tclass, qr/^setup/i );
 
-        $subset->add_testset( @$_ )
-            for Fennec::Util->package_sub_map( $tclass, qr/^test_/i );
+        $subset->add_testset( @$_ ) for @tests;
 
         $subset->add_teardown( @$_ )
             for sort { $a->[0] cmp $b->[0] }
