@@ -18,6 +18,7 @@ sub bad_files { \%BADFILES }
 sub cull {
     my $self = shift;
     my $handle = $self->dirhandle;
+    my @objs;
     for my $file ( readdir( $handle )) {
         next if -d $file;
         next if $file =~ m/^\.+$/;
@@ -31,9 +32,14 @@ sub cull {
                 for @{ $self->handlers };
             next;
         }
-        $_->handle( $obj ) for @{ $self->handlers };
+        push @objs => $obj;
     }
     close( $handle );
+    for my $obj ( sort { $a->timestamp <=> $b->timestamp } @objs ) {
+        for my $handler ( @{ $self->handlers }) {
+            $handler->handle( $obj );
+        }
+    }
 }
 
 sub dirhandle {

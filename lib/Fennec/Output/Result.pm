@@ -20,7 +20,7 @@ our @SIMPLE_ACCESSORS = qw/ pass benchmark /;
 our @PROPERTIES = (
     @SIMPLE_ACCESSORS,
     @ANY_ACCESSORS,
-    qw/ stderr stdout workflow_stack testfile /,
+    qw/ stderr stdout workflow_stack testfile timestamp /,
 );
 our $TODO;
 

@@ -12,7 +12,6 @@ use Fennec::Util::Accessors;
 use Try::Tiny;
 use Parallel::Runner;
 use Carp;
-use Digest::MD5 qw/md5_hex/;
 
 use Fennec::Util::Alias qw/
     Fennec::FileLoader
@@ -22,9 +21,10 @@ use Fennec::Util::Alias qw/
     Fennec::Runner::Proto
 /;
 
-use List::Util qw/shuffle/;
+use Digest::MD5 qw/md5_hex/;
+use List::Util  qw/shuffle/;
 use Time::HiRes qw/time/;
-use Benchmark qw/timeit :hireswallclock/;
+use Benchmark   qw/timeit :hireswallclock/;
 
 Accessors qw/
     files parallel_files parallel_tests threader ignore random pid parent_pid
@@ -86,7 +86,7 @@ sub process_workflow {
             for Fennec::Workflow->build_hooks();
     }
     catch {
-        Diag->new( "build_hook error: $_" )->write
+        Diag->new( stderr => [ "build_hook error: $_" ])->write
     };
 
     my $testfile = $workflow->testfile;
@@ -111,6 +111,12 @@ sub start {
     $self->collector->start;
     $self->threader->iteration_callback( sub { $self->collector->cull });
     $self->_started(1);
+    Diag->new(
+        stderr => [
+            "** Reproduce this test order with this environment variable:",
+            "** FENNEC_SEED='@{[ $self->seed ]}'",
+        ],
+    )->write;
 }
 
 sub finish {
@@ -176,16 +182,6 @@ Runner never finished!
 Did you forget to run finish() in a standalone test file?
 EOT
     }
-    print STDERR <<EOT
-
-
-=====================================
-The ordering of this run can be reproduced using the seed: @{[ $self->seed ]}
-Example: \$ FENNEC_SEED='@{[ $self->seed ]}' prove -I lib t/Fennec.t
-=====================================
-
-
-EOT
 }
 
 1;

@@ -8,6 +8,7 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
     Fennec::Util
 /;
+use Benchmark qw/timeit :hireswallclock/;
 
 Accessors qw/ stdout stderr _workflow testset timestamp /;
 
@@ -29,7 +30,7 @@ sub serialize {
             %$self,
             _workflow => undef,
             testset => undef,
-            workflow_stack => $self->workflow_stack,
+            workflow_stack => $self->workflow_stack || undef,
         },
         bless => ref( $self ),
     };
@@ -37,7 +38,7 @@ sub serialize {
 
 sub write {
     my $self = shift;
-    $self->timestamp( time ) unless $self->timestamp;
+    $self->timestamp( time() ) unless $self->timestamp;
     Runner->collector->write( $self );
 }
 
