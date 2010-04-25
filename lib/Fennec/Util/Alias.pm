@@ -28,6 +28,29 @@ sub import {
 
 Chad Granum L<exodist7@gmail.com>
 
+=head1 NAME
+
+Fennec::Util::Alias - Require packages and alias the package name.
+
+=head1 DESCRIPTION
+
+Load a list of modules and alias the package name to the last portion of the
+package name. Packages can implement an alias() method to override the behavior
+of the alias.
+
+=head1 SYNOPSIS
+
+    package MyPackage;
+    use Fennec::Util::Alias qw/
+        Fennec::Output::Result
+        Fennec::Output::Diag
+    /;
+
+    Result->new();
+    Diag->new();
+
+    1;
+
 =head1 COPYRIGHT
 
 Copyright (C) 2010 Chad Granum

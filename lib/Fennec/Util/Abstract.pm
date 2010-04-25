@@ -20,6 +20,24 @@ sub import {
 
 1;
 
+=head1 NAME
+
+Fennec::Util::Abstract - Provides the 'Abstract()' method.
+
+=head1 DESCRIPTION
+
+Provides the 'Abstract()' method, which can be used inside an abstract method
+to die with an explanation.
+
+=head1 SYNOPSIS
+
+    package MyPackage;
+    use Fennec::Util::Abstract;
+
+    sub do_thing { Abstract() }
+
+    1;
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

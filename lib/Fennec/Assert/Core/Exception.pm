@@ -92,6 +92,44 @@ sub live_or_die {
 
 1;
 
+=head1 NAME
+
+Fennec::Assert::Core::Exception - Functions to test code that throws exceptions
+
+=head1 DESCRIPTION
+
+Functions to test code that throws warnings. Emulates L<Test::Exception>.
+
+=head1 SYNOPSIS
+
+    dies_ok { die( 'xxx' )} "Should die";
+    lives_ok { 1 } "Should live";
+    throws_ok { die( 'xxx' )} qr/xxx/, "Throws 'xxx'";
+    lives_and { ok( 1, "We did not die" )} "Ooops we died";
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item lives_ok { ... } $name
+
+Test passes if the codeblock does not die.
+
+=item dies_ok { ... } $name
+
+Test passes if the codeblock dies.
+
+=item throws_ok { ... } qr//, $name
+
+Test passes if the codeblock dies, and the thrown message matches the regex.
+
+=item lives_and { ... } $name
+
+Does nothing if the codeblock lives, produces a failed test result if the
+codeblock dies.
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

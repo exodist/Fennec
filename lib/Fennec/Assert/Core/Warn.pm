@@ -108,6 +108,65 @@ sub warnings_exist(&$;$) {
 
 1;
 
+=head1 NAME
+
+Fennec::Assert::Core::Warn - Tools for testing warnings
+
+=head1 DESCRIPTION
+
+This library provides functions that are useful in testing code that throws
+warnings. This library provides everything L<Test::Warn> does plus some
+bonuses.
+
+=head1 SYNOPSIS
+
+    my @warnings = capture_warnings {
+        warn 'a';
+        warn 'b';
+    };
+
+    warning_is { warn 'xxx' } "xxx at ...", "Name";
+    warnings_are { warn 'xxx'; warn 'yyy'; }
+                 [ 'xxx at ...', 'yyy at ...' ],
+                 "Name";
+    warning_like { warn 'xxx' } qr/^xxx at/, "Name";
+    warnings_like { warn 'xxx'; warn 'yyy' }
+                  [ qr/^xxx/, qr/^yyy/ ],
+                  "Name";
+    warnings_exist { warn 'xxx'; warn 'yyy' }
+                   [ qr/^xxx/, 'yyy at ...' ],
+                   "Name";
+
+=head1 EXPORTS
+
+=over 4
+
+=item @list = capture_warnings { warn 'xxx' }
+
+Capture the generated warnings to do with as you please.
+
+=item warning_is { ... } $want, $name
+
+Check that the thrown warning is what you want.
+
+=item warnings_are { ... } \@want, $name
+
+Check that the thrown warnings are what you want.
+
+=item warning_like { ... } $regex, $name
+
+Check that the thrown warning matches $regex.
+
+=item warnings_like { ... } [ $regex, ... ], $name
+
+Check that the thrown warnings match the list of regexes.
+
+=item warnings_exist { ... } [ $string, $regex, ... ], $name
+
+Check that at least 1 warning matches for each string and regex provided.
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

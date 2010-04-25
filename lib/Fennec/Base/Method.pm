@@ -47,6 +47,35 @@ sub run_on {
 
 1;
 
+=head1 NAME
+
+Fennec::Base::Method - Base class for objects that are blessed methods.
+
+=head1 METHODS
+
+=over 4
+
+=item %proto = $class->proto()
+
+Define a generic protoype to use in all new objects. Prototype specified in
+constructor takes priority over these options. This is an abstract method,
+default sumply returns an empty list.
+
+=item $obj = $class->new( $name, sub { ... })
+
+=item $obj = $class->new( $name, method => sub { ... }, %proto )
+
+Create a new instance of the object, $name and method are required, method can
+be the second argument, or specified with method => sub {} when providing
+extended paramaters.
+
+=item $obj->run_on( $other_obj, @args )
+
+Run the object as a method on the object specified as the first argument.
+Additional arguments are passed into the method invocation.
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>
