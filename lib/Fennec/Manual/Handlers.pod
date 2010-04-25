@@ -4,6 +4,85 @@
 
 Fennec::Manual::Handlers - Writing Custom Result Handlers.
 
+=head1 OVERVIEW
+
+Handlers are very simple, they are the final destination for Output objects,
+including results. When Fennec is started one or more handlers will be
+instantiated. Every output generated will be sent to the parent process which
+sends the object to each of the handlers.
+
+=head1 SYNOPSYS
+
+Here is a very basic, and not very useful output handler.
+
+    package Fennec::Handler::MyHandler;
+    use strict;
+    use warnings;
+    use base 'Fennec::Handler';
+    use Data::Dumper;
+
+    sub init {
+        my $self = shift;
+        ...
+    }
+
+    sub start {
+        my $self = shift;
+        print "Fennec started\n";
+    }
+
+    sub handle {
+        my $self = shift;
+        my ( $output ) = @_;
+        print "Fennec generated output, here it is:\n";
+        print Dumper( $output );
+    }
+
+    sub fennec_error {
+        my $self = shift;
+        my ( $msg ) = @_;
+        print "Fennec experienced an error: $msg\n";
+    }
+
+    sub finish {
+        my $self = shift;
+        print "Fennec finished\n";
+    }
+
+    1;
+
+=head1 METHODS TO IMPLEMENT
+
+=head2 MUST IMPLEMENT
+
+=over 4
+
+=item handle( $output )
+
+This is how the Fennec runner sends output to the handlers. Every output item
+generated will be pased in here. All items will be subclases of
+L<Fennec::Output>.
+
+=item fennec_error( @msgs )
+
+Called when fennec encounters an error.
+
+=back
+
+=head2 CAN IMPLEMENT
+
+=over 4
+
+=item start()
+
+Called when fennec starts.
+
+=item finish()
+
+Called when fennec is finished.
+
+=back
+
 =head1 EARLY VERSION WARNING
 
 L<Fennec> is still under active development, many features are untested or even

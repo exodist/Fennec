@@ -124,7 +124,7 @@ sub start {
     my $self = shift;
     $self->collector->start;
     $self->threader->iteration_callback( sub {
-        $self->collector->cull;
+        $self->collector->handle_output;
         return unless $self->bail_out;
         $self->threader->killall(15)
     });

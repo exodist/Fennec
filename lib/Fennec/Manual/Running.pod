@@ -4,7 +4,32 @@
 
 Fennec::Manual::Running - Tips for running fennec
 
-=head3 Line number gotchas
+=head1 ENVIRONMET VARIABLES
+
+=over 4
+
+=item FENNEC_SEED=integer
+
+Should be an integer, when present it will be used as the seed for the
+randomization of tests. This can be used to reproduce the order of tests
+multiple times.
+
+=item FENNEC_FILE=path/to/fennec/test
+
+If present fennec will only run the specified test file.
+
+=item FENNEC_ITEM="line number"
+
+=item FENNEC_ITEM="testset or workflow name"
+
+Will only run the specified workflow or testset name, may also specify a line
+number. When given a line number, fennec will attempt to find the item defined
+accross that line number. Use of line number is an imperfect process at the
+moment.
+
+=back
+
+=head1 LINE NUMBER GOTCHA
 
 Fennec maps groups and workflows based on their starting line number. If you
 specify a line number before the number returned by L<B> then the group or
@@ -30,9 +55,13 @@ number for the test group 'example b'.
     5:    my $x = 'x';
     6: };
 
-=head3 Future fixes
+=head2 Future fixes
 
-See L<http://github.com/exodist/Fennec/issues#issue/39>
+=over 4
+
+=item L<http://github.com/exodist/Fennec/issues#issue/39>
+
+=back
 
 =head1 EARLY VERSION WARNING
 

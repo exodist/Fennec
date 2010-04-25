@@ -25,7 +25,7 @@ buildup or teardown functions.
 Using the L<Fennec::Workflow> system it was a minimal effort to write an RSPEC
 like workflow. Less than 100 lines of code in SPEC.pm at the time this was
 written. If you do not like how Fennec implements SPEC you can probably
-implement it your own way easily.
+implement it your own quite easily.
 
 =head1 OVERVIEW
 
@@ -77,6 +77,7 @@ and passed into their parent workflows.
     build_with 'my_workflow';
 
     sub testsets {
+        my $self = shift;
         ...
         return @testsets;
     }
@@ -135,15 +136,15 @@ via $self->_workflows() and $self->_testsets().
 =item build_with( $name, $class )
 
 Exports a method ($name) that when called will create an instance of $class, or
-the class frin which build_with() was called. The exported method will take a
-single codeblock as an argument. After being build the instance will be added
+the class in which build_with() was called. The exported method will take a
+name and codeblock as arguments. After being build the instance will be added
 to the current in which it was defined.
 
 =item build_hook { ... }
 
 =item build_hook( sub { ... })
 
-Add code that should be run just after building the workflows and jus before
+Add code that should be run just after building the workflows and just before
 running the tests.
 
 =back
@@ -205,7 +206,7 @@ Calls $wf->add_item() for each item in @items.
 
 =back
 
-=head1 OTHER DOCUMENTATION
+=head1 RECOMMENDED DOCUMENTATION
 
 =over 4
 

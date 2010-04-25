@@ -3,9 +3,12 @@ use strict;
 use warnings;
 
 use base 'Fennec::FileLoader';
+use Fennec::Util::Alias qw/
+    Fennec
+/;
 
 sub valid_file {
-    my $self = shift;
+    my $class = shift;
     my ( $file ) = @_;
     return $file =~ m{/t/.*\.pm$} ? 1 : 0;
 }
@@ -14,6 +17,7 @@ sub load_file {
     my $self = shift;
     my $file = $self->filename;
     require $file;
+    return Fennec->_test_class;
 }
 
 sub paths { 't/' }

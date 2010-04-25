@@ -15,9 +15,11 @@ tests 'create' => sub {
     my $one = $CLASS->new( out_std => sub {}, out_err => sub {} );
     isa_ok( $one, $CLASS );
     can_ok( $one, qw/handle fennec_error finish/ );
-    lives_ok {
-        $one->$_ for qw/finish start bail_out fennec_error/;
-    } "stubs";
+    capture_warnings {
+        lives_ok {
+            $one->$_ for qw/finish start fennec_error/;
+        } "stubs";
+    };
     throws_ok {
         $one->handle
     } "$CLASS does not implement result()",

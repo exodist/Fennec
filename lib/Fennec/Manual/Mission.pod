@@ -116,6 +116,20 @@ before the rest of the first result appears. The more tests you have the more
 likely you are to see this. This bug would be completely random and
 unpredictable.
 
+B<NOTE (4/24/2010) The second problem listed is proving difficult to prove:>
+
+In the past I wrote a script to verify this problem, however I was unable to
+find that proof when writing fennec. I have since written another test script
+in an attempt to demonstrate this again. My new script was unable to
+demonstrate the problem.
+
+Rather than hiding my lack of proof, I present it here, and freely admit the
+second forking problem may not in fact be a problem. I would love to have
+someone more familiar with the IO systems confirm or disprove the problem.
+
+My failed attempt can be found here:
+L<http://gist.github.com/raw/378112/4b74dfb6aa453a9df944ac8489b8825b6bc072bb/outputtest.pl>
+
 =back
 
 =head1 AUTHORS

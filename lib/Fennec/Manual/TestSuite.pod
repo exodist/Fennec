@@ -119,6 +119,14 @@ You can also directly use assert packages:
     use Fennec::Assert::Core::More;
     use Fennec::Assert::TBCore::Exception;
 
+You can also use Test::Builder based tools*:
+
+    use Fennec asserts => [];
+    use Test::More;
+
+B<*> There are 2 problems with this. 1) standalone and Test::More both export
+'done_testing'. 2) Test::Builder tools must be loaded AFTER Fennec.
+
 =item Choosing workflow plugins
 
     use Fennec workflows => [ 'Spec' ];

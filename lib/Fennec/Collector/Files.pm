@@ -6,6 +6,7 @@ use base 'Fennec::Collector';
 
 use Fennec::Util::Alias qw/
     Fennec::Runner
+    Fennec::Output
 /;
 
 use Fennec::FileLoader;
@@ -22,7 +23,6 @@ sub cull {
     my $self = shift;
     my $handle = $self->dirhandle;
     my @objs;
-    my @bailouts;
     for my $file ( readdir( $handle )) {
         next if -d $file;
         next if $file =~ m/^\.+$/;
@@ -37,16 +37,9 @@ sub cull {
             next;
         }
         push @objs => $obj;
-        push @bailouts => $obj
-            if $obj->isa( 'Fennec::Output::BailOut' );
     }
     close( $handle );
-    for my $obj ( sort { $a->timestamp <=> $b->timestamp } @objs ) {
-        for my $handler ( @{ $self->handlers }) {
-            $handler->handle( $obj );
-        }
-    }
-    Runner->bail_out( \@bailouts ) if @bailouts;
+    return @objs;
 }
 
 sub dirhandle {
@@ -65,7 +58,6 @@ sub start {
 sub finish {
     my $self = shift;
     $self->SUPER::finish(@_);
-    $self->cull;
     $self->cleanup;
 }
 
@@ -86,12 +78,9 @@ sub read {
     my $self = shift;
     my ( $file ) = @_;
     my $obj = do( $self->testdir . "/$file" );
-    if ( $obj ) {
-        my $bless = $obj->{ bless };
-        my $data = $obj->{ data };
-        eval "require $bless" || die( $@ );
-        return bless( $data, $bless );
-    }
+    return Output->deserialize( $obj )
+        if $obj;
+
     require Fennec::Debug;
     Fennec::Debug->debug( "bad file: '$file' - $! - $@" );
     $BADFILES{$file} = [ $!, $@ ];

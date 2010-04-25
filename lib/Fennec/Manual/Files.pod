@@ -4,6 +4,62 @@
 
 Fennec::Manual::Files - Writing Custom File Loaders.
 
+=head1 SYNOPSIS
+
+    package Fennec::FileLoader::MyType;
+    use strict;
+    use warnings;
+
+    use base 'Fennec::FileLoader';
+
+    sub valid_file {
+        my $class = shift;
+        my ( $file ) = @_;
+        ...
+        return $bool;
+    }
+
+    sub load_file {
+        my $self = shift;
+        my $file = $self->filename;
+        my $root_workflow = Fennec::Workflow->current;
+        ...
+        return $package;
+    }
+
+    sub paths {qw( t/ ... )}
+
+    1;
+
+=head1 METHODS
+
+You must implement the following methods.
+
+=over 4
+
+=item $bool = $class->valid_file( $filename )
+
+Return true if the given filename is a valid file of the type you expect.
+
+=item $package = $obj->load_file()
+
+Must load the test file. This must also make sure that a package name is
+generated for the file. When finished the method must return the name of the
+package for the test file. This package must also be a subclass of
+Fennec::TestFile.
+
+By the time this method is called a parent workflow has already been created
+for your test file. You can access this workflow using
+Fennec::Workflow->current(). You can use this to add testgroups and child
+workflows.
+
+=item @list = $obj->paths()
+
+A list of paths, relative to the project root, in which to search for test
+files.
+
+=back
+
 =head1 EARLY VERSION WARNING
 
 L<Fennec> is still under active development, many features are untested or even

@@ -28,9 +28,24 @@ sub start {
 
 sub finish {
     my $self = shift;
-    $self->cull;
+    $self->handle_output;
     $_->finish for @{ $self->handlers };
 }
+
+sub handle_output {
+    my $self = shift;
+    my @objs = $self->cull;
+    my @bailouts;
+    for my $obj ( sort { $a->timestamp <=> $b->timestamp } @objs ) {
+        push @bailouts => $obj
+            if $obj->isa( 'Fennec::Output::BailOut' );
+        for my $handler ( @{ $self->handlers }) {
+            $handler->handle( $obj );
+        }
+    }
+    Runner->bail_out( \@bailouts ) if @bailouts;
+}
+
 
 1;
 

@@ -118,9 +118,8 @@ sub load {
     return 1 if $self->[1]++;
     Fennec->_clear_test_class;
 
-    $self->load_file( $self->[0] );
+    my $tclass = $self->load_file( $self->[0] );
 
-    my $tclass = Fennec->_test_class;
     croak( "loading '" . $self->[0] . "' did not produce a test class" )
         unless $tclass;
     return $tclass;
