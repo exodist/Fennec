@@ -11,7 +11,7 @@ our $HAVE_TB = eval 'require Test::Builder; 1';
 tests use_package => sub {
     require_ok $CLASS;
     my $ac = anonclass( use => $CLASS );
-    $ac->can_ok( qw/tb_wrapper tester util result diag test_caller/ );
+    $ac->can_ok( qw/tb_wrapper tester util result diag test_caller note/ );
     $ac->isa_ok( 'Exporter::Declare::Base' );
 };
 

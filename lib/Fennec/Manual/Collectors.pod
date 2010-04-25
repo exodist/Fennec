@@ -62,11 +62,11 @@ You must override these methods.
 
 =over 4
 
-=head1 $obj->write( $output )
+=item $obj->write( $output )
 
 Send an output to the parent process
 
-=head1 @outputs = $obj->cull()
+=item @outputs = $obj->cull()
 
 Return all the outputs sent to the parent form children.
 

@@ -39,6 +39,8 @@ functions.vim
 
 Bindings:
 
+=over 4
+
 =item <f8>
 
 This will run the test on the current line only.
@@ -46,6 +48,8 @@ This will run the test on the current line only.
 =item <f10>
 
 This will run every test in the current file only.
+
+=back
 
 =head1 AUTHORS
 

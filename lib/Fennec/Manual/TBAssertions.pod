@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Fennec::Manual - Wrapping Test::Builder based tools for use in Fennec.
+Fennec::Manual - Using Test::Builder based tools with Fennec.
 
 =head1 EARLY VERSION WARNING
 

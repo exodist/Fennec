@@ -6,6 +6,7 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
     Fennec::Output::Result
     Fennec::Output::Diag
+    Fennec::Output::Note
 /;
 
 use Try::Tiny;
@@ -15,13 +16,15 @@ use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
 use Exporter::Declare ':extend';
 
-our @EXPORT = qw/tb_wrapper tester util result diag test_caller/;
+our @EXPORT = qw/tb_wrapper tester util result diag test_caller note/;
 our @CARP_NOT = qw/ Try::Tiny Benchmark /;
 
 our $TB_RESULT;
 our @TB_DIAGS;
-our $TB_OK;
+our @TB_NOTES;
+our $TB_OK = 0;
 our %TB_OVERRIDES;
+
 BEGIN {
     %TB_OVERRIDES = (
         _ending => sub {},
@@ -30,23 +33,23 @@ BEGIN {
         ok => sub {
             shift;
             my ( $ok, $name ) = @_;
-            result(
+            return result(
                 test_caller(),
                 pass => $ok,
                 name => $name,
-            ) unless $TB_OK;
-            $TB_RESULT = [ $ok, $name ];
+            ) unless $Fennec::Assert::TB_OK;
+            $Fennec::Assert::TB_RESULT = [ $ok, $name ];
         },
         diag => sub {
             shift;
             return if $_[0] =~ m/No tests run!/;
-            diag( @_ ) unless $TB_OK;
-            push @TB_DIAGS => @_;
+            return diag( @_ ) unless $Fennec::Assert::TB_OK;
+            push @Fennec::Assert::TB_DIAGS => @_;
         },
         note => sub {
             shift;
-            diag( @_ ) unless $TB_OK;
-            push @TB_DIAGS => @_;
+            return note( @_ ) unless $Fenec::Assert::TB_OK;
+            push @Fennec::Assert::TB_NOTES => @_;
         }
     );
 
@@ -59,6 +62,12 @@ BEGIN {
             *{ 'Test::Builder::' . $newref } = \&$ref;
             *{ 'Test::Builder::' . $ref    } = $TB_OVERRIDES{ $ref };
         }
+    }
+    if ( eval { require Test::More; 1 }) {
+        no warnings 'redefine';
+        no strict 'refs';
+        my $export = \@{ 'Test::More::EXPORT' };
+        @$export = grep { $_ ne 'done_testing' } @$export;
     }
 }
 
@@ -138,6 +147,12 @@ sub diag {
     Fennec::Output::Diag->new( stderr => \@_ )->write;
 }
 
+sub note {
+    shift( @_ ) if blessed( $_[0] )
+                && blessed( $_[0] )->isa( __PACKAGE__ );
+    Fennec::Output::Note->new( stdout => \@_ )->write;
+}
+
 sub result {
     shift( @_ ) if blessed( $_[0] )
                 && blessed( $_[0] )->isa( __PACKAGE__ );
@@ -158,14 +173,17 @@ sub tb_wrapper(&) {
     my $proto = prototype( $orig );
     my $wrapper = sub {
         my @args = @_;
-        local $TB_OK = 1;
-        local ( $TB_RESULT, @TB_DIAGS );
+        local $Fennec::Assert::TB_OK = 1;
+        local $Fennec::Assert::TB_RESULT;
+        local @Fennec::Assert::TB_DIAGS;
+        local @Fennec::Assert::TB_NOTES;
         $orig->( @args );
         return diag( @TB_DIAGS ) unless $TB_RESULT;
         return result(
-            pass      => $TB_RESULT->[0],
-            name      => $TB_RESULT->[1],
-            stderr    => [@TB_DIAGS],
+            pass      => $Fennec::Assert::TB_RESULT->[0],
+            name      => $Fennec::Assert::TB_RESULT->[1],
+            stderr    => \@Fennec::Assert::TB_DIAGS,
+            stdout    => \@Fennec::Assert::TB_NOTES,
         );
     };
     return $wrapper unless $proto;

@@ -1,7 +1,7 @@
 package TEST::Fennec::UseTB;
 use strict;
 use warnings;
-use Fennec asserts => [ 'Interceptor' ];
+use Fennec asserts => [ 'Interceptor', 'Core::Warn' ];
 
 use_or_skip Test::More;
 
@@ -25,6 +25,15 @@ tests 'capture Test::More asserts' => sub {
     ok( !$fail->[$_]->pass, "$_ failed" )
         for grep { $fail->[$_]->isa( 'Fennec::Output::Result' ) }
             0 .. @$fail - 1;
+
+    my @warn = capture_warnings {
+        done_testing;
+    };
+    like(
+        $warn[0],
+        qr/calling done_testing\(\) is only required for Fennec::Standalone tests at /,
+        "Did not import Test::More::done_testing"
+    );
 };
 
 1;
