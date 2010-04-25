@@ -89,6 +89,8 @@ tools to bypass this system. If there is a wrapped form of the tool you want
 then there is a higher chance these edge cases have been weeded out by the
 author of the wrapped version.
 
+=back
+
 =head1 WRAPPED CORE
 
 If you would rather use TB based assertions rather than the ones Fennec
