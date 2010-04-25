@@ -71,8 +71,8 @@ L<Fennec::Manual::Assertions> - Guide to writing custom assertion libraries
 Many L<Test::Builder> tools will work as expected within Fennec, however some
 may require, or can be improved by wrapping them into Fennec.
 
-L<Fennec::Manual::TBAssertions> - Guide to wrapping L<Test::Builder> based
-tools for use within fennec.
+L<Fennec::Manual::TBAssertions> - Using L<Test::Builder> based tools with
+Fennec.
 
 =item Core Assertion Libraries
 
