@@ -4,7 +4,7 @@
 
 Fennec::Manual::Assertions - Writing Custom Assertion Libraries
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     package Fennec::Assert::MyAssert;
     use strict;

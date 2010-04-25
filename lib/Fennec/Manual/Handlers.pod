@@ -11,7 +11,7 @@ including results. When Fennec is started one or more handlers will be
 instantiated. Every output generated will be sent to the parent process which
 sends the object to each of the handlers.
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
 Here is a very basic, and not very useful output handler.
 

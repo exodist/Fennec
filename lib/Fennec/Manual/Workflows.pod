@@ -64,7 +64,7 @@ a child workflow. The workflow sub 'nested' will be blessed as a workflow and
 passed to 'parent'. While this is going on the testsets will also be blessed
 and passed into their parent workflows.
 
-=head1 CUSTOM WORKFLOW SYNOPSYS
+=head1 CUSTOM WORKFLOW SYNOPSIS
 
     package Fennec::Workflow::MyWorkflow;
     use strict;
