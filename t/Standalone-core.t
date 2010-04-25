@@ -9,7 +9,7 @@ tests hello_world_group => sub {
     ok( 1, "Hello world" );
 };
 
-finish;
+done_testing;
 
 1;
 

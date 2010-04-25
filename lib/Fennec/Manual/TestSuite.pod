@@ -54,12 +54,6 @@ more details on arguments for Fennec::Runner->init;
 You can use prove -I lib t/Fennec.t to run your tests. Module::Build and
 Module::Install already know how to run Fennec tests because of this.
 
-=item Parse environment variables
-
-The last 2 items are for environment variables that can be used to tell Fennec
-to only run a specified file/test name or line number. This way you do not have
-to run the entire test suite every time.
-
 =back
 
 =head1 TEST FILES
@@ -90,7 +84,7 @@ t/MyPackage/MyThing.pm:
 
     1;
 
-B<NOTE> I<Unlike the standalone tests, you should not end the test file with finish().>
+B<NOTE> I<Unlike the standalone tests, you should not end the test file with done_testing().>
 
 The package can be anything except main, no 2 test files should implement the
 same package, and it is recommended that your package be the same as the
@@ -101,6 +95,10 @@ Within the test groups you can use all the core asserts by default (see
 L<Fennec::Assert::Core>). This list includes all functions normally exported by
 L<Test::More>, L<Test::Warn>, and L<Test::Exception>.
 
+You can also use the fennec_scaffold.pl command line utility to automatically
+generate a basic test file for every module under lib. See
+L<Fennec::Manual::CommandLine> for more details.
+
 =head1 ADVANCED USAGE
 
 =over 4
@@ -110,7 +108,7 @@ L<Test::More>, L<Test::Warn>, and L<Test::Exception>.
 By default L<Fennec::Assert::Core> is loaded, which in turn loads all Core
 assert modules. You can specify alternate ones as well.
 
-The following will load L<Fennec::Assert::TBCore> asset libraries instead of
+The following will load L<Fennec::Assert::TBCore> assert libraries instead of
 Core libraries. These are wrappers around L<Test::Builder> based test modules.
 
     use Fennec asserts => [ 'TBCore' ]

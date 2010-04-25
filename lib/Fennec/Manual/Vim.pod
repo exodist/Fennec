@@ -9,6 +9,44 @@ Fennec::Manual::Vim - Vim rc files and tools provided with Fennec.
 L<Fennec> is still under active development, many features are untested or even
 unimplemented. Please give it a try and report any bugs or suggestions.
 
+=head1 Files
+
+All vim files are stored in shared/vim in the distribution.
+
+=head2 functions.vim
+
+functions.vim contains vim functions that are useful when working with fennec
+tests. Currently there is only 1 function.
+
+=over 4
+
+=item RunFennecLine()
+
+This will run the testgroup on the current line in the current testfile. Fennec
+will make its best guess as to which testset is on which line. There is ticket
+in place to improve fennecs guesses.
+
+http://github.com/exodist/Fennec/issues#issue/39
+
+=back
+
+=head2 vimrc
+
+This is an example vimrc file that sources functions.vim and binds keys to
+runnign fennec tests. This file can be directly lnked to the fennec dist root
+directory. Anywhere else it will have to be modified to have the path to
+functions.vim
+
+Bindings:
+
+=item <f8>
+
+This will run the test on the current line only.
+
+=item <f10>
+
+This will run every test in the current file only.
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

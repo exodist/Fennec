@@ -7,6 +7,7 @@ use Carp;
 use Fennec::Util::Alias qw/
     Fennec::Runner
     Fennec::TestFile
+    Fennec::Assert
 /;
 
 our $VERSION = "0.017";
@@ -49,8 +50,15 @@ sub import {
 
     no strict 'refs';
     no warnings 'redefine';
-    *{ $caller . '::finish' } = sub { carp "calling finish() is only required for Fennec::Standalone tests" };
-
+    *{ $caller . '::done_testing' } = sub {
+        carp "calling done_testing() is only required for Fennec::Standalone tests"
+    };
+    *{ $caller . '::use_or_skip' } = sub(*) {
+        my ( $package ) = @_;
+        my $have = eval "require $package; 1";
+        die "SKIP: $package is not installed\n" unless $have;
+        eval "package $caller; use $package; 1" || die( $@ );
+    };
     1;
 }
 

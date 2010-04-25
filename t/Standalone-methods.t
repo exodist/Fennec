@@ -35,7 +35,7 @@ tests 'Z - Run this last' => sub {
     is( $self->did_run_teardown, 3, "Ran teardown last" );
 };
 
-finish;
+done_testing;
 
 1;
 

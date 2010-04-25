@@ -19,7 +19,7 @@ sub import {
     {
         no warnings 'redefine';
         no strict 'refs';
-        *{ $caller . '::finish' } = sub { $runner->finish }
+        *{ $caller . '::done_testing' } = sub { $runner->finish }
     }
 
     my $workflow = Fennec::Workflow->new(

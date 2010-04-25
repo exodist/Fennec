@@ -43,7 +43,7 @@ L<Fennec::Manual::Vim> - Vim tools and rc files provided with the dist.
 
 =item Running Fennec
 
-L<Fennec::Manual::Running> - How to run individual Fennec test files, or even
+L<Fennec::Manual::Running> - How to run individual Fennec test files, or
 zeroing in on specific testsets.
 
 =back

@@ -68,7 +68,21 @@ sub run_tests {
                 $self->process_workflow( $workflow );
             }
             catch {
-                Result->fail_testfile( $file, $_ );
+                use Data::Dumper;
+                if ( $_ =~ m/SKIP:\s*(.*)/ ) {
+                    Result->new(
+                        pass => 0,
+                        skip => $1,
+                        name => $file->filename || "unknown file",
+                    )->write;
+                }
+                else {
+                    Result->new(
+                        pass => 0,
+                        name => $file->filename || "unknown file",
+                        stderr => [ $_ ],
+                    )->write;
+                }
             };
         }, 1 );
     }

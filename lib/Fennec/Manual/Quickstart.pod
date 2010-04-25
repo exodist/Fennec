@@ -37,11 +37,14 @@ This is an example fennec standalone test using all default workflow styles.
     use warnings;
     use Fennec::Standalone;
 
+    # If the module specified is not installed all tests will be skipped
+    use_or_skip 'Module::Name';
+
     # Tests and workflows (See following headings)
     ...
 
-    #Finish must be called at the end of your workflow declarations
-    finish();
+    #done_testing must be called at the end of your workflow declarations
+    done_testing();
 
     1;
 
@@ -127,12 +130,19 @@ objects.
 
 Use the standalone fennec package.
 
+=item use_or_skip 'Module::Name'
+
+Works just like 'use', however if the module requested is not installed all
+tests will be skipped with 'Module::Name not installed' as the message. This
+can be used at the start of any test that should only be run when a specific
+other module is installed.
+
 =item ok( 1, "Not grouped" )
 
-Tests can be anywhere between 'use Fennec::Standalone' and 'finish()'. This
-means you can write Test::Builder style tests using fennec. The problem with
-this is that the tests are run as they are encountered. When you put tests into
-groups and workflows they can be parallelized, and are run later.
+Tests can be anywhere between 'use Fennec::Standalone' and 'done_testing()'.
+This means you can write Test::Builder style tests using fennec. The problem
+with this is that the tests are run as they are encountered. When you put tests
+into groups and workflows they can be parallelized, and are run later.
 
 =item tests hello_world_group => sub { ... }
 
@@ -168,12 +178,12 @@ Note: setups and teardowns defined in this manner only effects testsets also
 defined in this manner. They will not effect testsets defined using the tests
 { ... } function.
 
-=item finish()
+=item done_testing()
 
 Fennec runs your test groups and workflows after the package is loaded. In
-normal Fennec tests finish() is not necessary. However in Standalone tests
-fennec needs a trigger to tell it that the workflows are ready to be run. I
-appologise for this boilderplate, but it is safer than an END block.
+normal Fennec tests done_testing() is not necessary. However in Standalone
+tests fennec needs a trigger to tell it that the workflows are ready to be run.
+I appologise for this boilderplate, but it is safer than an END block.
 
 =back
 
@@ -219,7 +229,7 @@ failure in the grand scheme.
     }
 
     # Do not forget this!
-    finish();
+    done_testing();
 
     1;
 

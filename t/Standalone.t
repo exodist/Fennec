@@ -23,7 +23,7 @@ tests hello_world_group => sub {
     ok( !$output->[0]->pass, "intercepted a failed test" );
 };
 
-finish;
+done_testing;
 
 1;
 

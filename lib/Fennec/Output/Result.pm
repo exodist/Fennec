@@ -58,7 +58,20 @@ for my $any_accessor ( @ANY_ACCESSORS ) {
         return $self->{ $any_accessor }
             if $self->{ $any_accessor };
 
-        my @any = ( $self->testset, $self->workflow, $self->testfile );
+#        use Data::Dumper;
+#        no strict 'refs';
+#        print Dumper(
+#            $self->testfile,
+#            $self->testfile->can( 'fennec_meta' ) || 'cannot',
+#            { map { $_, $_->can( 'fennec_meta' ) } @{ blessed($self->testfile) . '::ISA' }}
+#        );
+
+        my $meta = $self->testfile
+            ? ( $self->testfile->can( 'fennec_meta' )
+                ? $self->testfile->fennec_meta
+                : undef
+            ) : undef;
+        my @any = ( $self->testset, $self->workflow, $meta ? $meta : () );
         for my $item ( @any ) {
             next unless $item;
             next unless $item->can( $any_accessor );
@@ -71,7 +84,7 @@ for my $any_accessor ( @ANY_ACCESSORS ) {
     };
 }
 
-for my $type ( qw/workflow testfile testset/ ) {
+for my $type ( qw/workflow testset/ ) {
     my $fail = sub {
         my $class = shift;
         my ( $item, @stderr ) = @_;
