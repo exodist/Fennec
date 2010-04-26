@@ -43,6 +43,38 @@ sub package_sub_map {
 
 1;
 
+=head1 NAME
+
+Fennec::Util - Misc utilities
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item @names = workflow_stack( $workflow )
+
+=item $stack = workflow_stack( $workflow )
+
+Like a stacktrace, except it returns the workflow and its parents up to the
+root including filename and line number on which they were defined. In array
+context it simply returns the list of workflow names up to the parent.
+
+=item @sub_names = $class->package_subs( $package )
+
+=item @sub_names = $class->package_subs( $package, $regex )
+
+Get the list of all subs in a package, if a regex is provided it will be used
+to filter the list.
+
+=item %map = $class->package_sub_map( $package )
+
+=item %map = $class->package_sub_map( $package, $regex )
+
+Get a map of (sub_name => $coderef) for all subs in a package. If a regex is
+provided use it to filter the list of subs.
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

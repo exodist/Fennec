@@ -21,6 +21,14 @@ sub runner_state {
 
 1;
 
+=head1 NAME
+
+Fennec::Debug - Debug utilities for Fennec
+
+=head1 DESCRIPTION
+
+This is a work in progress, it does nothing yet, move along.
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>
