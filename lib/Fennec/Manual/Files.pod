@@ -6,11 +6,11 @@ Fennec::Manual::Files - Writing Custom File Loaders.
 
 =head1 SYNOPSIS
 
-    package Fennec::FileLoader::MyType;
+    package Fennec::FileType::MyType;
     use strict;
     use warnings;
 
-    use base 'Fennec::FileLoader';
+    use base 'Fennec::FileType';
 
     sub valid_file {
         my $class = shift;
