@@ -11,6 +11,19 @@ sub new {
 
 1;
 
+=head1 NAME
+
+Fennec::Output::Note - Represents a note output object.
+
+=head1 DESCRIPTION
+
+See L<Fennec::Output>
+
+=head1 SYNOPSIS
+
+    use Fennec::Output::Note;
+    $note = Fennec::Output::Note->new( stdout => \@messages );
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

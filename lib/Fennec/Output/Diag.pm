@@ -11,6 +11,19 @@ sub new {
 
 1;
 
+=head1 NAME
+
+Fennec::Output::Diag - Represents a diagnostics output object.
+
+=head1 DESCRIPTION
+
+See L<Fennec::Output>
+
+=head1 SYNOPSIS
+
+    use Fennec::Output::Diag;
+    $diag = Fennec::Output::Diag->new( stderr => \@messages );
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

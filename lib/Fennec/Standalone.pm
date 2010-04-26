@@ -42,6 +42,19 @@ sub import {
 
 1;
 
+=head1 NAME
+
+Fennec::Standalone - Standalone Fennec test module
+
+=head1 DESCRIPTION
+
+Use this instead of L<Fennec> when writing standlone tests. Creates a runner,
+starts a root workflow, provides done_testing() to finish things up.
+
+=head1 SEE ALSO
+
+L<Fennec::Manual::Quickstart>
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>
