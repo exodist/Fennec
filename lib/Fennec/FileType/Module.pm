@@ -1,8 +1,9 @@
-package Fennec::FileLoader::Module;
+package Fennec::FileType::Module;
 use strict;
 use warnings;
 
-use base 'Fennec::FileLoader';
+use base 'Fennec::FileType';
+
 use Fennec::Util::Alias qw/
     Fennec
 /;
@@ -15,6 +16,7 @@ sub valid_file {
 
 sub load_file {
     my $self = shift;
+    Fennec->_clear_test_class;
     my $file = $self->filename;
     require $file;
     return Fennec->_test_class;
@@ -23,6 +25,35 @@ sub load_file {
 sub paths { 't/' }
 
 1;
+
+=head1 NAME
+
+Fennec::FileType::Module - Load module files under t/ as test files.
+
+=head1 DESCRIPTION
+
+Finds all .pm objects under the t/ directory and uses them as test files.
+
+=head1 METHODS
+
+This class inherits from L<Fennec::FileType>.
+
+=over 4
+
+=item $bool = $class->valid_file( $filename )
+
+Check if a file is a valid test file of this type.
+
+=item $test_class = $obj->load_file()
+
+Load the testfile this instance was built with. Return the class for the
+testfile.
+
+=item @paths = $class->paths()
+
+Returns a list of paths in which to search for test files.
+
+=back
 
 =head1 AUTHORS
 

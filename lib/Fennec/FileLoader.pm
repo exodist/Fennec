@@ -4,20 +4,11 @@ use warnings;
 
 use Carp;
 use Fennec::Output::Result;
-use Fennec::Util::Abstract;
 require Fennec;
 
-use List::MoreUtils qw/uniq/;
 use Cwd qw/cwd/;
-use File::Find qw/find/;
-BEGIN {
-    *_find = \&find;
-    undef( *Fennec::FileLoader::find );
-}
 
 our $ROOT;
-
-Abstract qw/ valid_file load_file paths /;
 
 sub root {
     my $class = shift;
@@ -48,24 +39,16 @@ sub _looks_like_root {
 sub find_types {
     my $class = shift;
     my ( $types, $files ) = @_;
-    my @paths;
 
     my @plugins;
     for my $type ( @$types ) {
-        my $plugin = "Fennec\::FileLoader\::$type";
+        my $plugin = "Fennec\::FileType\::$type";
         eval "require $plugin" || die( $@ );
         push @plugins => $plugin;
-        push @paths => $plugin->paths;
     }
-    @paths = uniq @paths;
 
-    unless ( $files ) {
-        $files = [];
-        _find(
-            sub { push @$files => $File::Find::name },
-            map { $class->root . "/$_" } @paths
-        );
-    }
+    return $class->find_all( @plugins )
+        unless $files;
 
     my @out;
     for my $file ( @$files ) {
@@ -80,54 +63,14 @@ sub find_types {
     return @out;
 }
 
-sub find {
+sub find_all {
     my $class = shift;
-    my @list;
-    _find(
-        sub {
-            my $file = $File::Find::name;
-            return unless $class->valid_file( $file );
-            push @list => $file;
-        },
-        map { $class->root . "/$_" } $class->paths
-    ) if $class->paths;
-
-    return map { $class->new( $_ ) } @list;
-}
-
-sub new {
-    my $class = shift;
-    my ( $file ) = @_;
-
-    croak( "$class\::new() called without a filename" )
-        unless $file;
-    croak( "$file is not a valid $class file" )
-        unless $class->valid_file( $file );
-
-    return bless( [ $file, 0 ], $class );
-}
-
-sub data {
-    my $self = shift;
-    ( $self->[2] ) = @_ if @_;
-    return $self->[2];
-}
-
-sub load {
-    my $self = shift;
-    return 1 if $self->[1]++;
-    Fennec->_clear_test_class;
-
-    my $tclass = $self->load_file( $self->[0] );
-
-    croak( "loading '" . $self->[0] . "' did not produce a test class" )
-        unless $tclass;
-    return $tclass;
-}
-
-sub filename {
-    my $self = shift;
-    $self->[0];
+    my @plugins = @_;
+    my @out;
+    for my $plugin ( @plugins ) {
+        push @out => $plugin->find();
+    }
+    return @out;
 }
 
 1;
