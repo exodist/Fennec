@@ -16,6 +16,22 @@ for my $name ( @LIST ) {
 
 1;
 
+=head1 NAME
+
+Fennec::Assert::TBCore::Simple - Fennec wrapper for L<Test::Simple>
+
+=head1 DESCRIPTION
+
+Simply wraps L<Test::Simple> so that its functions work better in L<Fennec>.
+
+=head1 WRAPPED FUNCTIONS
+
+=over 4
+
+=item ok()
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

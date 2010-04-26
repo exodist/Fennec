@@ -125,7 +125,7 @@ L<Fennec::Manual::Workflows>
 L<Fennec::Workflow::Module> - Workflow that lets you define testsets and
 setup/teardown as methods on your test object.
 
-L<Fennec::Workflow::SPEC> - Implementation of the SPEC test workflow
+L<Fennec::Workflow::Spec> - Implementation of the SPEC test workflow
 
 L<Fennec::Workflow::Case> - A workflow that lets you run testsets under
 multiple cases.

@@ -21,6 +21,48 @@ util note => \&diag;
 
 1;
 
+=head1 NAME
+
+Fennec::Assert::TBCore::More - Fennec wrapper for L<Test::More>
+
+=head1 DESCRIPTION
+
+Simply wraps L<Test::More> so that its functions work better in L<Fennec>.
+
+=head1 WRAPPED FUNCTIONS
+
+=over 4
+
+=item ok()
+
+=item is()
+
+=item isnt()
+
+=item like()
+
+=item unlike()
+
+=item cmp_ok()
+
+=item can_ok()
+
+=item isa_ok()
+
+=item new_ok()
+
+=item pass()
+
+=item fail()
+
+=item use_ok()
+
+=item require_ok()
+
+=item is_deeply()
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

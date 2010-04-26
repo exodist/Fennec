@@ -16,6 +16,28 @@ for my $name ( @LIST ) {
 
 1;
 
+=head1 NAME
+
+Fennec::Assert::TBCore::Exception - Fennec wrapper for L<Test::Exception>
+
+=head1 DESCRIPTION
+
+Simply wraps L<Test::Exception> so that its functions work better in L<Fennec>.
+
+=head1 WRAPPED FUNCTIONS
+
+=over 4
+
+=item throws_ok()
+
+=item dies_ok()
+
+=item lives_ok()
+
+=item lives_and()
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

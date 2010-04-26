@@ -53,12 +53,19 @@ sub import {
     *{ $caller . '::done_testing' } = sub {
         carp "calling done_testing() is only required for Fennec::Standalone tests"
     };
+    # XXX We should move these into an assertion library.
     *{ $caller . '::use_or_skip' } = sub(*) {
         my ( $package ) = @_;
         my $have = eval "require $package; 1";
         die "SKIP: $package is not installed\n" unless $have;
         eval "package $caller; use $package; 1" || die( $@ );
     };
+    *{ $caller . '::require_or_skip' } = sub(*) {
+        my ( $package ) = @_;
+        my $have = eval "require $package; 1";
+        die "SKIP: $package is not installed\n" unless $have;
+    };
+
     1;
 }
 

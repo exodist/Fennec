@@ -8,7 +8,6 @@ use Fennec::Util::Alias qw/
 
 use Fennec::Assert;
 use Try::Tiny;
-use Carp qw/cluck/;
 
 tester 'require_ok';
 sub require_ok(*) {
@@ -51,13 +50,52 @@ sub use_into_ok(**;@) {
     }
 };
 
-tester use_ok => sub(*) {
+tester use_ok => sub(*;@) {
     my( $from, @importargs ) = @_;
     my $caller = caller;
     use_into_ok( $from, $caller, @importargs );
 };
 
 1;
+
+=head1 NAME
+
+Fennec::Assert::Core::Package - Tools for testing that packages load properly
+
+=head1 SYNOPSIS
+
+    use Fennec::Assert::Core::Package;
+
+    require_ok( $package );
+    use_ok( $package );
+    use_into_ok( $package, $dest_package );
+
+    require_ok Package::Bareword;
+    use_ok Package::Bareword;
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item require_ok Package::Bareword
+
+=item require_ok( $package )
+
+Verify that a package loads ok.
+
+=item use_ok Package::Bareword
+
+=item use_ok( $package, @args )
+
+Verify that a package loads ok by using it, exports will be imported into the
+caller's namespace.
+
+=item use_into_ok( $package, $dest_package, @args )
+
+Verify that $package loads ok by using it from $dest_package. Exports will be
+imported into $dest_package.
+
+=back
 
 =head1 AUTHORS
 

@@ -22,6 +22,24 @@ sub import {
 
 1;
 
+=head1 NAME
+
+Fennec::Assert::TBCore - Shortcut to load all tbcore assertion libraries.
+
+=head1 DESCRIPTION
+
+Loads all the following assertion libraries:
+
+=over 4
+
+=item L<Fennec::Assert::TBCore::More>
+
+=item L<Fennec::Assert::TBCore::Exception>
+
+=item L<Fennec::Assert::TBCore::Warn>
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

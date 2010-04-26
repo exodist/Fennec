@@ -3,15 +3,10 @@ use strict;
 use warnings;
 use Fennec;
 
-my $skip = eval "require Test::Warn; 1"
-    ? undef
-    : 'Test::Warn is not installed';
+require_or_skip Test::Warn;
 
-tests load => (
-    skip => $skip,
-    method => sub {
-        require_ok( 'Fennec::Assert::TBCore::Warn' );
-    },
-);
+tests load => sub {
+    require_ok( 'Fennec::Assert::TBCore::Warn' );
+};
 
 1;

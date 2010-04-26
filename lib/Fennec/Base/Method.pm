@@ -5,6 +5,7 @@ use warnings;
 use Fennec::Util::Alias qw/
     Fennec::Util::Accessors
 /;
+use Carp;
 
 Accessors qw/method name file line skip todo/;
 

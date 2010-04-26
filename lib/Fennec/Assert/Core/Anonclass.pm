@@ -89,7 +89,7 @@ Fennec::Assert::Core::Anonclass - Easily build a temporary class
 =head1 DESCRIPTION
 
 Sometimes you need a class that uses a module or implements some functionality
-in order to test another modules. This provides a simple way to do that.
+in order to test another module. This provides a simple way to do that.
 
 =head1 SYNOPSIS
 
