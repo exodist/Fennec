@@ -32,13 +32,15 @@ sub new {
 
 sub load {
     my $self = shift;
-    return 1 if $self->[1]++;
 
-    my $tclass = $self->load_file( $self->[0] );
+    unless ( $self->[1] ) {
+        $self->[1] = $self->load_file( $self->[0] );
+    }
 
     croak( "loading '" . $self->[0] . "' did not produce a test class" )
-        unless $tclass;
-    return $tclass;
+        unless $self->[1];
+
+    return $self->[1];
 }
 
 sub filename {
@@ -62,6 +64,73 @@ sub find {
 }
 
 1;
+
+=head1 NAME
+
+Fennec::FileType - Base class for FileType plugins.
+
+=head1 DESCRIPTION
+
+All FileType plugins for fennec should subclass this module.
+
+=head1 ABSTRACT METHODS
+
+Your FileType must override these
+
+=over 4
+
+=item $bool = $class->valid_file( $filename )
+
+Check if a file is of this type.
+
+=item $testfile_class = $obj->load_file()
+
+Load the file the object was constructed with and return the testfile class it
+produced.
+
+=item @paths = paths()
+
+Should return a list of paths relative to project root which contain test
+files.
+
+=back
+
+=head1 CONSTRUCTOR
+
+=over
+
+=item $obj = $class->new( $filename )
+
+Creates an instance of your filetype object.
+
+=back
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item @testfiles = $class->find()
+
+Find all the TestFiles in a project that are of this FileType.
+
+=back
+
+=head1 OBJECT METHODS
+
+=over 4
+
+=item $obj->filename()
+
+Get the filename this instance was constructed with.
+
+=item $testfile_class = $obj->load()
+
+Load the FileType object and return the class name of the TestFile class it
+produced.
+
+Only loads the file once.
+
+=back
 
 =head1 AUTHORS
 

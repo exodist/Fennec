@@ -2,10 +2,7 @@ package Fennec::FileLoader;
 use strict;
 use warnings;
 
-use Carp;
-use Fennec::Output::Result;
 require Fennec;
-
 use Cwd qw/cwd/;
 
 our $ROOT;
@@ -74,6 +71,38 @@ sub find_all {
 }
 
 1;
+
+=head1 NAME
+
+Fennec::FileLoader - Utility to find and load Fennec tests
+
+=head1 DESCRIPTION
+
+This class is responsible for loading the FileType modules, and finding/loading
+Fennec test files.
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item my $root = $class->root()
+
+Return the project root directory.
+
+=item @files = @find_types( \@types )
+
+=item @files = find_types( \@types, \@files )
+
+Takes a list of types (Last part of package name only) and optionally a list of
+files. Returns an array of FileType objects each constructed with a single
+filename.
+
+=item @files = find_all( @type_classes )
+
+Returns a list of FileType objects for all the classes specified. Takes full
+class names.
+
+=back
 
 =head1 AUTHORS
 
