@@ -56,14 +56,14 @@ sub run_tests {
     my $self = shift;
     $self->start;
 
+    my $counter = 0;
+    my $all = @{ $self->files };
     for my $file ( @{ $self->files }) {
-        my $counter = 0;
-        my $all = @{ $self->files };
+        $counter++;
+        Note->new( stdout => ["Running file $counter/$all:", "\t" . $file->filename ])->write;
 
         srand( $self->seed );
         $self->threader->run( sub {
-            $counter++;
-            Note->new( stdout => ["Running file $counter/$all:", "\t" . $file->filename ])->write;
             try {
                 $self->reset_benchmark;
                 my $workflow = Fennec::Workflow->new(
