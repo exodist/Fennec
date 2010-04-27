@@ -17,6 +17,7 @@ use Fennec::Util::Alias qw/
     Fennec::FileLoader
     Fennec::Output::Result
     Fennec::Output::Diag
+    Fennec::Output::Note
     Fennec::Output::BailOut
     Fennec::Config
     Fennec::Runner::Proto
@@ -56,8 +57,13 @@ sub run_tests {
     $self->start;
 
     for my $file ( @{ $self->files }) {
+        my $counter = 0;
+        my $all = @{ $self->files };
+
         srand( $self->seed );
         $self->threader->run( sub {
+            $counter++;
+            Note->new( stdout => ["Running file $counter/$all:", "\t" . $file->filename ])->write;
             try {
                 $self->reset_benchmark;
                 my $workflow = Fennec::Workflow->new(

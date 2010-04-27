@@ -58,10 +58,6 @@ tests 'handle' => sub {
     is( @err, 1, "diag message" );
     is( $err[0], "# a", "Got message" );
 
-    warning_is { $one->handle( Diag->new( stdout => [ "a" ]))}
-        "Diag with stdout is deprecated\n",
-        "deprecate diag stdout";
-
     warning_like { $one->handle( bless( {}, 'XXX' ))}
         qr/Unhandled output type: XXX=HASH/,
         "Unhandled output";

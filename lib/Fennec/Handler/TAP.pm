@@ -32,12 +32,9 @@ sub handle {
         return;
     }
     return $self->result( $item ) if $item->isa( 'Fennec::Output::Result' );
-    if ( $item->isa( 'Fennec::Output::Diag' )) {
+    if ( $item->isa( 'Fennec::Output::Diag' ) || $item->isa( 'Fennec::Output::Note' )) {
         $self->stderr( @{ $item->stderr }) if $item->stderr;
-        if ( $item->stdout ) {
-            $self->stdout( @{ $item->stdout });
-            warn "Diag with stdout is deprecated\n";
-        }
+        $self->stdout( @{ $item->stdout }) if $item->stdout;
         return;
     }
     elsif ( $item->isa( 'Fennec::Output::BailOut' )) {
