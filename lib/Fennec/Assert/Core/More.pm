@@ -306,6 +306,13 @@ will also be compared.
 Used by compare() to compare 2 hashes. Datastructures nested within the array
 will also be compared.
 
+=item @errors = REGEXP_compare( \$got, \$want )
+
+Alias to SCALAR_compare().
+
+I<In perl 5.12.0 REGEXPs have become a proper type, in older versions this is
+never used>
+
 =item @errors = SCALAR_compare(\$got, \$want)
 
 NOTE: $got and $want must be references to scalars being compared, not the

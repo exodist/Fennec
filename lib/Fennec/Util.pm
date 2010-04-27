@@ -15,7 +15,7 @@ sub workflow_stack {
     do {
         push @list => $current;
     } while (( $current = $current->parent ) && $current->isa( 'Fennec::Workflow' ));
-    return reverse @list if wantarray;
+    return reverse map { $_->name } @list if wantarray;
 
     my @lines = map {
         join( ' ', $_->name || "UNNAMED", '-', $_->file || "UNKNOWN FILE", 'at', $_->line || "UNKNOWN LINE" )

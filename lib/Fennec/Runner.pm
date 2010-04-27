@@ -17,6 +17,7 @@ use Fennec::Util::Alias qw/
     Fennec::FileLoader
     Fennec::Output::Result
     Fennec::Output::Diag
+    Fennec::Output::BailOut
     Fennec::Config
     Fennec::Runner::Proto
 /;

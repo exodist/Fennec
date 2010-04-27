@@ -46,6 +46,19 @@ Loads all the following assertion libraries:
 
 =back
 
+=head1 CLASS METHODS
+
+=over 4
+
+=item $class->export_to( $package )
+
+=item $class->export_to( $package, $prefix )
+
+Export all assertions to the specified package. An optional prefix may be
+appended to all assertion names.
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

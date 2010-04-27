@@ -126,6 +126,34 @@ The anonymous class will be destroyed when the $anonclass object and all
 instances fall out of scope. This will most likely never be a problem, but it
 is important to know.
 
+=head1 CLASS METHODS
+
+=over 4
+
+=item $instance = $anonclass->new( ... )
+
+Create a new instance of the anonymous class. Will call any new() method
+provided during anonclass construction, otherwise will bless a hashref
+containing any params provided.
+
+=item $subref = $anonclass->can( $name )
+
+can() on an anonclass object will act against the blessed anonymous class, not
+against the anonclass package.
+
+=item $bool = $anonclass->isa( $package )
+
+isa() on an anonclass object will act against the blessed anonymous class, not
+against the anonclass package.
+
+=item $package = $anonclass->class()
+
+Return the full package name of the anonymous class. This will be a strange
+looking package name with seemingly random characters at the end, but it is
+valid until the anonclass object is destroyed.
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

@@ -130,6 +130,22 @@ codeblock dies.
 
 =back
 
+=head1 INTERNAL API
+
+=head2 FUNCTIONS
+
+=over 4
+
+=item $bool = live_or_die(sub { ... })
+
+=item ( $bool, $msg ) = live_or_die(sub { ... })
+
+Run a codeblock and check if it lives or dies. In array context will return a
+boolean, if the code died the error will also be returned. In scalar context
+only a boolean will be returned.
+
+=back
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

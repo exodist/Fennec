@@ -22,7 +22,8 @@ util ln => sub {
     return $line + $diff;
 };
 
-tester result_line_numbers_are => sub {
+tester 'result_line_numbers_are';
+sub result_line_numbers_are {
     my ( $results, @numbers ) = @_;
     result(
         pass => 0,
@@ -115,6 +116,14 @@ Capture and return all the results generated within a codeblock.
 
 Return the current line number plus $int. Useful for determining what line
 number a result should have.
+
+=item result_line_number_is( $result, $line; $name )
+
+Check the line number of a result.
+
+=item result_line_numbers_are( \@results, @lines )
+
+Check the line numbers of several results.
 
 =back
 

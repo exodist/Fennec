@@ -30,6 +30,7 @@ BEGIN {
         _ending => sub {},
         _my_exit => sub {},
         exit => sub {},
+        plan => sub {},
         ok => sub {
             shift;
             my ( $ok, $name ) = @_;
@@ -279,6 +280,10 @@ L<Fennec::Output::Result> construction parameters.
 =item diag( @messages )
 
 Issue a L<Fennec::Output::Diag> object with the provided messages.
+
+=item note( @messages )
+
+Issue a L<Fennec::Output::Note> object with the provided messages.
 
 =back
 

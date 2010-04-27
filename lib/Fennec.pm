@@ -40,11 +40,11 @@ sub import {
 
     _export_package_to( 'Fennec::TestSet', $caller );
 
-    $workflows ||= Runner->default_workflows || [];
+    $workflows ||= Runner->default_workflows;
     _export_package_to( 'Fennec::Workflow::' . $_, $caller )
         for @$workflows;
 
-    $asserts ||= Runner->default_asserts || [ qw/ Core / ];
+    $asserts ||= Runner->default_asserts;
     _export_package_to( 'Fennec::Assert::' . $_, $caller )
         for @$asserts;
 
@@ -53,12 +53,21 @@ sub import {
     *{ $caller . '::done_testing' } = sub {
         carp "calling done_testing() is only required for Fennec::Standalone tests"
     };
-    # XXX We should move these into an assertion library.
-    *{ $caller . '::use_or_skip' } = sub(*) {
-        my ( $package ) = @_;
-        my $have = eval "require $package; 1";
-        die "SKIP: $package is not installed\n" unless $have;
-        eval "package $caller; use $package; 1" || die( $@ );
+
+    *{ $caller . '::use_or_skip' } = sub(*;@) {
+        my ( $package, @params ) = @_;
+        my $eval = "package $caller; use $package"
+        . (@params ? (
+            @params > 1
+                ? ' @params'
+                : ($params[0] =~ m/^[0-9\-\.\e]+$/
+                    ? " $params[0]"
+                    : " '$params[0]'"
+                  )
+          ) : '')
+        . "; 1";
+        my $have = eval $eval;
+        die "SKIP: $package is not installed or insufficient version: $@" unless $have;
     };
     *{ $caller . '::require_or_skip' } = sub(*) {
         my ( $package ) = @_;
@@ -110,6 +119,8 @@ Fennec offers the following features, among others.
 =item No use of END blocks
 
 =item No Devel::Declare magic
+
+=item No use of Sub::Uplevel
 
 =item No source filters
 

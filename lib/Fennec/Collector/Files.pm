@@ -16,19 +16,20 @@ use File::Temp qw/tempdir/;
 our %BADFILES;
 our $SEMI_UNIQ = 1;
 our $TEMPDIR;
+our $PID = $$;
 
-sub bad_files { \%BADFILES }
+sub _bad_files { \%BADFILES }
 
 sub cull {
     my $self = shift;
-    my $handle = $self->dirhandle;
+    my $handle = $self->_dirhandle;
     my @objs;
     for my $file ( readdir( $handle )) {
         next if -d $file;
         next if $file =~ m/^\.+$/;
         next unless $file =~ m/\.res$/;
-        next if $BADFILES{ $file };
-        my ($obj) = $self->read_and_unlink( $file );
+        next if _bad_files->{ $file };
+        my ($obj) = $self->_read_and_unlink( $file );
         unless( $obj ) {
             require Fennec::Debug;
             Fennec::Debug->debug( "Error processing file: $file" );
@@ -40,53 +41,6 @@ sub cull {
     }
     close( $handle );
     return @objs;
-}
-
-sub dirhandle {
-    my $self = shift;
-    my $path = $self->testdir;
-    opendir( my $handle, $path ) || die( "Cannot open dir $path: $!" );
-    return $handle;
-}
-
-sub start {
-    my $self = shift;
-    $self->SUPER::start(@_);
-    $self->prepare;
-}
-
-sub finish {
-    my $self = shift;
-    $self->SUPER::finish(@_);
-    $self->cleanup;
-}
-
-sub read_and_unlink {
-    my $self = shift;
-    my @out;
-    for my $file ( @_ ) {
-        next if $BADFILES{ $file };
-        if( my $obj = $self->read( $file )) {
-            push @out => $obj;
-            unlink( $self->testdir . "/$file" );
-        }
-    }
-    return @out;
-}
-
-sub read {
-    my $self = shift;
-    my ( $file ) = @_;
-    my $obj = do( $self->testdir . "/$file" );
-    return Output->deserialize( $obj )
-        if $obj;
-
-    require Fennec::Debug;
-    Fennec::Debug->debug( "bad file: '$file' - $! - $@" );
-    $BADFILES{$file} = [ $!, $@ ];
-    $_->fennec_error( "bad file: '$file' - $! - $@" )
-        for @{ $self->handlers };
-    return;
 }
 
 sub write {
@@ -102,6 +56,18 @@ sub write {
     rename ( $file, "$file.res" );
 }
 
+sub start {
+    my $self = shift;
+    $self->SUPER::start(@_);
+    $self->_prepare;
+}
+
+sub finish {
+    my $self = shift;
+    $self->SUPER::finish(@_);
+    $self->_cleanup;
+}
+
 sub testdir {
     unless ( $TEMPDIR ) {
         $TEMPDIR = tempdir( Fennec::FileLoader->root . "/_$$\_test_XXXX" );
@@ -109,14 +75,49 @@ sub testdir {
     return $TEMPDIR;
 }
 
-sub prepare {
+sub _read {
     my $self = shift;
-    $self->cleanup;
+    my ( $file ) = @_;
+    my $obj = do( $self->testdir . "/$file" );
+    return Output->deserialize( $obj )
+        if $obj;
+
+    require Fennec::Debug;
+    Fennec::Debug->debug( "bad file: '$file' - $! - $@" );
+    _bad_files->{$file} = [ $!, $@ ];
+    $_->fennec_error( "bad file: '$file' - $! - $@" )
+        for @{ $self->handlers };
+    return;
+}
+
+sub _dirhandle {
+    my $self = shift;
+    my $path = $self->testdir;
+    opendir( my $handle, $path ) || die( "Cannot open dir $path: $!" );
+    return $handle;
+}
+
+sub _read_and_unlink {
+    my $self = shift;
+    my @out;
+    for my $file ( @_ ) {
+        next if _bad_files->{ $file };
+        if( my $obj = $self->_read( $file )) {
+            push @out => $obj;
+            unlink( $self->testdir . "/$file" );
+        }
+    }
+    return @out;
+}
+
+sub _prepare {
+    my $self = shift;
+    $self->_cleanup;
     my $path = $self->testdir;
     mkdir( $path ) unless -d $path;
 }
 
-sub cleanup {
+sub _cleanup {
     my $class = shift;
     return unless -d $class->testdir;
     opendir( my $TDIR, $class->testdir ) || die( $! );
@@ -129,7 +130,49 @@ sub cleanup {
     rmdir( $class->testdir ) || warn( "Cannot cleanup test dir: $!" );
 }
 
+sub DESTROY {
+    my $self = shift;
+    $self->_cleanup if $$ == $PID;
+}
+
 1;
+
+=head1 NAME
+
+Fennec::Collector::Files - File based output collector for fennec
+
+=head1 DESCRIPTION
+
+This is the default collector for fennec. This collector creates a temporary
+directory to which it writes all output objects. These files are removed as
+they are collected. When the tests complete the temp dir will be removed.
+
+=head1 METHODS
+
+=over 4
+
+=item @outputs = $obj->cull()
+
+Retrieve all the output objects that have been written since the start or last
+cull.
+
+=item $obj->write( $output )
+
+Store an output object so that it will be picked up in the parent process.
+
+=item $obj->start()
+
+Start the collector (does preparation work)
+
+=item $obj->finish()
+
+Finish the collector (Cleanup)
+
+=item $dir = $obj->testdir()
+
+Name of the tempdir that stores result files.
+
+=back
 
 =head1 AUTHORS
 

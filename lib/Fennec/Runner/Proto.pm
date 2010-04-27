@@ -42,7 +42,8 @@ sub _or_config {
     my ( $name, $default ) = @_;
     my %config = Config->fetch;
 
-    return $config{ overrides }->{ $name }
+    return $ENV{ 'FENNEC_' . uc( $name )}
+        || $config{ overrides }->{ $name }
         || $self->in->{ $name }
         || $config{ defaults }->{ $name }
         || $default;

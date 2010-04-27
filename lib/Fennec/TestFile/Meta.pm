@@ -104,7 +104,11 @@ Create a new instance of a meta object.
         workflow => $root_workflow,
     );
 
+=back
+
 =head1 OBJECT METHODS
+
+=over 4
 
 =item $random = $obj->random()
 

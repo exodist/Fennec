@@ -73,6 +73,10 @@ results.
 
 =over 4
 
+=item bail_out( @reasons )
+
+Tell fennec to stop everything, somethings wrong, just stop.
+
 =item TODO(sub { ... }; $reason)
 
 =item TODO { ... } $reason

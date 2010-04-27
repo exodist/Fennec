@@ -37,6 +37,28 @@ tests error_tests => sub {
         "Cannot export from invalid package";
 };
 
+tests exports => sub {
+    warning_like { done_testing }
+     qr/calling done_testing\(\) is only required for Fennec::Standalone tests/,
+     "done_testing in standalone only";
+
+    throws_ok { use_or_skip XXX::Fake::Package }
+        qr/SKIP: XXX::Fake::Package is not installed or insufficient version:/,
+        "use_or_skip";
+
+    throws_ok { use_or_skip XXX::Fake::Package, 'a', 'b', 'c' }
+        qr/SKIP: XXX::Fake::Package is not installed or insufficient version:/,
+        "use_or_skip";
+
+    throws_ok { use_or_skip Fennec, 100000 }
+        qr/SKIP: Fennec is not installed or insufficient version: Fennec version 100000 required/,
+        "use_or_skip w/ version";
+
+    throws_ok { require_or_skip XXX::Fake::Package }
+        qr/SKIP: XXX::Fake::Package is not installed/,
+        "require_or_skip";
+};
+
 1;
 
 =head1 AUTHORS

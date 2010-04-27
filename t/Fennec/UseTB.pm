@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Fennec asserts => [ 'Interceptor', 'Core::Warn' ];
 
-use_or_skip Test::More;
+use_or_skip Test::More, 0.94;
 
 tests 'using Test::More asserts' => sub {
     ok( 1, "ok" );
