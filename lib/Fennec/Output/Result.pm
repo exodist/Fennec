@@ -15,12 +15,12 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
 /;
 
-our @ANY_ACCESSORS = qw/ skip todo name file line/;
+our @ANY_ACCESSORS = qw/ skip todo name line/;
 our @SIMPLE_ACCESSORS = qw/ pass benchmark /;
 our @PROPERTIES = (
     @SIMPLE_ACCESSORS,
     @ANY_ACCESSORS,
-    qw/ stderr stdout workflow_stack testfile timestamp /,
+    qw/ stderr stdout workflow_stack testfile timestamp file /,
 );
 our $TODO;
 
@@ -82,6 +82,37 @@ for my $any_accessor ( @ANY_ACCESSORS ) {
             return $found;
         }
     };
+}
+
+sub file {
+    my $self = shift;
+    return $self->{ file } if $self->{ file };
+
+    my $meta = $self->testfile
+        ? ( $self->testfile->can( 'fennec_meta' )
+            ? $self->testfile->fennec_meta
+            : undef
+        ) : undef;
+    my @any = ( $meta ? $meta : (), $self->testset, $self->workflow );
+    my $found;
+    for my $item ( @any ) {
+        next unless $item;
+        next unless $item->can( 'file' );
+
+        $found = $item->file;
+        next unless $found;
+    }
+    while ( ref $found ) {
+        if ( $found->can( 'filename' )) {
+            $found = $found->filename;
+        }
+        elsif ( $found->can( 'file' )) {
+            $found = $found->file;
+        }
+        else {
+            $found = 'Unknown File';
+        }
+    }
 }
 
 for my $type ( qw/workflow testset/ ) {
