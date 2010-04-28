@@ -59,7 +59,7 @@ sub find {
                 return unless $class->valid_file( $file );
                 push @list => $file;
             },
-        }
+        },
         map { FileLoader->root . "/$_" } $class->paths
     ) if $class->paths;
 
