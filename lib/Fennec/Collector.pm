@@ -12,9 +12,9 @@ sub new {
     my $class = shift;
     my @handlers;
     for my $hclass ( @_ ) {
-        $hclass = 'Fennec::Handler::' . $hclass;
-        eval "require $hclass; 1" || die ( @_ );
-        push @handlers => $hclass->new();
+        my $fhclass = 'Fennec::Handler::' . $hclass;
+        eval "require $fhclass; 1" || die ( $@ );
+        push @handlers => $fhclass->new();
     }
     my $self = bless( { handlers => \@handlers }, $class );
     $self->init if $self->can( 'init' );
