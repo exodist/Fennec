@@ -75,17 +75,18 @@ sub run_tests {
                 $self->process_workflow( $workflow );
             }
             catch {
-                use Data::Dumper;
                 if ( $_ =~ m/SKIP:\s*(.*)/ ) {
                     Result->new(
                         pass => 0,
                         skip => $1,
+                        file => $file->filename || "unknown file",
                         name => $file->filename || "unknown file",
                     )->write;
                 }
                 else {
                     Result->new(
                         pass => 0,
+                        file => $file->filename || "unknown file",
                         name => $file->filename || "unknown file",
                         stderr => [ $_ ],
                     )->write;
