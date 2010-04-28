@@ -52,11 +52,14 @@ sub find {
     my $class = shift;
     my @list;
     _find(
-        sub {
-            my $file = $File::Find::name;
-            return unless $class->valid_file( $file );
-            push @list => $file;
-        },
+        {
+            follow => 1,
+            wanted => sub {
+                my $file = $File::Find::name;
+                return unless $class->valid_file( $file );
+                push @list => $file;
+            },
+        }
         map { FileLoader->root . "/$_" } $class->paths
     ) if $class->paths;
 
