@@ -113,6 +113,7 @@ sub file {
             $found = 'Unknown File';
         }
     }
+    $self->{ file } = $found;
 }
 
 for my $type ( qw/workflow testset/ ) {
