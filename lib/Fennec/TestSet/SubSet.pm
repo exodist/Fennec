@@ -48,8 +48,10 @@ sub run {
         if $self->skip;
 
     $self->run_setups;
-    $self->run_tests;
+    my $ok = eval { $self->run_tests; 1 };
+    my $msg = $@;
     $self->run_teardowns;
+    return $ok || die ( $@ );
 }
 
 sub add_testset {
