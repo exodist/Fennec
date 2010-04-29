@@ -18,6 +18,12 @@ use Time::HiRes qw/time/;
 
 Accessors qw/in/;
 
+our @PROPERTIES = qw/
+    ignore files collector handlers cull_delay threader parallel_files
+    parallel_tests seed random filetypes default_asserts default_workflows
+    search
+/;
+
 sub new {
     my $class = shift;
     return bless({ in => {@_} }, $class );
@@ -49,49 +55,27 @@ sub _or_config {
         || $default;
 }
 
-for my $accessor (
-qw/
-    ignore files collector handlers cull_delay threader parallel_files
-    parallel_tests seed random data filetypes default_asserts default_workflows
-    search
-/
-) {
+for my $property ( @PROPERTIES, 'data' ) {
     my $sub = sub {
         my $self = shift;
         my ( $data_only ) = @_;
-        my $get_from = "_$accessor";
+        my $get_from = "_$property";
 
-        $self->{ $accessor } = $self->$get_from
-            unless exists $self->{ $accessor };
+        $self->{ $property } = $self->$get_from
+            unless exists $self->{ $property };
 
-        return $self->{ $accessor } if $data_only;
-        return defined $self->{ $accessor }
-            ? ($accessor => $self->{ $accessor })
+        return $self->{ $property } if $data_only;
+        return defined $self->{ $property }
+            ? ($property => $self->{ $property })
             : ();
     };
     no strict 'refs';
-    *$accessor = $sub;
+    *$property = $sub;
 }
 
 sub _data {
     my $self = shift;
-    return { map {( $self->$_ )} qw/
-        collector
-        cull_delay
-        default_asserts
-        default_workflows
-        files
-        filetypes
-        handlers
-        ignore
-        parallel_files
-        parallel_tests
-        pids
-        random
-        search
-        seed
-        threader
-    / };
+    return { map {( $self->$_ )} (@PROPERTIES, 'pids') };
 }
 
 sub _ignore {

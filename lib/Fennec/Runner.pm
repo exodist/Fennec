@@ -2,25 +2,22 @@ package Fennec::Runner;
 use strict;
 use warnings;
 
-use Fennec::Util::Alias qw/
-    Fennec::TestFile
-    Fennec::Collector
-    Fennec::Workflow
-/;
-
 use Fennec::Util::Accessors;
 use Try::Tiny;
 use Parallel::Runner;
 use Carp;
 
 use Fennec::Util::Alias qw/
+    Fennec::Collector
+    Fennec::Config
     Fennec::FileLoader
-    Fennec::Output::Result
+    Fennec::Output::BailOut
     Fennec::Output::Diag
     Fennec::Output::Note
-    Fennec::Output::BailOut
-    Fennec::Config
+    Fennec::Output::Result
     Fennec::Runner::Proto
+    Fennec::TestFile
+    Fennec::Workflow
 /;
 
 use Digest::MD5 qw/md5_hex/;
@@ -64,52 +61,60 @@ sub run_tests {
 
         srand( $self->seed );
         $self->threader->run( sub {
-            try {
-                $self->reset_benchmark;
-                my $workflow = Fennec::Workflow->new(
-                    $file->filename,
-                    method => sub { shift->file->load },
-                    file => $file,
-                )->_build_as_root;
-
-                $self->process_workflow( $workflow );
-            }
-            catch {
-                if ( $_ =~ m/SKIP:\s*(.*)/ ) {
-                    Result->new(
-                        pass => 0,
-                        skip => $1,
-                        file => $file->filename || "unknown file",
-                        name => $file->filename || "unknown file",
-                    )->write;
-                }
-                else {
-                    Result->new(
-                        pass => 0,
-                        file => $file->filename || "unknown file",
-                        name => $file->filename || "unknown file",
-                        stderr => [ $_ ],
-                    )->write;
-                }
-            };
+            $self->_test_thread( $file );
         }, 1 );
     }
 
     $self->finish;
 }
 
+sub _test_thread {
+    my $self = shift;
+    my ( $file ) = @_;
+
+    try {
+        $self->process_workflow(
+            $self->_init_file( $file )
+        );
+    }
+    catch {
+        if ( $_ =~ m/SKIP:\s*(.*)/ ) {
+            Result->new(
+                pass => 0,
+                skip => $1,
+                file => $file->filename || "unknown file",
+                name => $file->filename || "unknown file",
+            )->write;
+        }
+        else {
+            Result->new(
+                pass => 0,
+                file => $file->filename || "unknown file",
+                name => $file->filename || "unknown file",
+                stderr => [ $_ ],
+            )->write;
+        }
+    };
+}
+
+sub _init_file {
+    my $self = shift;
+    my ( $file ) = @_;
+
+    $self->reset_benchmark;
+    return Fennec::Workflow->new(
+        $file->filename,
+        method => sub { shift->file->load },
+        file => $file,
+    )->_build_as_root;
+}
+
 sub process_workflow {
     my $self = shift;
     my ( $workflow ) = @_;
 
-    $self->reset_benchmark;
-    try {
-        $workflow->run_sub_as_current( $_ )
-            for Fennec::Workflow->build_hooks();
-    }
-    catch {
-        Diag->new( stderr => [ "build_hook error: $_" ])->write
-    };
+    $self->reset_benchmark();
+    return unless $workflow->run_build_hooks();
 
     my $testfile = $workflow->testfile;
     return Result->skip_workflow( $testfile )

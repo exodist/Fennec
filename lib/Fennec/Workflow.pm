@@ -73,6 +73,25 @@ sub import {
         unless grep { $_ eq $class } @{ $caller . '::ISA' };
 }
 
+sub run_build_hooks {
+    my $self = shift;
+    my $success = 1;
+    try {
+        $self->run_sub_as_current( $_ )
+            for $self->build_hooks();
+    }
+    catch {
+        $success = 0;
+        Result->new(
+            pass => 0,
+            file => $self->file->filename || "unknown file",
+            name => "Build Hooks",
+            stderr => [ $_ ],
+        )->write;
+    };
+    return $success;
+}
+
 sub run_tests {
     my $self = shift;
         try {
