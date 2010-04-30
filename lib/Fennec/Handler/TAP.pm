@@ -4,6 +4,10 @@ use warnings;
 use Carp;
 
 use base 'Fennec::Handler';
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+    Fennec::FileLoader
+/;
 
 sub init {
     my $self = shift;
@@ -45,6 +49,17 @@ sub handle {
     warn "Unhandled output type: $item";
 }
 
+sub starting_file {
+    my $self = shift;
+    my ( $filename ) = @_;
+    my $root = FileLoader->root;
+    $filename =~ s|^$root/?||;
+    my $n = $self->_file_count;
+    my $t = @{ Runner->files };
+    $self->_output( 'out_std', "\nStarting file ($n/$t) $filename" );
+    $self->_output( 'out_std', '-' x 40 );
+}
+
 sub result {
     my $self = shift;
     my ( $result ) = @_;
@@ -72,23 +87,29 @@ sub stderr {
 
 sub finish {
     my $self = shift;
-    $self->_output( 'out_std', '1..' . ($self->_count - 1));
+    $self->_output( 'out_std', '1..' . ($self->_test_count - 1));
 }
 
 sub fennec_error {
     my $self = shift;
     $self->_output(
         'out_std',
-        "not ok " . $self->_count . " - Fennec Internal error"
+        "not ok " . $self->_test_count . " - Fennec Internal error"
     );
     $self->stderr( $_ ) for ( @_ );
 }
 
-sub _count {
+sub _test_count {
     my $self = shift;
     $self->{ count } ||= 1;
     my $num = $self->{ count }++;
     sprintf( "%.4d", $num );
+}
+
+sub _file_count {
+    my $self = shift;
+    $self->{ fcount } ||= 1;
+    return $self->{ fcount }++;
 }
 
 sub _output {
@@ -145,7 +166,7 @@ sub _result_line {
     my ( $result ) = @_;
 
     my $status = $self->_status( $result );
-    my $count = $self->_count;
+    my $count = $self->_test_count;
     my $benchmark = $self->_benchmark( $result->benchmark );
     my $name = $result->name || "[UNNAMED TEST]";
     my $postfix = $self->_postfix( $result );

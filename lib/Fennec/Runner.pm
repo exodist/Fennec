@@ -23,7 +23,6 @@ use Fennec::Util::Alias qw/
 use Digest::MD5 qw/md5_hex/;
 use List::Util  qw/shuffle/;
 use Time::HiRes qw/time/;
-use Benchmark   qw/timeit :hireswallclock/;
 
 Accessors qw/
     files parallel_files parallel_tests threader ignore random pid parent_pid
@@ -53,11 +52,8 @@ sub run_tests {
     my $self = shift;
     $self->start;
 
-    my $counter = 0;
-    my $all = @{ $self->files };
     for my $file ( @{ $self->files }) {
-        $counter++;
-        Note->new( stdout => ["Running file $counter/$all:", "\t" . $file->filename ])->write;
+        $self->collector->starting_file( $file->filename );
 
         srand( $self->seed );
         $self->threader->run( sub {
@@ -122,10 +118,8 @@ sub process_workflow {
 
     try {
         $workflow->build_children;
-        my $benchmark = timeit( 1, sub {
-            $self->reset_benchmark;
-            $workflow->run_tests( $self->search )
-        });
+        $self->reset_benchmark;
+        $workflow->run_tests( $self->search )
     }
     catch {
         $testfile->fennec_meta->threader->finish;

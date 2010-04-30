@@ -19,7 +19,6 @@ use Try::Tiny;
 use Carp;
 
 use Time::HiRes       qw/time/;
-use Benchmark         qw/timeit :hireswallclock/;
 use Scalar::Util      qw/blessed/;
 use List::Util        qw/shuffle/;
 use Exporter::Declare qw/:extend/;
@@ -94,32 +93,32 @@ sub run_build_hooks {
 
 sub run_tests {
     my $self = shift;
-        try {
-            my @sets = $self->testsets;
-            $_->observed( 1 ) for @sets;
+    try {
+        my @sets = $self->testsets;
+        $_->observed( 1 ) for @sets;
 
-            if ( Runner->search ) {
-                @sets = $self->search_filter( Runner->search, \@sets );
-            }
-
-            @sets = shuffle @sets if $self->testfile->fennec_meta->random;
-            @sets = sort { $a->name cmp $b->name } @sets
-                if $self->testfile->fennec_meta->sort;
-
-            my $benchmark = timeit( 1, sub {
-                for my $set ( @sets ) {
-                    $self->testfile->fennec_meta->threader->run(sub {
-                        Runner->reset_benchmark;
-                        $set->run()
-                    });
-                }
-                $self->testfile->fennec_meta->threader->finish
-            });
-            Result->pass_workflow( $self, $benchmark );
+        if ( Runner->search ) {
+            @sets = $self->search_filter( Runner->search, \@sets );
         }
-        catch {
-            Result->fail_workflow( $self, $_ );
-        };
+
+        @sets = shuffle @sets if $self->testfile->fennec_meta->random;
+        @sets = sort { $a->name cmp $b->name } @sets
+            if $self->testfile->fennec_meta->sort;
+
+        my $start = time;
+        for my $set ( @sets ) {
+            $self->testfile->fennec_meta->threader->run(sub {
+                Runner->reset_benchmark;
+                $set->run()
+            });
+        }
+        $self->testfile->fennec_meta->threader->finish;
+        my $end = time;
+        Result->pass_workflow( $self, [($end - $start)] );
+    }
+    catch {
+        Result->fail_workflow( $self, $_ );
+    };
 }
 
 sub search_filter {

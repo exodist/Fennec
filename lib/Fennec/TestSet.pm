@@ -18,7 +18,6 @@ use Fennec::Util::Alias qw/
 /;
 
 use Time::HiRes qw/time/;
-use Benchmark qw/timeit :hireswallclock/;
 
 Accessors qw/ workflow no_result observed created_in /;
 
@@ -45,10 +44,10 @@ sub run {
         if $self->skip;
 
     try {
-        my $benchmark = timeit( 1, sub {
-            $self->run_on( $self->testfile );
-        });
-        Result->pass_testset( $self, $benchmark ) unless $self->no_result;
+        my $start = time;
+        $self->run_on( $self->testfile );
+        my $end = time;
+        Result->pass_testset( $self, [($end - $start)] ) unless $self->no_result;
     }
     catch {
         Result->fail_testset( $self, $_ );

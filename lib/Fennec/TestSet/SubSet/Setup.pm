@@ -9,6 +9,7 @@ use Try::Tiny;
 
 use Fennec::Util::Alias qw/
     Fennec::Output::Diag
+    Fennec::Output::Result
 /;
 
 Accessors qw/testfile/;
@@ -20,11 +21,14 @@ sub lines_for_filter {
 
 sub run {
     my $self = shift;
-    try {
+    return try {
         $self->run_on( $self->testfile );
+        return 1;
     }
     catch {
-        Diag->new( stderr => [ $self->name . " error: $_" ])->write
+        die( $@ ) unless m/SKIP:\s*(.*)\s+at/;
+        Result->skip_testset( $self, $1 );
+        return 0;
     };
 }
 

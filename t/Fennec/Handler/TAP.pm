@@ -38,9 +38,9 @@ tests 'verbose' => sub {
 
 tests 'count' => sub {
     my $one = $CLASS->new( out_std => sub {}, out_err => sub {} );
-    is( $one->_count, "0001", "First count" );
-    is( $one->_count, "0002", "Increment" );
-    is( $one->_count, "0003", "Increment again" );
+    is( $one->_test_count, "0001", "First count" );
+    is( $one->_test_count, "0002", "Increment" );
+    is( $one->_test_count, "0003", "Increment again" );
 };
 
 tests 'handle' => sub {
@@ -103,7 +103,7 @@ tests 'output' => sub {
 tests 'finish' => sub {
     my ( $out );
     my $one = $CLASS->new( out_std => sub { ($out) = @_ }, out_err => sub {1});
-    $one->_count for 1 .. 5;
+    $one->_test_count for 1 .. 5;
     $one->finish;
     is( $out, '1..5', "Test count" );
 };

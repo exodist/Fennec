@@ -10,8 +10,6 @@ use Fennec::Util::Alias qw/
 /;
 
 use Try::Tiny;
-use Time::HiRes qw/time/;
-use Benchmark qw/timeit :hireswallclock/;
 use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
 use Exporter::Declare ':extend';

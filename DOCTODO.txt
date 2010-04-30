@@ -1,0 +1,35 @@
+== Fennec.pm ==
+ * _test_class
+ * _test_class_args
+ * caller => [ ... ]
+ * use_or_skip
+ * require_or_skip
+ * meta => \%proto
+ * constructor => \@args
+ * init()
+
+== Useful for extensions ==
+ * Base/Method.pm
+ * Util/Accessors.pm
+ * Util/Abstract.pm
+ * Util/Util.pm
+ * Util/Alias.pm
+ * Runner->run_with_collector
+ * Runner->benchmark
+
+== In Custom Assert Assert Howto ==
+ * Interceptor
+ * Setup
+ * SubSet
+ * TestSet
+
+== Environment variables ==
+ * COLLECTOR (Collector class)
+ * CULL_DELAY
+ * PARALLEL_FILES
+ * PARALLEL_TESTS
+ * FENNEC_SEED
+
+== somewhere ==
+ * bail_out
+ * SKIP: die

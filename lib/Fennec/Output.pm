@@ -8,7 +8,6 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
     Fennec::Util
 /;
-use Benchmark qw/timeit :hireswallclock/;
 
 Accessors qw/ stdout stderr _workflow testset timestamp /;
 

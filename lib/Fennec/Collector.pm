@@ -32,6 +32,12 @@ sub finish {
     $_->finish for @{ $self->handlers };
 }
 
+sub starting_file {
+    my $self = shift;
+    my ( $filename ) = @_;
+    $_->starting_file( $filename ) for @{ $self->handlers };
+}
+
 sub handle_output {
     my $self = shift;
     my @objs = @_ ? @_ : $self->cull;
