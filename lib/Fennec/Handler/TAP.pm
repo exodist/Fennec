@@ -9,10 +9,18 @@ use Fennec::Util::Alias qw/
     Fennec::FileLoader
 /;
 
+use Fennec::Util::Accessors;
+Accessors qw/outhandle/;
+
 sub init {
     my $self = shift;
 
-    $self->{ out_std } ||= sub { print STDOUT "$_\n" for @_ };
+    open my $stdout, ">&STDOUT" or die "Can't duplicate STDOUT: $!";
+    close STDOUT;
+    open STDOUT, ">&", \*STDERR or die "Can't redirect STDOUT to STDERR";
+    $self->outhandle( $stdout );
+
+    $self->{ out_std } ||= sub { print $stdout "$_\n" for @_ };
 
     my $harness = $ENV{HARNESS_ACTIVE};
     my $verbose = $ENV{HARNESS_IS_VERBOSE};
