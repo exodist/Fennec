@@ -38,7 +38,8 @@ sub new {
             workflow    => $workflow,
             file        => $file,
             threader    => Parallel::Runner->new(
-                $proto{ no_fork } ? 1 : Runner->parallel_tests
+                $proto{ no_fork } ? 1 : Runner->parallel_tests,
+                reap_callback => \&Fennec::Runner::_reap_callback,
             ),
             skip        => $skip || undef,
             todo        => $todo || undef,

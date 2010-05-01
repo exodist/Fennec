@@ -135,6 +135,7 @@ sub start {
         return unless $self->bail_out;
         $self->threader->killall(15)
     });
+    $self->threader->reap_callback( \&_reap_callback );
     $self->_started(1);
     Diag->new(
         stderr => [
@@ -142,6 +143,21 @@ sub start {
             "** FENNEC_SEED='@{[ $self->seed ]}'",
         ],
     )->write;
+}
+
+sub _reap_callback {
+    my ( $status, $pid, $ret ) = @_;
+    Result->new(
+        pass => 0,
+        name => "Child exit",
+        stderr => [ "Child ($pid) exited with non-zero status(@{[$status >> 8]})!" ],
+    )->write if $status;
+    Result->new(
+        pass => 0,
+        name => "Wait status",
+        stderr => [ "waitpid($pid) returned $ret!" ],
+    )->write if $pid != $ret;
+    return;
 }
 
 sub finish {
