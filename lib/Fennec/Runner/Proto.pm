@@ -22,7 +22,7 @@ Accessors qw/in/;
 our @PROPERTIES = qw/
     ignore files collector handlers cull_delay threader parallel_files
     parallel_tests seed random filetypes default_asserts default_workflows
-    search
+    search root_workflow_class
 /;
 
 sub new {
@@ -115,6 +115,12 @@ sub _collector {
 
     $collector_class = load_package( $collector_class, 'Fennec::Collector' );
     return $collector_class->new( @{ $self->handlers( 1 )});
+}
+
+sub _root_workflow_class {
+    my $self = shift;
+    my $class = $self->_or_config( 'root_workflow_class', 'Fennec::Workflow' );
+    return load_package( $class, 'Fennec::Workflow' );
 }
 
 sub _handlers {

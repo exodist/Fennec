@@ -27,7 +27,7 @@ use Time::HiRes qw/time/;
 Accessors qw/
     files parallel_files parallel_tests threader ignore random pid parent_pid
     collector search default_asserts default_workflows _benchmark_time seed
-    _started _finished finish_hooks bail_out
+    _started _finished finish_hooks bail_out root_workflow_class
 /;
 
 our $SINGLETON;
@@ -98,7 +98,7 @@ sub _init_file {
     my ( $file ) = @_;
 
     $self->reset_benchmark;
-    return Fennec::Workflow->new(
+    return $self->root_workflow_class->new(
         $file->filename,
         method => sub { shift->file->load },
         file => $file,
