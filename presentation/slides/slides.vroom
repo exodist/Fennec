@@ -9,6 +9,137 @@ skip: 0
 Modern perl testing with Fennec
 
 by Chad 'Exodist' Granum
+
+----
+== Brief introduction to testing
+
++ * Tests are code to verify that other code does what it should
+
++ * Tests can often be divided into 2 types, Unit and Integration
+
++ * There are usually 2 pieces involved:
++  * A producer, which generates output
++  * A consumer or harness, which make use of the output
+
++ * Fennec is a producer, not a consumer
+
+----
+== Testing Tools
+
+ * Test::Builder is a screwdriver base with many different heads
+
++ * Test utilities that don't work with TB are hammers
+
++ * Fennec is a toolbox, any tools inside it will work together
+
+----
+== Fennec is a test tool manager, or toolbox
+
+ * Workflow Management
+
+ * Test files are all objects
+
+ * Assertion Library management
+   (Works with Test::Builder)
+
+ * Test Grouping
+
+ * Result output formatting
+
+ * A versatile runner
+
+ * Test File Types (finding test files)
+
+ * Parallelization
+
+----
+== Limitations of a screwdriver
+
+ * Test::Builder excels as a base for tools that provide assertion functions
+
+ * Test::Builder does nothing to address workflows
+
++== Whats a workflow?
+
++ * A way to structure tests when writing them
+
++ * A way to structure how tests are run
+
++ * A way to provide fixture data
+
++ * A way to setup and teardown an environment around the test
+----
+== Problems with workflow implementations
+
+ * Often require a 'runner' to take control.
+
+ * Usually do not work well together
+
+
+
++For example, Test::Class Uses a .t file to find, load, and run Test::Class tests.
+
+ * If 2 'runners' find files that look the same (t/.../*.pm) they may stomp eachother
+
+ * What if you want to mix multiple workflows?
+
+
+
++Fennec to the rescue:
+
+ * Fennec provides a base for creating workflows that work together
+
+ * Fennec provides the runner, workflows can simply share it
+
+----
+== Fennec Workflow Management
+
+ * Fennec::Workflow base class for custom workflows
+
+ * Tools to simplify defining a workflow in tests
+
+ * Workflows hold child workflows and test sets
+
+ * Workflows return self-contained TestSet objects to the runner
+
+ * Every test file has a 'root' workflow
+
+ * All test groups and workflows are nested within the root workflow
+
+----
+== Workflows provided with Fennec
+
+ * Basic - Test groups and child workflows
+
+ * SPEC - An implementation of Ruby's RSPEC for perl
+
+ * Case - Run a set of test groups under multiple cases
+
+ * Module - Similar to Test::Class, tests are methods.
+----
+== Overview of a workflow structure
+-- Root Workflow
+   |- Test Group
+   |- Another Test Group
+   |- Child Workflow
+   |  |- Test Group
+   |  |- ...
+   |
+   |- Another Child
+      |- Test Group
+
+The workflow process:
+ * Load file
+   * Create root workflow
+   * Add workflows and testgroups defined at package level
+
+ * Initialize/Build child workflows
+  * Build workflows to depth
+
+ * Get test sets from each workflow to depth
+
+ * Run test sets
+
 ---- perl
 == Here is a typical Test::Builder based test
 
