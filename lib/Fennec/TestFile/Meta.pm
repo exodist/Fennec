@@ -14,39 +14,51 @@ use Scalar::Util qw/blessed/;
 
 our %MAP;
 
-Accessors qw/ workflow threader todo skip file sort /;
+Accessors qw/ root_workflow workflow_stack threader todo skip file sort /;
 
 sub set {
     my $class = shift;
     my ( $item, $meta ) = @_;
+    $item = blessed( $item ) || $item;
     $MAP{ $item } = $meta;
 }
 
 sub get {
     my $class = shift;
     my ( $item ) = @_;
+    $item = blessed( $item ) || $item;
     return $MAP{ $item };
+}
+
+sub test_classes {
+    return keys %MAP;
 }
 
 sub new {
     my $class = shift;
     my %proto = @_;
-    my ( $todo, $skip, $workflow, $file, $random, $sort ) = @proto{qw/ todo skip workflow file random sort /};
+    my ( $todo, $skip, $workflow_class, $file, $random, $sort )
+        = @proto{qw/ todo skip root_workflow file random sort /};
 
     my $self = bless(
         {
-            workflow    => $workflow,
-            file        => $file,
-            threader    => Parallel::Runner->new(
+            root_workflow => $workflow_class->new(
+                $file,
+                method => sub { 1 },
+                file => $file,
+            ),
+            threader      => Parallel::Runner->new(
                 $proto{ no_fork } ? 1 : Runner->parallel_tests,
                 reap_callback => \&Fennec::Runner::_reap_callback,
             ),
-            skip        => $skip || undef,
-            todo        => $todo || undef,
+            file           => $file,
+            workflow_stack => [],
+            skip           => $skip || undef,
+            todo           => $todo || undef,
             defined( $random ) || $sort
                 ? (
                     random => $random || 0,
-                    sort => $sort || undef,
+                    sort   => $sort || undef,
                 )
                 : (),
         },
@@ -65,7 +77,33 @@ sub random {
         : Runner->random;
 }
 
-sub name { shift->file->filename }
+sub workflow {
+    my $self = shift;
+    return $self->workflow_stack->[-1] || $self->root_workflow;
+}
+
+sub push_workflow {
+    my $self = shift;
+    my ( $workflow ) = @_;
+    push @{ $self->workflow_stack } => $workflow;
+    return $self->depth;
+}
+
+sub depth {
+    my $self = shift;
+    return scalar @{ $self->workflow_stack };
+}
+
+sub pop_workflow {
+    my $self = shift;
+    my ( $depth ) = @_;
+    croak "workflow pop at depth $depth, but current depth is " . $self->depth
+        unless $depth == $self->depth;
+    pop @{ $self->workflow_stack };
+    return $self->depth;
+}
+
+sub name { shift->file }
 
 1;
 
@@ -120,6 +158,10 @@ True if the testsets should be randomized
 Return the filename that defined the TestFile class.
 
 =item $workflow = $obj->workflow()
+
+Get the workflow at the top of the stack
+
+=item $workflow = $obj->root_workflow()
 
 Get the root workflow for the TestFile
 

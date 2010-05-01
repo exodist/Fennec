@@ -22,22 +22,13 @@ sub import {
         *{ $caller . '::done_testing' } = sub { $runner->finish }
     }
 
-    my $workflow = Fennec::Workflow->new(
-        $caller,
-        method => sub { $Fennec::TEST_CLASS = $caller },
-        file => $file,
-    )->_build_as_root;
-
     $runner->add_finish_hook( sub {
         my $self = shift;
-        $self->process_workflow( $workflow );
+        $self->process_workflow(
+            $runner->_init_workflow( $caller )
+        );
     });
     $runner->reset_benchmark;
-
-    no warnings 'redefine';
-    *Fennec::Workflow::has_current = sub { 1 };
-    *Fennec::Workflow::current = sub { $workflow };
-    *Fennec::Workflow::depth = sub { 1 };
 }
 
 1;

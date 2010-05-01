@@ -3,9 +3,11 @@ use strict;
 use warnings;
 
 use base 'Fennec::FileType';
+use Carp;
 
 use Fennec::Util::Alias qw/
     Fennec
+    Fennec::TestFile::Meta
 /;
 
 sub valid_file {
@@ -16,10 +18,18 @@ sub valid_file {
 
 sub load_file {
     my $self = shift;
-    Fennec->_clear_test_class;
+
+    my %classes = map { $_ => 1 } Meta->test_classes;
+
     my $file = $self->filename;
     require $file;
-    return Fennec->_test_class;
+
+    $classes{$_}++ for Meta->test_classes;
+    my @new = grep { $classes{$_} == 1 } keys %classes;
+    return $new[0] if @new == 1;
+
+    croak( "$file did not generate a fennec test class" ) unless @new;
+    croak( "Generating more than one fennec test class per file is not yet supported" );
 }
 
 sub paths { 't/' }

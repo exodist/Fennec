@@ -31,7 +31,8 @@ export it => sub {
 for my $name ( qw/ before_each before_all after_each after_all /) {
     export $name => sub(&) {
         my ($sub) = @_;
-        Fennec::Workflow->current->add_item(
+        my ( $caller ) = caller;
+        $caller->fennec_meta->workflow->add_item(
             Setup->new( $name => $sub )
         );
     };

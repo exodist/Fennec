@@ -6,19 +6,14 @@ use Fennec::TestFile::Meta;
 
 sub fennec_new {
     my $class = shift;
-    my %proto = @_;
-    my $meta = Fennec::TestFile::Meta->new( %{ $proto{ meta }});
-    my $new;
     if ( $class->can( 'new' )) {
-        $new = $class->new( @{ $proto{ constructor }});
+        return $class->new();
     }
     else {
-        $new = bless( {}, $class );
+        my $new = bless( {}, $class );
         $new->init if $new->can( 'init' );
+        return $new;
     }
-
-    Fennec::TestFile::Meta->set( $new, $meta );
-    return $new;
 }
 
 sub fennec_meta {

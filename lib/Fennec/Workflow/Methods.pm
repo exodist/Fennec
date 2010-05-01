@@ -17,7 +17,10 @@ use Carp;
 
 Accessors qw/subset/;
 
-build_hook { Workflow->add_item( __PACKAGE__->new )};
+build_hook {
+    my ( $root_workflow ) = @_;
+    $root_workflow->add_item( __PACKAGE__->new )
+};
 
 sub new {
     my $class = shift;

@@ -70,7 +70,9 @@ sub _test_thread {
 
     try {
         $self->process_workflow(
-            $self->_init_file( $file )
+            $self->_init_workflow(
+                $self->_init_file( $file )
+            )
         );
     }
     catch {
@@ -96,13 +98,17 @@ sub _test_thread {
 sub _init_file {
     my $self = shift;
     my ( $file ) = @_;
-
     $self->reset_benchmark;
-    return $self->root_workflow_class->new(
-        $file->filename,
-        method => sub { shift->file->load },
-        file => $file,
-    )->_build_as_root;
+
+    return $file->load;
+}
+
+sub _init_workflow {
+    my $self = shift;
+    my ( $tclass ) = @_;
+    my $test = $tclass->fennec_new;
+    $test->fennec_meta->root_workflow->parent( $test );
+    return $test->fennec_meta->root_workflow;
 }
 
 sub process_workflow {

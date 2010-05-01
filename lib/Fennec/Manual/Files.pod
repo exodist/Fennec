@@ -22,7 +22,6 @@ Fennec::Manual::Files - Writing Custom File Loaders.
     sub load_file {
         my $self = shift;
         my $file = $self->filename;
-        my $root_workflow = Fennec::Workflow->current;
         ...
         return $package;
     }
@@ -47,11 +46,6 @@ Must load the test file. This must also make sure that a package name is
 generated for the file. When finished the method must return the name of the
 package for the test file. This package must also be a subclass of
 Fennec::TestFile.
-
-By the time this method is called a parent workflow has already been created
-for your test file. You can access this workflow using
-Fennec::Workflow->current(). You can use this to add testgroups and child
-workflows.
 
 =item @list = $obj->paths()
 

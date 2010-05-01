@@ -25,7 +25,13 @@ export 'tests' => sub {
     my $name = shift;
     my %proto = @_ > 1 ? @_ : (method => shift( @_ ));
     my ( $caller, $file, $line ) = caller;
-    Workflow->add_item( __PACKAGE__->new( $name, file => $file, line => $line, %proto ));
+    $caller->fennec_meta->workflow->add_item(
+        __PACKAGE__->new( $name,
+            file => $file,
+            line => $line,
+            %proto
+        )
+    );
 };
 
 sub init {
