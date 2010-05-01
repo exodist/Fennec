@@ -6,6 +6,7 @@ use Parallel::Runner;
 use Carp;
 use Digest::MD5 qw/md5_hex/;
 use Cwd;
+use Fennec::Util::PackageFinder;
 
 use Fennec::Util::Alias qw/
     Fennec::FileLoader
@@ -112,14 +113,15 @@ sub _collector {
 
     my $collector_class = $self->_or_config( 'collector', 'Files' );
 
-    $collector_class = 'Fennec::Collector::' . $collector_class;
-    eval "require $collector_class; 1" || die( $@ );
+    $collector_class = load_package( $collector_class, 'Fennec::Collector' );
     return $collector_class->new( @{ $self->handlers( 1 )});
 }
 
 sub _handlers {
     my $self = shift;
     my $handlers = $self->in->{ handlers } || [ 'TAP' ];
+    load_package( $_, 'Fennec::Handler' ) for @$handlers;
+    return $handlers;
 }
 
 sub _cull_delay {
@@ -163,17 +165,23 @@ sub _random {
 
 sub _filetypes {
     my $self = shift;
-    return $self->in->{ filetypes } || [qw/ Module /];
+    my $types = $self->in->{ filetypes } || [qw/ Module /];
+    load_package( $_, 'Fennec::FileType' ) for @$types;
+    return $types;
 }
 
 sub _default_asserts {
     my $self = shift;
-    return $self->in->{ default_asserts } || [qw/ Core /];
+    my $asserts = $self->in->{ default_asserts } || [qw/ Core /];
+    load_package( $_, 'Fennec::Assert' ) for @$asserts;
+    return $asserts;
 }
 
 sub _default_workflows {
     my $self = shift;
-    return $self->in->{ default_workflows } || [qw/Spec Case Methods/],
+    my $workflows = $self->in->{ default_workflows } || [qw/Spec Case Methods/];
+    load_package( $_, 'Fennec::Workflow' ) for @$workflows;
+    return $workflows;
 }
 
 sub _search {

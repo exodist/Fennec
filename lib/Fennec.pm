@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Carp;
+use Fennec::Util::PackageFinder;
 
 use Fennec::Util::Alias qw/
     Fennec::Runner
@@ -41,11 +42,11 @@ sub import {
     _export_package_to( 'Fennec::TestSet', $caller );
 
     $workflows ||= Runner->default_workflows;
-    _export_package_to( 'Fennec::Workflow::' . $_, $caller )
+    _export_package_to( load_package( $_, 'Fennec::Workflow' ), $caller )
         for @$workflows;
 
     $asserts ||= Runner->default_asserts;
-    _export_package_to( 'Fennec::Assert::' . $_, $caller )
+    _export_package_to( load_package( $_, 'Fennec::Assert' ), $caller )
         for @$asserts;
 
     no strict 'refs';
