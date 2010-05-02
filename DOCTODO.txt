@@ -1,11 +1,7 @@
 == Fennec.pm ==
- * _test_class
- * _test_class_args
  * caller => [ ... ]
  * use_or_skip
  * require_or_skip
- * meta => \%proto
- * constructor => \@args
  * init()
 
 == Useful for extensions ==

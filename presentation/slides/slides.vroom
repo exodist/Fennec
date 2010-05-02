@@ -35,6 +35,8 @@ by Chad 'Exodist' Granum
 ----
 == Fennec is a test tool manager, or toolbox
 
+ * Examples
+
  * Workflow Management
 
  * Test files are all objects
@@ -51,6 +53,90 @@ by Chad 'Exodist' Granum
  * Test File Types (finding test files)
 
  * Parallelization
+
+ * More examples
+---- perl
+package TEST::MyTest;
+use strict;
+use warnings;
+use Fennec;
+
+# If the module specified is not installed all tests will be skipped
+use_or_skip 'Module::Name';
+
+# Traditional script style works fine
+ok( 1, "Not grouped" );
+is( 'a', 'a', "" );
+...
+
+#It is much better to put tests into parallelizable groups.
+tests hello_world_group => sub {
+    my $self = shift;
+    ok( 1, "Hello world" );
+};
+
+1;
+
+---- perl
+package TEST::MyTest;
+use strict;
+use warnings;
+use Fennec;
+
+describe 'my group' => sub {
+    my $self = shift;
+
+    before_each { $self->load_data };
+    after_each { $self->unload_data };
+
+    # it is an alias to 'tests'
+    it 'my test' => sub {
+        my $self = shift;
+        ok( 1, 'spec test!' );
+    };
+
+    # Nested!
+    describe ...;
+};
+
+1;
+---- perl
+
+cases {
+    my $self = shift;
+    case a => sub {
+        my $self = shift;
+        $self->reset_data( 'a' );
+    }
+    case b => sub {
+        my $self = shift;
+        $self->reset_data( 'b' );
+    }
+    tests a => sub {
+        my $self = shift;
+        ok( $self->have_data, "have data" );
+    }
+    tests b => sub {
+        my $self = shift;
+        ok( $self->works, "it works" );
+    }
+}
+
+---- perl
+    sub setup_my_setup {
+        my $self = shift;
+        print "methods prefixed by setup_ will be run before tests defined as methods.";
+    }
+
+    sub test_method_as_test_by_prefix {
+        my $self = shift;
+        ok( 1, "methods prefixed by test_ will be run as method." );
+    }
+
+    sub teardown_my_teardown {
+        my $self = shift;
+        print "method prefixed by teardown_ will be run after tests defined as methods."
+    }
 
 ----
 == Limitations of a screwdriver
@@ -139,7 +225,53 @@ The workflow process:
  * Get test sets from each workflow to depth
 
  * Run test sets
+----
+== Test files are objects
 
+ * Base class
+ * Meta
+  * Root workflow
+ * Construction and init
+
+----
+== Assertion Library management
+ * Death based asserts
+ * Fennec Asserts
+ * Test::Builder asserts
+   * TBCore
+   * Test Builder overrides
+----
+== Test Grouping
+ * tests name => sub {}
+ * tests name => ( %options )
+ * SubSet
+ * Spec
+ * Case
+ * Random
+----
+== Result output formatting
+ * TAP
+ * Handler base
+ * Custom Handlers
+ * Failure collector
+----
+== A versatile runner
+ * Proto
+  * Environment
+  * Config
+  * Default
+  * specified
+----
+== Test File Types (finding test files)
+ * Find by path
+ * Verify file
+ * Loading
+----
+== Parallelization
+ * parallel files
+ * parallel tests
+  * Grouping
+ * Collector
 ---- perl
 == Here is a typical Test::Builder based test
 
