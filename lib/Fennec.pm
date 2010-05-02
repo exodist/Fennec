@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Carp;
+use Fennec::Util::TBOverride;
 use Fennec::Util::PackageFinder;
 
 use Fennec::Util::Alias qw/
@@ -107,30 +108,9 @@ sub export_tools {
     _export_package_to( 'Fennec::TestSet', $self->test_class );
 
     no strict 'refs';
-    *{ $self->test_class . '::done_testing' } = sub {
-        carp "calling done_testing() is only required for Fennec::Standalone tests"
-    };
-
-    *{ $self->test_class . '::use_or_skip' } = sub(*;@) {
-        my ( $package, @params ) = @_;
-        my $eval = "package @{[$self->test_class]}; use $package"
-        . (@params ? (
-            @params > 1
-                ? ' @params'
-                : ($params[0] =~ m/^[0-9\-\.\e]+$/
-                    ? " $params[0]"
-                    : " '$params[0]'"
-                  )
-          ) : '')
-        . "; 1";
-        my $have = eval $eval;
-        die "SKIP: $package is not installed or insufficient version: $@" unless $have;
-    };
-    *{ $self->test_class . '::require_or_skip' } = sub(*) {
-        my ( $package ) = @_;
-        my $have = eval "require $package; 1";
-        die "SKIP: $package is not installed\n" unless $have;
-    };
+    *{ $self->test_class . '::done_testing' } = \&_done_testing;
+    *{ $self->test_class . '::use_or_skip' } = \&_use_or_skip;
+    *{ $self->test_class . '::require_or_skip' } = \&_require_or_skip;
 }
 
 sub export_workflows {
@@ -150,6 +130,33 @@ sub _export_package_to {
     die( $@ ) unless eval "require $from; 1";
     $from->export_to( $to );
 }
+
+sub _done_testing {
+    carp "calling done_testing() is only required for Fennec::Standalone tests"
+};
+
+sub _use_or_skip(*;@) {
+    my ( $package, @params ) = @_;
+    my $caller = caller;
+    my $eval = "package $caller; use $package"
+    . (@params ? (
+        @params > 1
+            ? ' @params'
+            : ($params[0] =~ m/^[0-9\-\.\e]+$/
+                ? " $params[0]"
+                : " '$params[0]'"
+              )
+      ) : '')
+    . "; 1";
+    my $have = eval $eval;
+    die "SKIP: $package is not installed or insufficient version: $@" unless $have;
+};
+
+sub _require_or_skip(*) {
+    my ( $package ) = @_;
+    my $have = eval "require $package; 1";
+    die "SKIP: $package is not installed\n" unless $have;
+};
 
 1;
 

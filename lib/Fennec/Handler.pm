@@ -20,10 +20,7 @@ sub handle {
 sub finish {1}
 sub start {1}
 sub starting_file {1}
-sub fennec_error {
-    my $self = shift;
-    warn @_;
-}
+sub fennec_error {1}
 
 1;
 

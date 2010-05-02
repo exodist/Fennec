@@ -8,7 +8,7 @@ BEGIN {
     my $pid = $$;
     my $old = $SIG{INT};
     $SIG{INT} = sub {
-        __PACKAGE__->cleanup;
+        __PACKAGE__->_cleanup if $$ == $pid;
         $old->() if $old;
         exit 1;
     };
@@ -43,8 +43,6 @@ sub cull {
 
         my ($obj) = $self->_read_and_unlink( $file );
         unless( $obj ) {
-            require Fennec::Debug;
-            Fennec::Debug->debug( "Error processing file: $file" );
             $_->fennec_error( "Error processing file: $file" )
                 for @{ $self->handlers };
             next;
@@ -98,7 +96,6 @@ sub _read {
     return Output->deserialize( $obj )
         if $obj;
 
-    require Fennec::Debug;
     _bad_files->{$file} = [ $!, $@ ];
     $_->fennec_error( "bad file: '$file' - $! - $@" )
         for @{ $self->handlers };

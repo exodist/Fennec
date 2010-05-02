@@ -2,6 +2,7 @@ package Fennec::Standalone;
 use strict;
 use warnings;
 require Fennec;
+use Fennec::Util::TBOverride;
 use Fennec::Runner;
 use Fennec::Workflow;
 

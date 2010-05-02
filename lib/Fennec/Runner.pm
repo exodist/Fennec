@@ -2,22 +2,16 @@ package Fennec::Runner;
 use strict;
 use warnings;
 
+use Fennec::Util::TBOverride;
 use Fennec::Util::Accessors;
 use Try::Tiny;
 use Parallel::Runner;
 use Carp;
 
 use Fennec::Util::Alias qw/
-    Fennec::Collector
-    Fennec::Config
-    Fennec::FileLoader
-    Fennec::Output::BailOut
     Fennec::Output::Diag
-    Fennec::Output::Note
     Fennec::Output::Result
     Fennec::Runner::Proto
-    Fennec::TestFile
-    Fennec::Workflow
 /;
 
 use Digest::MD5 qw/md5_hex/;
@@ -226,7 +220,7 @@ sub DESTROY {
     if( $self->_started && !$self->_finished ) {
         warn <<EOT;
 Runner never finished!
-Did you forget to run finish() in a standalone test file?
+Did you forget to run done_testing() in a standalone test file?
 EOT
     }
 }

@@ -27,7 +27,7 @@ sub new {
     return bless({ method => sub {1}, children => [] }, $class );
 }
 
-sub add_item { croak 'Child workflows cannot be added to the Methods workflow' }
+sub add_item { croak 'Children cannot be added to the Methods workflow' }
 
 sub testsets {
     my $self = shift;

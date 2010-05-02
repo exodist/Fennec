@@ -15,6 +15,7 @@ Accessors qw/outhandle/;
 sub init {
     my $self = shift;
 
+    # Force STDOUT to STDERR unless we generate it
     open my $stdout, ">&STDOUT" or die "Can't duplicate STDOUT: $!";
     close STDOUT;
     open STDOUT, ">&", \*STDERR or die "Can't redirect STDOUT to STDERR";
@@ -24,10 +25,12 @@ sub init {
 
     my $harness = $ENV{HARNESS_ACTIVE};
     my $verbose = $ENV{HARNESS_IS_VERBOSE};
+
     # If we have a non-verbose harness then output the errors to STDERR so that
     # they are seen. Outside of a harness, or in verbose mode the error output
     # is sent to STDOUT so that the error message appear at or near the result
     # that generated them.
+
     if ( $harness && !$verbose ) {
         $self->{ out_err } ||= sub { print STDERR "$_\n" for @_ };
     }
@@ -39,11 +42,14 @@ sub init {
 sub handle {
     my $self = shift;
     my ( $item ) = @_;
+
     unless ( $item ) {
         carp "No item";
         return;
     }
+
     return $self->result( $item ) if $item->isa( 'Fennec::Output::Result' );
+
     if ( $item->isa( 'Fennec::Output::Diag' ) || $item->isa( 'Fennec::Output::Note' )) {
         $self->stderr( @{ $item->stderr }) if $item->stderr;
         $self->stdout( @{ $item->stdout }) if $item->stdout;
@@ -54,16 +60,20 @@ sub handle {
         $self->_output( 'out_std', "Bail out!" );
         return;
     }
+
     warn "Unhandled output type: $item";
 }
 
 sub starting_file {
     my $self = shift;
     my ( $filename ) = @_;
+
     my $root = FileLoader->root;
     $filename =~ s|^$root/?||;
+
     my $n = $self->_file_count;
     my $t = @{ Runner->files };
+
     $self->_output( 'out_std', "\nStarting file ($n/$t) $filename" );
     $self->_output( 'out_std', '-' x 40 );
 }

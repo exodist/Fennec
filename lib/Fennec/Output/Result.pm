@@ -58,14 +58,6 @@ for my $any_accessor ( @ANY_ACCESSORS ) {
         return $self->{ $any_accessor }
             if $self->{ $any_accessor };
 
-#        use Data::Dumper;
-#        no strict 'refs';
-#        print Dumper(
-#            $self->testfile,
-#            $self->testfile->can( 'fennec_meta' ) || 'cannot',
-#            { map { $_, $_->can( 'fennec_meta' ) } @{ blessed($self->testfile) . '::ISA' }}
-#        );
-
         my $meta = $self->testfile
             ? ( $self->testfile->can( 'fennec_meta' )
                 ? $self->testfile->fennec_meta
