@@ -4,6 +4,16 @@ use warnings;
 
 use base 'Fennec::Collector';
 
+BEGIN {
+    my $pid = $$;
+    my $old = $SIG{INT};
+    $SIG{INT} = sub {
+        __PACKAGE__->cleanup;
+        $old->() if $old;
+        exit 1;
+    };
+}
+
 use Fennec::Util::Alias qw/
     Fennec::Runner
     Fennec::Output
@@ -24,11 +34,13 @@ sub cull {
     my $self = shift;
     my $handle = $self->_dirhandle;
     my @objs;
+
     for my $file ( readdir( $handle )) {
         next if -d $file;
         next if $file =~ m/^\.+$/;
         next unless $file =~ m/\.res$/;
         next if _bad_files->{ $file };
+
         my ($obj) = $self->_read_and_unlink( $file );
         unless( $obj ) {
             require Fennec::Debug;
@@ -46,11 +58,14 @@ sub cull {
 sub write {
     my $self = shift;
     my ( $output ) = @_;
+
     my $out = $output->serialize;
     my $file = $self->testdir . "/$$-" . $SEMI_UNIQ++;
+
     open( my $HANDLE, '>', $file ) || warn "Error writing output:\n\t$file\n\t$!";
     print $HANDLE Dumper( $out ) || warn "Error writing output";
     close( $HANDLE ) || die( $! );
+
     # Rename file to .res after creation, that way collector does not cull it
     # until it is finished writing.
     rename ( $file, "$file.res" );
@@ -79,11 +94,11 @@ sub _read {
     my $self = shift;
     my ( $file ) = @_;
     my $obj = do( $self->testdir . "/$file" );
+
     return Output->deserialize( $obj )
         if $obj;
 
     require Fennec::Debug;
-    Fennec::Debug->debug( "bad file: '$file' - $! - $@" );
     _bad_files->{$file} = [ $!, $@ ];
     $_->fennec_error( "bad file: '$file' - $! - $@" )
         for @{ $self->handlers };
@@ -100,6 +115,7 @@ sub _dirhandle {
 sub _read_and_unlink {
     my $self = shift;
     my @out;
+
     for my $file ( @_ ) {
         next if _bad_files->{ $file };
         if( my $obj = $self->_read( $file )) {
@@ -107,6 +123,7 @@ sub _read_and_unlink {
             unlink( $self->testdir . "/$file" );
         }
     }
+
     return @out;
 }
 
@@ -120,6 +137,7 @@ sub _prepare {
 sub _cleanup {
     my $class = shift;
     return unless -d $class->testdir;
+
     opendir( my $TDIR, $class->testdir ) || die( $! );
     for my $file ( readdir( $TDIR )) {
         next if $file =~ m/^\.+$/;
@@ -127,6 +145,7 @@ sub _cleanup {
         unlink( $class->testdir . "/$file" );
     }
     closedir( $TDIR );
+
     rmdir( $class->testdir ) || warn( "Cannot cleanup test dir: $!" );
 }
 
@@ -134,6 +153,8 @@ sub DESTROY {
     my $self = shift;
     $self->_cleanup if $$ == $PID;
 }
+
+END { __PACKAGE__->_cleanup if $$ == $PID }
 
 1;
 
