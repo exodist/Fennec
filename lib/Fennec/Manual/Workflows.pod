@@ -34,9 +34,15 @@ workflow is an L<Fennec::Workflow> object. Every testset or workflow defined in
 the test file is a blessed method. The blessed methods are passed to a parent
 workflow. Those defined outside of a workflow are passed to a 'root' workflow.
 
+A test classes root workflow is stored inthe classes meta object. Calling
+$test_class->fennec_meta() will return the meta object for a testclass. The
+meta object has 2 methods for workflows: $meta->root_workflow() which always
+returns the root workflow, and $meta->workflow() which returns the highest
+workflow on the stack, also known as the 'current' workflow.
+
 Any testsets or workflows defined inside the method of a parent workflow are
 passed to that parent workflow. Each workflow object must inherit or
-imeplement the add_item() method which takes a workflow or testset. Testsets
+implement the add_item() method which takes a workflow or testset. Testsets
 are retrieved from the workflows after they have been traversed to the deepest
 level.
 
@@ -112,6 +118,10 @@ The inherited method sets $wf as the current workflow, it then runs the method
 that was blessed into as the workflow object. Overriding this is not
 recommended, but may be necessary for some complicated workflows.
 
+You should always call $self->built(1) at the end of your custom build()
+method. Not doing this may cause problems with items being added to a workflow
+AFTER build().
+
 =item $wf->build_children()
 
 This should rarely need to be overriden, calls $child->build() on all child
@@ -124,6 +134,9 @@ override this to reflect the change.
 Add $item to the workflow. The inherited method will add workflows or testsets,
 it will throw an exception for anything else. You can access the added items
 via $self->_workflows() and $self->_testsets().
+
+If you override this method you should die with a useful message if
+$self->built() is true.
 
 =back
 

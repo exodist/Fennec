@@ -27,8 +27,8 @@ directory. This is where you start when writing a test-suite using fennec.
 
     $ fennec_prove - - [prove options]
     $ fennec_prove t/My/Test.pm - [prove options]
-    $ fennec_prove t/my/Test.pm test_name [prove options]
-    $ fennec_prove t/my/Test.pm line_number [prove options]
+    $ fennec_prove t/My/Test.pm test_name [prove options]
+    $ fennec_prove t/My/Test.pm line_number [prove options]
 
 This is a wrapper around prove that lets you run a specific fennec test file,
 and optionally a specific test name or line number within that file. Running a
