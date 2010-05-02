@@ -12,6 +12,7 @@ use Fennec::Util::Alias qw/
     Fennec::TestSet
     Fennec::Output::Result
     Fennec::Output::Diag
+    Fennec::Assert
 /;
 
 use Fennec::Util::Accessors;
@@ -23,7 +24,7 @@ use Scalar::Util      qw/blessed/;
 use List::Util        qw/shuffle/;
 use Exporter::Declare qw/:extend/;
 
-Accessors qw/ parent _testsets _workflows /;
+Accessors qw/ parent _testsets _workflows built /;
 
 our @BUILD_HOOKS;
 
@@ -176,9 +177,24 @@ sub workflows {
 
 sub add_item {
     my $self = shift;
-    confess 'xxx' unless blessed( $self );
     my ( $item ) = @_;
     my $type = blessed( $item );
+
+    if ( $self->built ) {
+        my %testcaller = Assert->test_caller;
+        die "Attempt to add '$type("
+            . ($item->can( 'name' ) ? $item->name : "unnamed" )
+            . ")' to workflow '"
+            . $self->name
+            . "' after the workflow has already been built.\n"
+            . "Did you try to define a workflow or testset inside a testset?\n"
+            . "File: "
+            . $testcaller{file}
+            . "\nLine: "
+            . $testcaller{line}
+            . "\n"
+    }
+
     croak( "Item must be a blessed Workflow or Testset object" )
         unless $type and $item->isa( 'Fennec::Base::Method' );
 
@@ -197,12 +213,18 @@ sub add_item {
 
 sub build {
     my $self = shift;
+    croak( "Workflow '" . $self->name . "' already built" )
+        if $self->built;
+
     if ( $self->skip ) {
         Result->skip_workflow( $self, $self->skip );
         return $self;
     }
+
     $self->run_method_as_current_on( $self->method, $self->testfile );
     $self->build_children;
+
+    $self->built( 1 );
     return $self;
 }
 

@@ -70,7 +70,8 @@ sub lives_and(&;$) {
     );
 }
 
-sub live_or_die {
+util 'live_or_die';
+sub live_or_die(&) {
     my ( $code ) = @_;
     my $return = eval { $code->(); 'did not die' } || "died";
     my $msg = $@;

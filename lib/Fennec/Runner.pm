@@ -123,7 +123,7 @@ sub process_workflow {
         if $testfile->fennec_meta->skip;
 
     try {
-        $workflow->build_children;
+        $workflow->build;
         $self->reset_benchmark;
         $workflow->run_tests( $self->search )
     }
