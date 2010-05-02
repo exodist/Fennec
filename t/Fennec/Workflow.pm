@@ -18,10 +18,10 @@ tests 'add_item after build' => sub {
     my $ln = ln(1);
     my ( $ok, $msg ) = live_or_die { $workflow->add_item( $late )};
     ok( !$ok, "add_item died" );
-    is( $msg, <<'EOT', "Useful message" );
-Attempt to add 'Fennec::Workflow(fake nested)' to workflow 'fake' after the workflow has already been built.
+    is( $msg, <<EOT, "Useful message" );
+Attempt to add 'Fennec\::Workflow(fake nested)' to workflow 'fake' after the workflow has already been built.
 Did you try to define a workflow or testset inside a testset?
-File: /home/exodist/Projects/Fennec/t/Fennec/Workflow.pm
+File: @{[ __FILE__ ]}
 Line: 19
 EOT
 };

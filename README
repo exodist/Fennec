@@ -22,6 +22,7 @@ FEATURES
     No method attributes
     No use of END blocks
     No Devel::Declare magic
+    No use of Sub::Uplevel
     No source filters
     Large library of core test functions
     Plays nicely with Test::Builder tools
