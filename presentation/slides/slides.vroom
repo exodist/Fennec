@@ -35,8 +35,6 @@ by Chad 'Exodist' Granum
 ----
 == Fennec is a test tool manager, or toolbox
 
- * Examples
-
  * Workflow Management
 
  * Test files are all objects
@@ -46,15 +44,18 @@ by Chad 'Exodist' Granum
 
  * Test Grouping
 
- * Result output formatting
+ * Result Handling (output)
 
- * A versatile runner
+ * A Versatile Runner
 
  * Test File Types (finding test files)
 
  * Parallelization
 
- * More examples
+---- center
+
+Fennec Examples
+
 ---- perl
 package TEST::MyTest;
 use strict;
@@ -123,20 +124,24 @@ cases {
 }
 
 ---- perl
-    sub setup_my_setup {
-        my $self = shift;
-        print "methods prefixed by setup_ will be run before tests defined as methods.";
-    }
+sub setup_my_setup {
+    my $self = shift;
+    print "methods prefixed by setup_ will be run before tests defined as methods.";
+}
 
-    sub test_method_as_test_by_prefix {
-        my $self = shift;
-        ok( 1, "methods prefixed by test_ will be run as method." );
-    }
+sub test_method_as_test_by_prefix {
+    my $self = shift;
+    ok( 1, "methods prefixed by test_ will be run as method." );
+}
 
-    sub teardown_my_teardown {
-        my $self = shift;
-        print "method prefixed by teardown_ will be run after tests defined as methods."
-    }
+sub teardown_my_teardown {
+    my $self = shift;
+    print "method prefixed by teardown_ will be run after tests defined as methods."
+}
+
+---- center
+
+Workflows
 
 ----
 == Limitations of a screwdriver
@@ -223,49 +228,180 @@ The workflow process:
   * Build workflows to depth
 
  * Get test sets from each workflow to depth
+   (Each workflow returns its own groups and the groups of its children)
 
- * Run test sets
+ * Run test sets (parallelizable)
+
+---- center
+
+Test files part I.
+
 ----
 == Test files are objects
 
- * Base class
- * Meta
-  * Root workflow
- * Construction and init
+ * All packages that 'use Fennec' are subclasses of Fennec::TestFile
+
++ * Meta Class - TEST::MyTest->fennec_meta()
+   * Root workflow
+   * Workflow stack
+   * Threader
+   * META data (todo, skip, file, sort, random)
+
++ * Construction - TEST::MyTest->fennec_new()
+   * Uses new() if your write your own, or use moose
+   * Blesses a hashref if their is no custom constructor
+     * Calls init() on the new object if you define it
+   * Initializes meta class
+
+---- center
+
+Assertions and test utilities
 
 ----
 == Assertion Library management
- * Death based asserts
- * Fennec Asserts
- * Test::Builder asserts
-   * TBCore
-   * Test Builder overrides
+
+ * Every group and workflow generates a result
+   * Result passes if the method does not die
+   * Result fails if the method dies
+   * This allows for 'traditional asserts'
+
++ * Fennec::Assert - Custom assertions or tester functions
+   * Easily create libraries of functions similar to Test::More, etc.
+   * Automatically fills in result metadata such as:
+     * File name
+     * Line number
+
++ * Fennec::Util::TBOverride
+   * Defangs Test::Builder, forces it to report to Fennec
+   * Most Test::Builder tools 'just work' under fennec
+   * The most popular tools have been wrapped in Fennec::Assert::TBCore
+     * Wrapping Test::Builder tools encapsulates errors and results together
+
+---- center
+
+Grouping tests
+
 ----
 == Test Grouping
- * tests name => sub {}
- * tests name => ( %options )
- * SubSet
- * Spec
- * Case
- * Random
+
+ * Tests are grouped into blessed methods
+
+ * Test groups are subclasses of Fennec::TestSet
+
+ * TestSets are what workflows produce
+
+---- perl
+
+tests 'Simple' => sub {
+    my $self = shift;
+    ok( 1, "Passing" );
+    ok( 0, "Failing" );
+};
+
+tests 'Complicated' => (
+    method => sub { ... },
+    # Only report a failure (die)
+    no_result => 1,
+    # Skip or todo an entire group
+    skip => $reason,
+    todo => $reason,
+);
+
 ----
-== Result output formatting
- * TAP
- * Handler base
- * Custom Handlers
- * Failure collector
+== Fennec::TestSet::SubSet
+
+SubSet is the secret behind the SPEC and Case workflows.
+
+Properties:
+    * Tests     (TestSets)
+    * Setups    (methods)
+    * Teardowns (methods)
+
+ * Runs the setups in the order they were added
+ * Runs testsets after setups (usually randomized)
+ * Runs the teardowns in reverse order
+
+---- center
+
+Result handling
+
+(Output)
+
 ----
-== A versatile runner
- * Proto
-  * Environment
-  * Config
-  * Default
-  * specified
+== Fennec::Handler
+
+ * Base class for custom output handers
+
+ * All output (results, diags, notes, etc) are passed to handlers
+
+ * Handlers run in, and remain in, the parent process
+
+ * Can run several at once
+
+ * Do anything you want with output objects
+
 ----
-== Test File Types (finding test files)
- * Find by path
- * Verify file
- * Loading
+== Fennec::Handler::TAP
+
+Fennec provides a TAP handler
+
+ * prints outside the TAP handler are redirected to STDERR
+
+ * In a verbose harness (or no harness) errors (diag) appear directly below
+   failed results, not off in space (Except for unwrapped Test::Builder tools)
+
+----
+== Custom Handlers
+
+ * Can record results in any format, XML, TAP, Custom
+
+ * Can filter results, such as only recording failures
+
+ * Send results to a server, or database
+
+---- center
+
+The Runner
+
+----
+== Fennec::Runner
+
+ * Normally kicked off by t/Fennec.t
+   * Works with prove
+   * Can be configured per-project
+
+ * One runner, unlimited file types, workflows, etc.
+
+ * Parameters can be obtained from:
+   * Environment variables
+   * Config file (~/ or /etc/)
+   * Specified in Fennec.t
+   * Sane Defaults
+
+---- center
+
+File Types
+
+----
+== Fennec::FileType
+
+ * Specify the types of files to load in the runner
+
+ * Each Fennec::FileType::XXX must implement:
+
+   * $bool = $class->valid_file( $filename )
+
+   * $testclass = $class->load_file( $filename )
+
+   * @paths = $class->paths()
+
+  These 3 methods allows Fennec to work with almost any test file format you
+  can concieve.
+
+---- center
+
+Parallelization
+
 ----
 == Parallelization
  * parallel files
