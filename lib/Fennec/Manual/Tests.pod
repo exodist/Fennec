@@ -12,7 +12,7 @@ L<Fennec::Manual::TestSuite> for more info.
 
 =head1 SYNOPSIS
 
-This is an example fennec standalone test using all default workflow styles.
+This is an example fennec test using all default workflow styles.
 
 =head2 t/MyTest.pm
 
