@@ -4,11 +4,6 @@
 
 Fennec::Manual::Vim - Vim rc files and tools provided with Fennec.
 
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
-
 =head1 Files
 
 All vim files are stored in shared/vim in the distribution.

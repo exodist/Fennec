@@ -215,23 +215,21 @@ How many test groups to run in parallel, do not set this too high.
 
 =back
 
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
-
 =head1 DOCUMENTATION
 
 =over 4
 
-=item QUICK START
+=item Tests
 
-L<Fennec::Manual::Quickstart> - Drop Fennec standalone tests into an existing
-suite.
+L<Fennec::Manual::Tests> - Examples of different fennec tools.
 
-=item FENNEC BASED TEST SUITE
+=item Fennec Based Test Suite
 
 L<Fennec::Manual::TestSuite> - How to create a Fennec based test suite.
+
+=item Standalone
+
+L<Fennec::Manual::Standalone> - Write fennec tests that stand on their own.
 
 =item MISSION
 

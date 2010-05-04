@@ -4,11 +4,6 @@
 
 Fennec::Manual - Using Test::Builder based tools with Fennec.
 
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
-
 =head1 THEY JUST WORK
 
     package MyTest;

@@ -72,11 +72,6 @@ Return all the outputs sent to the parent form children.
 
 =back
 
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
-
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

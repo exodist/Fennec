@@ -2,49 +2,33 @@
 
 =head1 NAME
 
-Fennec::Manual::Quickstart - Quick guide to immediate fennec usage.
+Fennec::Manual::Tests - Examples of Fennec Tests
 
 =head1 DESCRIPTION
 
 This document is the primer for fennec. It gives a synopsys of fennec
-capabilities using a standalone test file. After this introduction you should
-move on to L<Fennec::Manual::TestSuite> For more advanced usage. Writing all
-your tests as standalone tests is not recommended.
-
-=head1 NOTE ON STANDALONE
-
-This is documentation for a standalone test, that is a test that does not
-require anything outside each test file. This is perfectly acceptable, but not
-ideal. After reading this document I recommend reading
-L<Fennec::Manual::TestSuite> to create a fennec config file.
-
-A consequence of standalone tests is a loss of parallelization, and the
-overhead of loading fennec for each standlone test. When fennec is used to
-manage a suite it is loaded only once, and it can parallelize running of both
-test files and test groups.
+capabilities. After this introduction you should move on to
+L<Fennec::Manual::TestSuite> for more info.
 
 =head1 SYNOPSIS
 
 This is an example fennec standalone test using all default workflow styles.
 
-=head2 t/mystandalone.t
+=head2 t/MyTest.pm
 
 =head3 Boilerplate
 
     #!/usr/bin/perl;
-    package TEST::MyStandaloneTest;
+    package TEST::MyTest;
     use strict;
     use warnings;
-    use Fennec::Standalone;
+    use Fennec;
 
     # If the module specified is not installed all tests will be skipped
     use_or_skip 'Module::Name';
 
     # Tests and workflows (See following headings)
     ...
-
-    #done_testing must be called at the end of your workflow declarations
-    done_testing();
 
     1;
 
@@ -121,14 +105,10 @@ object.
 
 =over 4
 
-=item package TEST::MyStandaloneTest;
+=item package TEST::MyTest;
 
 Fennec tests must all be contained inside test packages, they will be used as
 objects.
-
-=item use Fennec::Standalone;
-
-Use the standalone fennec package.
 
 =item use_or_skip 'Module::Name'
 
@@ -177,13 +157,6 @@ don't)
 Note: setups and teardowns defined in this manner only effects testsets also
 defined in this manner. They will not effect testsets defined using the tests
 { ... } function.
-
-=item done_testing()
-
-Fennec runs your test groups and workflows after the package is loaded. In
-normal Fennec tests done_testing() is not necessary. However in Standalone
-tests fennec needs a trigger to tell it that the workflows are ready to be run.
-I appologise for this boilderplate, but it is safer than an END block.
 
 =back
 
@@ -239,19 +212,13 @@ Next you should read the TestSuite documentation.
 
 L<Fennec::Manual::TestSuite>
 
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
-
 =head1 DOCUMENTATION
 
 =over 4
 
-=item QUICK START
+=item STANDALONE
 
-L<Fennec::Manual::Quickstart> - Drop Fennec standalone tests into an existing
-suite.
+L<Fennec::Manual::Standalone> - Write fennec tests that stand on their own.
 
 =item FENNEC BASED TEST SUITE
 

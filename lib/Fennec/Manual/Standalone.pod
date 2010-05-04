@@ -1,0 +1,103 @@
+=pod
+
+=head1 NAME
+
+Fennec::Manual::Standalone - Writing stand-alone fennec tests.
+
+=head1 DESCRIPTION
+
+This is documentation for a standalone test, that is a test that does not
+require anything outside each test file. This is perfectly acceptable, but not
+ideal. You should also read L<Fennec::Manual::Tests> for more information on
+writing Fennec tests.
+
+A consequence of standalone tests is a loss of parallelization, and the
+overhead of loading fennec for each standlone test. When fennec is used to
+manage a suite it is loaded only once, and it can parallelize running of both
+test files and test groups.
+
+=head1 SYNOPSIS
+
+=head2 t/mystandalone.t
+
+    #!/usr/bin/perl;
+    package TEST::MyStandaloneTest;
+    use strict;
+    use warnings;
+    use Fennec::Standalone;
+
+    # If the module specified is not installed all tests will be skipped
+    use_or_skip 'Module::Name';
+
+    # See Fennec::Manual::Tests for more tools
+    tests hello_world_group => sub {
+        my $self = shift;
+        ok( 1, "Hello world" );
+    };
+
+    #done_testing must be called at the end of your workflow declarations
+    done_testing();
+
+    1;
+
+=head2 Breakdown
+
+=over 4
+
+=item package TEST::MyStandaloneTest;
+
+Fennec tests must all be contained inside test packages, they will be used as
+objects.
+
+=item use Fennec::Standalone;
+
+Use the standalone fennec package.
+
+=item tests name => sub { ... }
+
+You should also read L<Fennec::Manual::Tests> for more information.
+
+=item done_testing()
+
+Fennec runs your test groups and workflows after the package is loaded. In
+normal Fennec tests done_testing() is not necessary. However in Standalone
+tests fennec needs a trigger to tell it that the workflows are ready to be run.
+I appologise for this boilderplate, but it is safer than an END block.
+
+=back
+
+=head1 DOCUMENTATION
+
+=over 4
+
+=item TESTS
+
+L<Fennec::Manual::Tests> - Examples of different fennec tools.
+
+=item FENNEC BASED TEST SUITE
+
+L<Fennec::Manual::TestSuite> - How to create a Fennec based test suite.
+
+=item MISSION
+
+L<Fennec::Manual::Mission> - Why does Fennec exist?
+
+=item MANUAL
+
+L<Fennec::Manual> - Advanced usage and extending Fennec.
+
+=back
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

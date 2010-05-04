@@ -4,11 +4,6 @@
 
 Fennec::Manual::Workflows - Writing custom workflow plugins for Fennec.
 
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
-
 =head1 WHY WRITE A WORKFLOW
 
 In fennec a workflow is a way to structure tests. There are many popular

@@ -178,11 +178,6 @@ doc has been reduced to API documentation.>
 
 L<Fennec::Manual::Assertions>
 
-=head1 EXPORTED FUNCTIONS
-
-Note: These also work in method form, if your assert class can be instantiated
-as an object you can call $instance->NAME().
-
 =over 4
 
 =item $newsub = tb_wrapper( sub { ... } )
