@@ -178,7 +178,7 @@ extendable API. Using Fennec you can write custom workflows, assertions,
 testers, and output plugins. You can even define custom file types and file
 loaders.
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
 Create t/Fennec.t, which serves as your test runner and config file:
 

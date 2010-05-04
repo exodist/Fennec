@@ -12,7 +12,7 @@ DESCRIPTION
     assertions, testers, and output plugins. You can even define custom file
     types and file loaders.
 
-SYNOPSYS
+SYNOPSIS
     Create t/Fennec.t, which serves as your test runner and config file:
 
         $ cd myproject
