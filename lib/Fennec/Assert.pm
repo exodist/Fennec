@@ -14,6 +14,7 @@ use Fennec::Util::TBOverride;
 use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
 use Exporter::Declare ':extend';
+use Fennec::Util qw/test_caller/;
 
 our @EXPORT = qw/tb_wrapper tester util result diag test_caller note/;
 our @CARP_NOT = qw/ Try::Tiny Benchmark /;
@@ -156,20 +157,6 @@ sub tb_wrapper(&) {
         );
     };
     return wrap_with_proto( $wrapper, prototype( $orig ));
-}
-
-sub test_caller {
-    my $current = 1;
-    my ( $caller, $file, $line );
-    do {
-        ( $caller, $file, $line ) = caller( $current );
-        $current++;
-    } while $caller && !$caller->isa( 'Fennec::TestFile' );
-
-    return (
-        file => $file || "N/A",
-        line => $line || "N/A",
-    );
 }
 
 sub wrap_with_proto {

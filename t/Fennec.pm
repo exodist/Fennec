@@ -37,6 +37,13 @@ tests error_tests => sub {
         "Cannot export from invalid package";
 };
 
+sub test_blah {
+    ok(1, 'blah1');
+
+
+    ok(1, 'blah2');
+}
+
 tests exports => sub {
     warning_like { done_testing }
      qr/calling done_testing\(\) is only required for Fennec::Standalone tests/,

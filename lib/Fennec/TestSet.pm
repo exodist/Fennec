@@ -39,11 +39,6 @@ sub init {
     $self->created_in( $$ );
 }
 
-sub lines_for_filter {
-    my $self = shift;
-    B::svref_2object( $self->method )->START->line;
-}
-
 sub run {
     my $self = shift;
     return Result->skip_testset( $self, $self->skip )

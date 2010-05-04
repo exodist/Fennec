@@ -14,11 +14,6 @@ use Fennec::Util::Alias qw/
 
 Accessors qw/testfile/;
 
-sub lines_for_filter {
-    my $self = shift;
-    B::svref_2object( $self->method )->START->line;
-}
-
 sub run {
     my $self = shift;
     return try {
@@ -26,7 +21,7 @@ sub run {
         return 1;
     }
     catch {
-        die( $@ ) unless m/SKIP:\s*(.*)\s+at/;
+        die( $_ ) unless m/SKIP:\s*(.*)\s+at/;
         Result->skip_testset( $self, $1 );
         return 0;
     };

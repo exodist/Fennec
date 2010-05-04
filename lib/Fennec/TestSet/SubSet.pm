@@ -16,7 +16,7 @@ use Fennec::Util::Alias qw/
     Fennec::TestSet::SubSet::Setup
 /;
 
-use List::Util   qw/shuffle/;
+use List::Util   qw/shuffle min max/;
 use Time::HiRes qw/time/;
 
 Accessors qw/setups teardowns tests/;
@@ -37,9 +37,17 @@ sub new {
 
 sub lines_for_filter {
     my $self = shift;
-    return 0 unless wantarray;
-    map { $_->lines_for_filter } @{$self->tests}, @{$self->setups}, @{$self->teardowns};
+    my @sets = map {[ $_->lines_for_filter ]}
+        @{$self->tests}, @{$self->setups}, @{$self->teardowns};
+
+    my $start = min( map { $_->[0] } @sets );
+    my @ends = map { $_->[1] } @sets;
+    my $end = (grep { !$_ } @ends) ? undef : max( @ends );
+    return ( $start, $end );
 }
+
+sub start_line { my $list = [shift->lines_for_filter]; $list->[0] }
+sub end_line { my $list = [shift->lines_for_filter]; $list->[1] }
 
 sub run {
     my $self = shift;

@@ -2,6 +2,10 @@ package Fennec::Util;
 use strict;
 use warnings;
 
+use base 'Exporter';
+
+our @EXPORT_OK = qw/test_caller/;
+
 use Carp qw/carp confess croak cluck/;
 
 sub workflow_stack {
@@ -40,6 +44,21 @@ sub package_sub_map {
     my @list = $class->package_subs( @_ );
     return map {[ $_, $package->can( $_ )]} @list;
 }
+
+sub test_caller {
+    my $current = 1;
+    my ( $caller, $file, $line );
+    do {
+        ( $caller, $file, $line ) = caller( $current );
+        $current++;
+    } while $caller && !$caller->isa( 'Fennec::TestFile' );
+
+    return (
+        file => $file || "N/A",
+        line => $line || "N/A",
+    );
+}
+
 
 1;
 

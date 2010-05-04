@@ -21,7 +21,7 @@ use Carp;
 
 use Time::HiRes       qw/time/;
 use Scalar::Util      qw/blessed/;
-use List::Util        qw/shuffle/;
+use List::Util        qw/shuffle max min/;
 use Exporter::Declare qw/:extend/;
 
 Accessors qw/ parent _testsets _workflows built /;
@@ -90,12 +90,13 @@ sub run_build_hooks {
 
 sub run_tests {
     my $self = shift;
+    my ($search) = @_;
     try {
         my @sets = $self->testsets;
         $_->observed( 1 ) for @sets;
 
-        if ( Runner->search ) {
-            @sets = $self->search_filter( Runner->search, \@sets );
+        if ( $search ) {
+            @sets = $self->search_filter( $search, \@sets );
         }
 
         @sets = shuffle @sets if $self->testfile->fennec_meta->random;
@@ -134,27 +135,41 @@ sub search_filter {
 sub filter_by_line_number {
     my $self = shift;
     my ( $filter, $tests ) = @_;
+
     my %map;
-    for my $item ( @$tests ) {
-        my %seen;
-        my @lines = grep { !$seen{$_}++ } $item->lines_for_filter;
-        push @{ $map{$_}} => $item for @lines;
+    for my $test ( @$tests ) {
+        push @{ $map{$test->start_line}} => $test;
     }
 
-    # 'B' returns the first line that has a statement within in the sub:
-    # 1: sub x {
-    # 2:  print 'x';
-    # 3: }
-    # B would give us line '2', so we shift everything up a line unless there
-    # is already something for that line.
-    for my $line ( keys %map ) {
-        $map{($line - 1)} = delete $map{$line}
-            unless $map{($line - 1)}
+    # Ends (obtained via caller) are more reliable than starts (obtained by the
+    # B module), but are not always available (package subs do not get it, only
+    # anonymous ones do.)
+    # Here we remove the gaps between groups shifting starts up to just below
+    # the previous groups end, if it has one, otherwise leave it where it is.
+    my $last_end = 1;
+    for my $start ( sort { $a <=> $b } keys %map ) {
+        my $idx = ($last_end && $last_end < $start)
+            ? $last_end
+            : $start;
+
+        $map{ $idx } ||= delete $map{ $start }
+            unless $last_end == $start;
+
+        my @ends = map { $_->end_line || 0 } @{ $map{ $idx }};
+        $last_end = max( $last_end, @ends ) + 1;
+        $last_end = 0 if grep { !$_ } @ends;
     }
 
-    my ($idx) = grep { $_ <= $filter } sort { $b <=> $a } keys %map;
-    return unless $idx;
-    return @{ $map{ $idx }};
+    my $idx = max( grep { $_ <= $filter } keys %map );
+
+    my @set = @{ $map{ $idx }};
+    my @out = grep {
+        $_->end_line
+            ? ( $_->end_line >= $filter ? 1 : 0)
+            : 1
+    } @set;
+    return @out if @out;
+    return @set;
 }
 
 sub filter_by_name {

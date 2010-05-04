@@ -4,12 +4,30 @@ use warnings;
 
 use Fennec::Util::Alias qw/
     Fennec::Util::Accessors
+    Fennec::Util::Sub
 /;
 use Carp;
+use Fennec::Util qw/test_caller/;
+use B;
 
 Accessors qw/method name file line skip todo/;
 
 sub proto {()}
+
+sub end_line { shift->specs->end_line }
+sub start_line { shift->specs->start_line }
+
+sub specs {
+    my $self = shift;
+    $self->{ specs } = Sub->new( $self->method )
+        unless $self->{ specs };
+    return $self->{ specs };
+}
+
+sub lines_for_filter {
+    my $self = shift;
+    return ( $self->start_line, $self->end_line );
+}
 
 sub _method_proto {
     my $class = shift;
@@ -25,11 +43,15 @@ sub new {
     confess( "$class must be created with a method " )
         unless $method;
 
+    my %tc = test_caller();
+    my $end_line = $tc{line};
+
     my $self = bless(
         {
             $class->proto,
             %proto,
-            name => $name,
+            specs  => Sub->new( $method, $end_line ),
+            name   => $name,
             method => $method,
         },
         $class
