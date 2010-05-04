@@ -1,25 +1,91 @@
 NAME
-    Fennec - Framework upon which intercompatible testing solutions can be
-    built.
+    Fennec - Full Featured Testing Toolbox And Development Kit
 
 DESCRIPTION
-    Fennec provides a solid base that is highly extendable. It allows for
-    the writing of custom nestable workflows (like RSPEC), Custom Asserts
-    (like Test::Exception), Custom output handlers (Alternatives to TAP),
-    Custom file types, and custom result passing (collectors). In Fennec all
-    test files are objects. Fennec also solves the forking problem, thats
-    it, forking just plain works.
+    Fennec is a full featured testing toolbox. Fennec provides all the tools
+    your used to, but in a framework that allows for greater interopability
+    of third party tools. Along with the typical set of tools, Fennec
+    addresses many common problems, complaints, and wish list items.
 
-EARLY VERSION WARNING
-    Fennec is still under active development, many features are untested or
-    even unimplemented. Please give it a try and report any bugs or
-    suggestions.
+    In addition to the provided tools, Fennec provides a solid framework and
+    highly extendable API. Using Fennec you can write custom workflows,
+    assertions, testers, and output plugins. You can even define custom file
+    types and file loaders.
+
+SYNOPSYS
+    Create t/Fennec.t, which serves as your test runner and config file:
+
+        $ cd myproject
+        $ fennec_init
+
+    Run this any time to create a basic scaffold test for every module under
+    lib/
+
+        $ fennec_scaffold
+
+    An example test (t/MyModule.pm)
+
+        package MyModule;
+        use strict;
+        use warnings;
+        use Fennec;
+
+        # Skip this test unless a dependancy is avialable
+        use_or_skip 'Dependancy::Module';
+
+        sub module { 'MyModule' };
+
+        # Tests can be outside groups
+        ok( 1, "Not grouped" );
+
+        # Everything Test::More has is provided
+        tests 'load module' => sub {
+            my $self = shift;
+            use_ok $self->module();
+            can_ok( $self->module, 'new' );
+            isa_ok( $self->module->new(), $self->module );
+        };
+
+        # Everything Test::Warn and Test::Exception have is also here
+        tests 'More Tests' => sub {
+            dies_ok { die 'x' } "die dies";
+            warning_like { warn 'x' } qr/^x/, "warn warns";
+        }
+
+        describe 'RSPEC Tests' => sub {
+            my $self = shift;
+            before_each { $self->do_something };
+            it { ok( 1, "1 is true!" ) };
+            it { ok( 2, "2 is true!" ) };
+            after_each { $self->do_something_else };
+
+            # Nested!
+            describe { ... };
+        };
+
+        # Run each test group under each case.
+        cases {
+            my $self = shift;
+            my $var;
+            case { $var = 1 };
+            case { $var = 2 };
+            tests { ok( $var, "var is true" ) };
+            tests {
+                my $self = shift;
+                ok( is_prime($var), "var is prime" )
+            };
+        }
+
+        1;
+
+    Please see Fennec::Manual::Testing for a breakdown of everything seen
+    above.
 
 FEATURES
     Fennec offers the following features, among others.
 
     No large dependancy chains
-    No method attributes
+    No attributes <http://perldoc.perl.org/attributes.html>
     No use of END blocks
     No Devel::Declare magic
     No use of Sub::Uplevel
@@ -38,18 +104,84 @@ FEATURES
     Intercept or hook into most steps or components by design
 
 DOCUMENTATION
-    QUICK START
-        Fennec::Manual::Quickstart - Drop Fennec standalone tests into an
-        existing suite.
+    INTRODUCTION TO FENNEC TESTS
+        Fennec::Manual::Testing - Introduction to testing with Fennec.
 
     FENNEC BASED TEST SUITE
         Fennec::Manual::TestSuite - How to create a Fennec based test suite.
+
+    STAND ALONE TESTS
+        Fennec::Manual::StandAlone - Drop Fennec standalone tests into an
+        existing suite.
 
     MISSION
         Fennec::Manual::Mission - Why does Fennec exist?
 
     MANUAL
         Fennec::Manual - Advanced usage and extending Fennec.
+
+DEVELOPER API
+    This section only covers the API for Fennec.pm. See Fennec::Manual and
+    other documentation for other module API's.
+
+  Class methods
+    import( %proto )
+            use Fennec %proto;
+
+        Called when you use the Fennec module. %proto is key/value pairs for
+        configuration and/or test class meta data. Meta data keys may be
+        mixed in or placed in a hashref under the 'meta' key.
+
+    my $obj = $class->new( %proto )
+        Create a new instance. %proto can be all the same key/value pairs as
+        import(), except that the meta data must be in a hashref under the
+        'meta' key. You must also specify a 'caller' key with an arrayref
+        containing a package name, filename, and line number for the test
+        file.
+
+  Object methods
+    test_class()
+        Returns the test class. This will either be determined by import()
+        or provided to import/new via the first element of the arrayref
+        provided under the 'caller' key.
+
+    test_file()
+        Returns the test class. This will either be determined by import()
+        or provided to import/new via the second element of the arrayref
+        provided under the 'caller' key.
+
+    imported_line()
+        Returns the test class. This will either be determined by import()
+        or provided to import/new via the third element of the arrayref
+        provided under the 'caller' key.
+
+    workflows()
+        Returns an arrayref containing the workflow names provided at
+        import, or if none were provided, then the defaults will be
+        provided.
+
+    asserts()
+        Returns an arrayref containing the assert names provided at import,
+        or if none were provided, then the defaults will be provided.
+
+    root_workflow()
+        Returns the classname of the root workflow that will be used.
+
+    subclass()
+        Modifies the test classes @ISA array to make it a subclass of
+        Fennec::TestFile
+
+    init_meta()
+        Initializes the meta object for the test class.
+
+    export_tools()
+        Export the basic tools to the test class
+
+    export_workflows()
+        Export the desired workflows to the test class
+
+    export_asserts()
+        Export the desired asserts to the test class
 
 AUTHORS
     Chad Granum exodist7@gmail.com
