@@ -290,6 +290,10 @@ Grouping tests
 
  * TestSets are what workflows produce
 
+ * Fennec provides a mechanism for you to isolate and run a specific testset
+
+ * TestSets can be run in parrallel
+
 ---- perl
 
 tests 'Simple' => sub {

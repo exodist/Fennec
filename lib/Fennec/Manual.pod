@@ -13,6 +13,98 @@ types, and custom result passing (collectors). In L<Fennec> all test files are
 objects. L<Fennec> also solves the forking problem, thats it, forking just
 plain works.
 
+=head1 THE QUICK AND DIRTY FENNEC PITCH
+
+Fennec is not just good for writing new tools, it comes with everything the
+common Test::Builder tools provide and more. Here is a list of things Fennec
+does for you that not everything else thinks of:
+
+=head2 Test grouping
+
+    tests 'Group A' => sub {
+        ok( 1, "1 is true!" );
+        ok( 2, "2 is too!" );
+    };
+
+Usually you group similar tests together anyway, why not isolate them? Doing
+this also allows you to run groups in parallel, or run only the group on which
+you are currently working.
+
+=head2 Handy workflows to make testing tasks easier
+
+RSPEC like:
+
+    describe 'Workflow' => sub {
+        my $self = shift;
+        setup { $self->do_something };
+        it { ok( 1, "1 is true!" ) };
+        teardown { $self->do_something_else };
+    };
+
+Case:
+
+    cases {
+        my $var;
+        case { $var = 1 };
+        case { $var = 2 };
+        tests { ok( $var, "var is true" ) };
+        tests { ok( is_prime($var), "var is prime" )};
+    }
+
+These workflows come with Fennec, they sure do make life easier! It is also
+fairly easy to use Fennecs framework to write custom workflows.
+
+=head2 Running subsets of tests
+
+These commands can be used to run a subset of tests within a specified test
+file:
+
+    $ FENNEC_ITEM="item name" FENNEC_FILE="Filename" prove -I lib -v t/Fennec.t
+    $ FENNEC_ITEM="line number" FENNEC_FILE="Filename" prove -I lib -v t/Fennec.t
+
+Thats right, you can specify a group or workflow name, or even a line number!
+Only that workflow ro group will be run, no waiting around for other tests to
+get at what you care about. Line number can be any line number across which the
+workflow or group is defined.
+
+=head2 Parallelizing test groups within test files
+
+See 'Test grouping'. Each group can be run in parrallel.
+
+=head2 Object oriented test files
+
+All test groups and workflows are blessed methods. Your test file defines a
+package, which is initialized. All groups and workflows are run as methods on
+the same test object (May be in different processes).
+
+=head2 Command line tools to make life easier
+
+Create t/Fennec.t with a good default config:
+
+    $ cd project_dir
+    $ fennec_init
+
+Create scaffold tests for every module in /lib
+
+    $ cd project_dir
+    $ fennec_scaffold
+
+Run a specific test file:
+
+    $ cd project_dir
+    $ fennec_prove t/MyModule.pm - [prove options]
+
+Run a specific test group by line number or name:
+
+    $ cd project_dir
+    $ fennec_prove t/MyModule.pm "My Group" [prove options]
+
+=head2 Test Randomization
+
+Test groups are run in random order by default. You can easily disable
+randomization if needed on a global or per test basis. Fennec prints out its
+random seed so you can reproduce the order if necessary.
+
 =head1 EARLY VERSION WARNING
 
 L<Fennec> is still under active development, many features are untested or even
