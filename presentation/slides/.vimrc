@@ -14,6 +14,7 @@ set statusline=%-20f\ Modern\ perl\ testing\ with\ Fennec
 
 " Overrides from /home/exodist/.vroom/vimrc
 :set listchars=""
+:set nonumber
 
 
 " Values from slides.vroom config section. (under 'vimrc')
