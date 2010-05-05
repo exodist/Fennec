@@ -4,11 +4,6 @@
 
 Fennec::Manual::CommandLine - Fennec Command Line Tools.
 
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
-
 =head1 COMMAND LINE TOOLS
 
 =over 4
@@ -32,8 +27,7 @@ directory. This is where you start when writing a test-suite using fennec.
 
 This is a wrapper around prove that lets you run a specific fennec test file,
 and optionally a specific test name or line number within that file. Running a
-specific line number is imperfect, fennec makes an educated guess about which
-testset runs on which line.
+specific line number is not 100% accurate, but pretty close.
 
 =item fennec_run.pl
 

@@ -28,12 +28,14 @@ util anonclass => sub {
         *{ $pkg . '::' . $sub } = $code;
     }
 
+    Fennec::Assert::Core->export_to( $pkg );
+    my $self = bless( \$pkg, __PACKAGE__ );
+
     for my $load ( ___as_list( $proto{ use })) {
-        eval "package $pkg; use $load; 1" || die( $@ );
+        $self->use( $load );
     }
 
-    Fennec::Assert::Core->export_to( $pkg );
-    return bless( \$pkg, __PACKAGE__ );
+    return $self;
 };
 
 sub ___as_list {
@@ -49,6 +51,20 @@ sub new {
         unless blessed( $in );
     return $in->class->new( $in, @_ ) if $in->class->can( 'new' );
     return bless( { _keep_alive_ref_ => $in,  @_ }, $in->class );
+}
+
+sub use {
+    my $self = shift;
+    my ( $load, @args ) = @_;
+    my $pkg = $self->class;
+
+    if ( @args ) {
+        eval "package $pkg; use $load \@args; 1" || die( $@ );
+    }
+    else {
+        eval "package $pkg; use $load; 1" || die( $@ );
+    }
+    1;
 }
 
 sub can {

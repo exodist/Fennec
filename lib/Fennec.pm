@@ -254,39 +254,76 @@ Fennec offers the following features, among others.
 
 =item No large dependancy chains
 
-=item No attributes L<http://perldoc.perl.org/attributes.html>
+Mostly core dependancies, only a couple cpan modules.
+
+=item No attributes
+
+By attrivutes we mean: L<http://perldoc.perl.org/attributes.html>
 
 =item No use of END blocks
 
+Thar be dragons.
+
 =item No Devel::Declare magic
+
+Unles you use L<Fennec::Declare>, which is not part of core.
 
 =item No use of Sub::Uplevel
 
+Known to cause problems with Carp, L<Test::Exception>, and others.
+
 =item No source filters
+
+Never.
 
 =item Large library of core test functions
 
+L<Fennec::Assert::Core>
+
 =item Plays nicely with L<Test::Builder> tools
+
+L<Fennec::Manual::TBAssertions>
 
 =item Better diagnostics
 
+No STDERR and STDOUT disconnect between a failure and its output. If a tool
+does not provide helpful output Fennec tries to give you some anyway.
+
 =item Highly Extendable
+
+Thats the goal
 
 =item Lite benchmarking for free
 
+Time between results in each process is timed.
+
 =item Works with prove
+
+t/Fennec.t as a runner, or L<Fennec::Standalone>
 
 =item Full-Suite management
 
+L<Fennec::Manual::TestSuite>
+
 =item Standalone test support
+
+L<Fennec::Manual::Standalone>
 
 =item Support for SPEC and other test workflows
 
+L<Fennec::Workflow::SPEC> and L<Fennec::Workflow::Case>
+
 =item Forking works
+
+Results are process-aware, no mangled test numbers.
 
 =item Run only specific test sets within test files (for development)
 
+Don't run an entire test file to debug a single section
+
 =item Intercept or hook into most steps or components by design
+
+No limits.
 
 =back
 

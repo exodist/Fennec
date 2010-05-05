@@ -4,6 +4,10 @@ use warnings;
 
 use Fennec;
 
+use Fennec::Util::Alias qw/
+    Fennec::Runner
+/;
+
 tests hello_world_group => sub {
     my $self = shift;
     ok( 1, "Hello world" );
@@ -37,13 +41,6 @@ tests error_tests => sub {
         "Cannot export from invalid package";
 };
 
-sub test_blah {
-    ok(1, 'blah1');
-
-
-    ok(1, 'blah2');
-}
-
 tests exports => sub {
     warning_like { done_testing }
      qr/calling done_testing\(\) is only required for Fennec::Standalone tests/,
@@ -64,6 +61,54 @@ tests exports => sub {
     throws_ok { require_or_skip XXX::Fake::Package }
         qr/SKIP: XXX::Fake::Package is not installed/,
         "require_or_skip";
+};
+
+tests import => sub {
+    my $ac = anonclass( use => 'Fennec' );
+    can_ok( $ac, qw/ use_or_skip require_or_skip done_testing ok / );
+    isa_ok( $ac, 'Fennec::TestFile' );
+    ok( $ac->class->fennec_meta, "have meta" );
+
+    throws_ok { $ac->use( 'Fennec' )}
+        qr/Meta info for '@{[ $ac->class ]}' already initialized, did you 'use Fennec' twice\?/,
+        "Using fennec twice causes error";
+
+    throws_ok {
+        local $Fennec::Runner::SINGLETON = undef;
+        anonclass->use( 'Fennec' )
+    } qr/Test runner not found/,
+          "No runner error";
+
+    throws_ok { package main; eval 'use Fennec; 1' || die( $@ ) }
+        qr/You must put your tests into a package, not main/,
+        "Using Fennec from main";
+};
+
+tests OO => sub {
+    my $one = Fennec->new( caller => [ 'TEST::FENNEC', __FILE__, 1 ]);
+    is( $one->test_class, 'TEST::FENNEC', "Test Class" );
+    is( $one->test_file, __FILE__, "file" );
+    is( $one->imported_line, 1, "line number" );
+    is( $one->workflows, Runner->default_workflows, "Workflows" );
+    is( $one->asserts, Runner->default_asserts, "asserts" );
+    is( $one->root_workflow, Runner->root_workflow_class, "root_workflow" );
+
+    ok( !TEST::FENNEC->isa( 'Fennec::TestFile' ), "Not a fennec subclass" );
+    $one->subclass;
+    isa_ok( 'TEST::FENNEC', 'Fennec::TestFile' );
+
+    ok( !TEST::FENNEC->fennec_meta, "No Meta" );
+    $one->init_meta;
+    ok( TEST::FENNEC->fennec_meta, "have Meta" );
+
+    ok( !TEST::FENNEC->can( $_ ), "can't $_" )
+        for qw/done_testing use_or_skip require_or_skip/;
+    $one->export_tools;
+    can_ok( 'TEST::FENNEC', qw/done_testing use_or_skip require_or_skip/ );
+};
+
+tests exports => sub {
+
 };
 
 1;

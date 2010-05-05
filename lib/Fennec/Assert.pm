@@ -65,7 +65,7 @@ sub tester {
 
     $assert_class->export(
         $name,
-        wrap_with_proto( $wrapsub, prototype( $sub ))
+        _wrap_with_proto( $wrapsub, prototype( $sub ))
     );
 }
 
@@ -156,10 +156,10 @@ sub tb_wrapper(&) {
             stdout    => \@Fennec::Assert::TB_NOTES,
         );
     };
-    return wrap_with_proto( $wrapper, prototype( $orig ));
+    return _wrap_with_proto( $wrapper, prototype( $orig ));
 }
 
-sub wrap_with_proto {
+sub _wrap_with_proto {
     my ( $sub, $proto ) = @_;
     return $sub unless $proto;
     return eval "sub($proto) { \$sub->( \@_ )}"
@@ -270,11 +270,6 @@ L<Fennec::Assert> itself then @ISA will be modified to subclass the calling
 package. Assert subclasses do not modify the @ISA whent hey are used.
 
 =back
-
-=head1 EARLY VERSION WARNING
-
-L<Fennec> is still under active development, many features are untested or even
-unimplemented. Please give it a try and report any bugs or suggestions.
 
 =head1 MANUAL
 

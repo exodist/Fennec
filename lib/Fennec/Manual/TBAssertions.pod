@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Fennec::Manual - Using Test::Builder based tools with Fennec.
+Fennec::Manual::TBAssertions - Using Test::Builder based tools with Fennec.
 
 =head1 THEY JUST WORK
 
