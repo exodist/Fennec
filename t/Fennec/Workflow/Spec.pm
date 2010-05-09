@@ -16,13 +16,11 @@ sub init {
 }
 
 describe '0 - First' => sub {
-    my $self = shift;
+    before_all { shift->state->{ top_before_all }++ };
+    after_all { shift->state->{ top_after_all }++ };
 
-    before_all { $self->state->{ top_before_all }++ };
-    after_all { $self->state->{ top_after_all }++ };
-
-    before_each { $self->state->{ top_before_each }++ };
-    after_each { $self->state->{ top_after_each }++ };
+    before_each { shift->state->{ top_before_each }++ };
+    after_each { shift->state->{ top_after_each }++ };
 
     it one => sub {
         my $self = shift;
@@ -47,15 +45,15 @@ describe '0 - First' => sub {
     };
 
     describe '0 - First - Child' => sub {
-        before_all { $self->state->{ child_before_all }++ };
-        after_all { $self->state->{ child_after_all }++ };
-        before_all { $self->state->{ child_before_all2 }++ };
-        after_all { $self->state->{ child_after_all2 }++ };
+        before_all { shift->state->{ child_before_all }++ };
+        after_all { shift->state->{ child_after_all }++ };
+        before_all { shift->state->{ child_before_all2 }++ };
+        after_all { shift->state->{ child_after_all2 }++ };
 
-        before_each { $self->state->{ child_before_each }++ };
-        after_each { $self->state->{ child_after_each }++ };
-        before_each { $self->state->{ child_before_each2 }++ };
-        after_each { $self->state->{ child_after_each2 }++ };
+        before_each { shift->state->{ child_before_each }++ };
+        after_each { shift->state->{ child_after_each }++ };
+        before_each { shift->state->{ child_before_each2 }++ };
+        after_each { shift->state->{ child_after_each2 }++ };
 
         it one => sub {
             my $self = shift;
@@ -106,8 +104,8 @@ describe '0 - First' => sub {
     };
 
     describe '0 - First - Child2' => sub {
-        before_each { $self->state->{ child2_before_each }++ };
-        after_each { $self->state->{ child2_after_each }++ };
+        before_each { shift->state->{ child2_before_each }++ };
+        after_each { shift->state->{ child2_after_each }++ };
 
         it one => sub {
             my $self = shift;
@@ -141,19 +139,19 @@ describe '0 - First' => sub {
 
 describe '1 - second - ordering' => sub {
     my $self = shift;
-    before_all { push @{ $self->{ order_before_all }} => 1 };
-    before_all { push @{ $self->{ order_before_all }} => 2 };
-    before_all { push @{ $self->{ order_before_all }} => 3 };
-    after_all { push @{ $self->{ order_after_all }} => 1 };
-    after_all { push @{ $self->{ order_after_all }} => 2 };
-    after_all { push @{ $self->{ order_after_all }} => 3 };
+    before_all { push @{ shift->{ order_before_all }} => 1 };
+    before_all { push @{ shift->{ order_before_all }} => 2 };
+    before_all { push @{ shift->{ order_before_all }} => 3 };
+    after_all { push @{ shift->{ order_after_all }} => 1 };
+    after_all { push @{ shift->{ order_after_all }} => 2 };
+    after_all { push @{ shift->{ order_after_all }} => 3 };
 
-    before_each { push @{ $self->{ order_before_each }} => 1 };
-    before_each { push @{ $self->{ order_before_each }} => 2 };
-    before_each { push @{ $self->{ order_before_each }} => 3 };
-    after_each { push @{ $self->{ order_after_each }} => 1 };
-    after_each { push @{ $self->{ order_after_each }} => 2 };
-    after_each { push @{ $self->{ order_after_each }} => 3 };
+    before_each { push @{ shift->{ order_before_each }} => 1 };
+    before_each { push @{ shift->{ order_before_each }} => 2 };
+    before_each { push @{ shift->{ order_before_each }} => 3 };
+    after_each { push @{ shift->{ order_after_each }} => 1 };
+    after_each { push @{ shift->{ order_after_each }} => 2 };
+    after_each { push @{ shift->{ order_after_each }} => 3 };
 
     it 'trigger' => sub {
         ok( 1, "Test to trigger before/after" );

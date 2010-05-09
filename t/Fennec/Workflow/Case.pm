@@ -17,23 +17,30 @@ sub init {
 
 cases 'a - first' => sub {
     my $self = shift;
+
     case 'case a' => sub {
+        my $self = shift;
         $self->state->{cases}->{a}++
     };
     case 'case b' => sub {
+        my $self = shift;
         $self->state->{cases}->{b}++
     };
     case 'case c' => sub {
+        my $self = shift;
         $self->state->{cases}->{c}++
     };
 
     tests 'tests a' => sub {
+        my $self = shift;
         $self->state->{sets}->{a}++
     };
     tests 'tests b' => sub {
+        my $self = shift;
         $self->state->{sets}->{b}++
     };
     tests 'tests c' => sub {
+        my $self = shift;
         $self->state->{sets}->{c}++
     };
 };

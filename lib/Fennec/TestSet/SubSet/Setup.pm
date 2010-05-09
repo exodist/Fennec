@@ -12,12 +12,11 @@ use Fennec::Util::Alias qw/
     Fennec::Output::Result
 /;
 
-Accessors qw/testfile/;
-
-sub run {
+sub run_on {
     my $self = shift;
+    my ( $on ) = @_;
     return try {
-        $self->run_on( $self->testfile );
+        $self->SUPER::run_on( $on );
         return 1;
     }
     catch {

@@ -73,7 +73,6 @@ sub add_testset {
 sub add_setup {
     my $self = shift;
     my $setup = Setup->new( @_ );
-    $setup->testfile( $self->testfile );
     push @{ $self->{ setups }} => $setup;
 
 }
@@ -81,7 +80,6 @@ sub add_setup {
 sub add_teardown {
     my $self = shift;
     my $setup = Setup->new( @_ );
-    $setup->testfile( $self->testfile );
     push @{ $self->{ teardowns }} => $setup;
 }
 
@@ -89,7 +87,7 @@ sub run_setups {
     my $self = shift;
     return unless my $setups = $self->setups;
     for my $setup ( @$setups ) {
-        return unless $setup->run
+        return unless $setup->run_on( $self->testfile )
     }
     return 1;
 }
@@ -124,7 +122,7 @@ sub run_tests {
 sub run_teardowns {
     my $self = shift;
     return unless my $teardowns = $self->teardowns;
-    $_->run for reverse @$teardowns;
+    $_->run_on( $self->testfile ) for reverse @$teardowns;
 }
 
 sub observed {
