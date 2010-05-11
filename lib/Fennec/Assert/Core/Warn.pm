@@ -6,8 +6,8 @@ use Fennec::Assert;
 use Fennec::Assert::Core::More;
 use Fennec::Output::Result;
 
-util $_ for qw/warning_is warnings_are warning_like capture_warnings/;
-tester $_ for qw/warnings_like warnings_exist/;
+util( $_ ) for qw/warning_is warnings_are warning_like capture_warnings/;
+tester( $_ ) for qw/warnings_like warnings_exist/;
 
 sub capture_warnings(&) {
     my ( $sub ) = @_;

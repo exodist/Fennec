@@ -70,7 +70,7 @@ sub lives_and(&;$) {
     );
 }
 
-util 'live_or_die';
+util live_or_die codeblock;
 sub live_or_die(&) {
     my ( $code ) = @_;
     my $return = eval { $code->(); 'did not die' } || "died";

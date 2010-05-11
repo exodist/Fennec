@@ -11,7 +11,7 @@ our @LIST = qw/ok/;
 for my $name ( @LIST ) {
     no strict 'refs';
     next unless Test::Simple->can( $name );
-    tester $name => tb_wrapper \&{ 'Test::Simple::' . $name };
+    tester( $name => tb_wrapper( \&{ 'Test::Simple::' . $name }));
 }
 
 1;

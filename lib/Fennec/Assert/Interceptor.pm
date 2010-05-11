@@ -9,12 +9,12 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
 /;
 
-util capture => sub(&) {
+util( "capture", "codeblock", sub(&) {
     my ( $code ) = @_;
     my $collector = Interceptor->new;
     Runner->run_with_collector( $collector, $code );
     return $collector->intercepted;
-};
+});
 
 util ln => sub {
     my ( $diff ) = @_;

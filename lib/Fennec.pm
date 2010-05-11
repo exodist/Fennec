@@ -13,7 +13,7 @@ use Fennec::Util::Alias qw/
     Fennec::TestFile::Meta
 /;
 
-our $VERSION = "0.018";
+our $VERSION = "0.019";
 our @META_DATA = qw/todo skip random sort no_fork/;
 
 sub import {

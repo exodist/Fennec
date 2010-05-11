@@ -9,10 +9,15 @@ our $CLASS = 'Fennec::Assert::Core::Exception';
 tests use_test_exception => sub {
     use_ok $CLASS;
     my $self = shift;
-    can_ok( $self, qw/lives_ok dies_ok throws_ok lives_and/ );
+    can_ok( $self, qw/lives_ok dies_ok throws_ok lives_and live_or_die/ );
     my $ac = anonclass( use => $CLASS );
-    can_ok( $ac->class, qw/lives_ok dies_ok throws_ok lives_and/ );
+    can_ok( $ac->class, qw/lives_ok dies_ok throws_ok lives_and live_or_die/ );
 };
+
+tests live_or_die_declare {
+    my $lived = live_or_die { die( 'a' )}
+    ok( !$lived, "Got value - used declare syntax (no semicolon)" )
+}
 
 tests lives_ok => sub {
     my $results = capture {

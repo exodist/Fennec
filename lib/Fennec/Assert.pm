@@ -16,7 +16,7 @@ use Scalar::Util 'blessed';
 use Exporter::Declare ':extend';
 use Fennec::Util qw/test_caller/;
 
-our @EXPORT = qw/tb_wrapper tester util result diag test_caller note/;
+our @EXPORT = qw/tb_wrapper result diag test_caller note/;
 our @CARP_NOT = qw/ Try::Tiny Benchmark /;
 
 our $TB_RESULT;
@@ -24,13 +24,14 @@ our @TB_DIAGS;
 our @TB_NOTES;
 our $TB_OK = 0;
 
+export util export;
 sub util { goto &export }
 
 sub _name_sub_and_assert_class_from_args {
     my ( $name, $sub, $assert_class );
 
     $sub = pop( @_ ) if ref( $_[-1] ) && ref( $_[-1] ) eq 'CODE';
-    $assert_class = shift( @_ ) if @_ > 1;
+    $assert_class = shift( @_ ) if @_ > 1 && defined( $_[1] );
     ( $name ) = @_;
     $assert_class = blessed( $assert_class ) || $assert_class || caller(1);
     $sub ||= $assert_class->can( $name );
@@ -41,6 +42,7 @@ sub _name_sub_and_assert_class_from_args {
     );
 }
 
+export tester export;
 sub tester {
     my ( $name, $sub, $assert_class ) = _name_sub_and_assert_class_from_args( @_ );
     croak( "No code found in '$assert_class' for exported sub '$name'" )

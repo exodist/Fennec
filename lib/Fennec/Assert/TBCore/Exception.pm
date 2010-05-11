@@ -11,7 +11,7 @@ our @LIST = qw/ throws_ok dies_ok lives_ok lives_and /;
 for my $name ( @LIST ) {
     no strict 'refs';
     next unless Test::Exception->can( $name );
-    tester $name => tb_wrapper \&{ 'Test::Exception::' . $name };
+    tester( $name => tb_wrapper( \&{ 'Test::Exception::' . $name }));
 }
 
 1;

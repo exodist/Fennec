@@ -4,6 +4,7 @@ use warnings;
 
 use base 'Fennec::Base::Method';
 
+use Fennec::Parser;
 use Fennec::Util::Accessors;
 use Exporter::Declare;
 use Try::Tiny;
@@ -21,8 +22,7 @@ use Time::HiRes qw/time/;
 
 Accessors qw/ workflow no_result observed created_in /;
 
-export 'tests' => sub {
-    my $name = shift;
+export 'tests' fennec {
     my %proto = @_ > 1 ? @_ : (method => shift( @_ ));
     my ( $caller, $file, $line ) = caller;
     $caller->fennec_meta->workflow->add_item(

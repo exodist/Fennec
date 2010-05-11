@@ -41,14 +41,14 @@ export build_hook => sub(&) {
     push @BUILD_HOOKS => @_;
 };
 
-export export => sub { goto &export };
+export( 'export', 'export', sub { goto &export });
 
 export build_with => sub {
     my ( $name, $build ) = @_;
     my ($class) = caller;
     $build ||= $class;
 
-    $class->export( $name, sub {
+    $class->export( $name, 'fennec', sub {
         caller->fennec_meta->workflow->add_item(
             $build->new( @_ )
         );

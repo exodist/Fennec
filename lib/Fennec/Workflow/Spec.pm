@@ -1,6 +1,7 @@
 package Fennec::Workflow::Spec;
 use strict;
 use warnings;
+use Fennec::Parser;
 
 use Fennec::Workflow qw/:subclass/;
 
@@ -22,20 +23,21 @@ sub init {
 
 build_with 'describe';
 
-export it => sub {
+export( 'it', 'fennec', sub {
     my $caller = caller;
     no strict 'refs';
     goto &{ $caller . '::tests' };
-};
+});
 
 for my $name ( qw/ before_each before_all after_each after_all /) {
-    export $name => sub(&) {
+    Fennec::Parser->nameless( $name );
+    export( $name, 'fennec', sub(&) {
         my ($sub) = @_;
         my ( $caller ) = caller;
         $caller->fennec_meta->workflow->add_item(
             Setup->new( $name => $sub )
         );
-    };
+    });
 }
 
 sub testsets {

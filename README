@@ -85,23 +85,60 @@ FEATURES
     Fennec offers the following features, among others.
 
     No large dependancy chains
-    No attributes <http://perldoc.perl.org/attributes.html>
+        Mostly core dependancies, only a couple cpan modules.
+
+    No attributes
+        By attrivutes we mean: <http://perldoc.perl.org/attributes.html>
+
     No use of END blocks
+        Thar be dragons.
+
     No Devel::Declare magic
+        Unles you use Fennec::Declare, which is not part of core.
+
     No use of Sub::Uplevel
+        Known to cause problems with Carp, Test::Exception, and others.
+
     No source filters
+        Never.
+
     Large library of core test functions
+        Fennec::Assert::Core
+
     Plays nicely with Test::Builder tools
+        Fennec::Manual::TBAssertions
+
     Better diagnostics
+        No STDERR and STDOUT disconnect between a failure and its output. If
+        a tool does not provide helpful output Fennec tries to give you some
+        anyway.
+
     Highly Extendable
+        Thats the goal
+
     Lite benchmarking for free
+        Time between results in each process is timed.
+
     Works with prove
+        t/Fennec.t as a runner, or Fennec::Standalone
+
     Full-Suite management
+        Fennec::Manual::TestSuite
+
     Standalone test support
+        Fennec::Manual::Standalone
+
     Support for SPEC and other test workflows
+        Fennec::Workflow::SPEC and Fennec::Workflow::Case
+
     Forking works
+        Results are process-aware, no mangled test numbers.
+
     Run only specific test sets within test files (for development)
+        Don't run an entire test file to debug a single section
+
     Intercept or hook into most steps or components by design
+        No limits.
 
 DOCUMENTATION
     INTRODUCTION TO FENNEC TESTS

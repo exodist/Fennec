@@ -12,7 +12,7 @@ our @LIST = qw/ ok is isnt like unlike cmp_ok can_ok isa_ok new_ok pass fail
 for my $name ( @LIST ) {
     no strict 'refs';
     next unless Test::More->can( $name );
-    tester $name => tb_wrapper \&{ 'Test::More::' . $name };
+    tester( $name => tb_wrapper( \&{ 'Test::More::' . $name }));
 }
 
 util diag => \&diag;
