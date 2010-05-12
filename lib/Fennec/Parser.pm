@@ -2,8 +2,9 @@ package Fennec::Parser;
 use strict;
 use warnings;
 
+use Devel::Declare::Interface;
 use base 'Devel::Declare::Parser::Export';
-BEGIN { Devel::Declare::Parser->register( 'fennec' )};
+BEGIN { Devel::Declare::Interface::register_parser( 'fennec' )};
 
 our %NAMELESS;
 sub nameless { $NAMELESS{ $_[-1] }++ }
@@ -46,9 +47,6 @@ sub rewrite {
     }
 
     my ( $names, $specs ) = $self->sort_parts();
-    if ( @$names > 1 ) {
-        $self->bail( "XXX" );
-    }
     $self->new_parts([
         @$names,
         @$specs
