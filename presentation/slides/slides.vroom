@@ -70,10 +70,10 @@ ok( 1, "Not grouped" );
 is( 'a', 'a', "" );
 
 #It is much better to put tests into parallelizable groups.
-tests hello_world_group => sub {
+tests hello_world_group {
     my $self = shift;
     ok( 1, "Hello world" );
-};
+}
 
 1;
 
@@ -100,10 +100,10 @@ Fennec comes with everything the common Test::Builder tools provide and more.
 
     # VS
 
-    tests 'Group A' => sub {
+    tests 'Group A' {
         ok( 1, "1 is true!" );
         ok( 2, "2 is too!" );
-    };
+    }
 
 __END__
 
@@ -114,27 +114,27 @@ __END__
  * You can also run only the group on which you are currently working.
 
 ---- perl
-    describe 'Workflow' => sub {
+    describe 'Workflow' {
         my $self = shift;
 
-        before_each { $self->do_something };
+        before_each { $self->do_something }
 
-        it { ok( 1, "1 is true!" ) };
-        it { ok( 2, "2 is true!" ) };
+        it one { ok( 1, "1 is true!" ) }
+        it two { ok( 2, "2 is true!" ) }
 
-        after_each { $self->do_something_else };
+        after_each { $self->do_something_else }
 
         # Nested!
-        describe { ... };
+        describe more { ... }
     };
 
     cases {
         my $var;
-        case { $var = 1 };
-        case { $var = 2 };
+        case case_a { $var = 1 };
+        case case_b { $var = 2 };
 
-        tests { ok( $var, "var is true" ) };
-        tests { ok( is_prime($var), "var is prime" )};
+        tests tests_a { ok( $var, "var is true" ) };
+        tests tests_b { ok( is_prime($var), "var is prime" )};
     }
 
 __END__
@@ -362,18 +362,18 @@ Grouping tests
 
 ---- perl
 
-tests 'Simple' => sub {
+tests Simple {
     my $self = shift;
     ok( 1, "Passing" );
     ok( 0, "Failing" );
-};
+}
 
 
 
 
 tests 'Complicated' => (
     method => sub { ... },
-    # Only report a failure (die)
+    # Only report a failure
     no_result => 1,
     # Skip or todo an entire group
     skip => $reason,
@@ -598,23 +598,23 @@ use Fennec;
 
 use_ok( 'MyModule' );
 
-tests Sanity => sub {
-    my $self = shift;
+tests Sanity {
+    ok( $self, "I'm a method!" );
     can_ok( 'MyModule', qw/a b/ );
     isa_ok( 'MyModule', 'OtherModule' );
-};
+}
 
-tests 'Check defaults' => sub {
+tests 'Check defaults' {
     my $one = MyModule->new;
     is( MyModule->a, 'a', "default for a" );
     is( MyModule->b, 'b', "default for b" );
-};
+}
 
-tests 'Set values' => sub {
+tests 'Set values' {
     my $one = MyModule->new( a => 'A', b => 'B' );
     is( MyModule->a, 'A', "construct value a" );
     is( MyModule->b, 'B', "construct value b" );
-};
+}
 
 1;
 ----
@@ -627,7 +627,7 @@ tests 'Set values' => sub {
 + * done_testing() is not required
 
 + * Test groups are methods
-  (notice: $self = shift; in the first group)
+  (notice $self in the first group)
 
 ---- center
 
@@ -639,42 +639,42 @@ use strict;
 use warnings;
 use Fennec;
 
-describe 'my group' => sub {
+describe 'my group' {
     my $self = shift;
 
-    before_each { $self->load_data };
-    after_each { $self->unload_data };
+    before_each { $self->load_data }
+    after_each { $self->unload_data }
 
     # it is an alias to 'tests'
-    it 'my test' => sub {
+    it 'my test' {
         my $self = shift;
         ok( 1, 'spec test!' );
-    };
+    }
 
     # Nested!
     describe ...;
-};
+}
 
 1;
 ---- perl
 
-cases "Act the same in these cases" => sub {
+cases "Act the same in these cases" {
     my $self = shift;
 
-    case a => sub {
+    case a {
         my $self = shift;
         $self->reset_data( 'a' );
     }
-    case b => sub {
+    case b {
         my $self = shift;
         $self->reset_data( 'b' );
     }
 
-    tests a => sub {
+    tests {
         my $self = shift;
         ok( $self->have_data, "have data" );
     }
-    tests b => sub {
+    tests {
         my $self = shift;
         ok( $self->works, "it works" );
     }
@@ -717,7 +717,7 @@ objects.
 
 ---- perl
 
-tests like => sub {
+tests like {
     my $pass = capture {
         like( 'abcd', qr/^abcd$/, 'full' );
         like( 'efgh', qr/^efgh/, 'start' );
@@ -735,7 +735,7 @@ tests like => sub {
     ok( !$fail->[$_]->pass, "$_ failed" ) for 0 .. ( @$fail - 1 );
     is( $fail->[0]->stderr->[0], "'abcd' does not match (?-xism:efgh)", "Correct error" );
     is( $fail->[1]->stderr->[0], "'apple' does not match (?-xism:pear)", "Correct error" );
-};
+}
 
 ---- center
 
