@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+
+                                            differences
+
+ * The test file is a module (.pm)
+
+ * The test groups are named and declared seperately
+
+ * done_testing() is not required
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

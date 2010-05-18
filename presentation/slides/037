@@ -1,0 +1,34 @@
+
+
+
+
+
+
+
+
+
+
+
+                                          Parallelization
+
+ * Fennec can run files in parrallel
+   (forking in the runner)
+
+ * Fennec can run test groups in parrallel
+   (forking in the file subprocess)
+
+ * Fennec uses a 'Collector' to ensure results funnel down to the parent
+   process.
+
+
+
+
+
+
+
+
+
+
+
+
+
