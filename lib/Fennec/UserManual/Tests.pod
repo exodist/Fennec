@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-Fennec::Manual::Tests - Examples of Fennec Tests
+Fennec::UserManual::Tests - Examples of Fennec Tests
 
 =head1 DESCRIPTION
 
-This document is the primer for fennec. It gives a synopsys of fennec
+This document is the primer for fennec. It gives a synopsis of fennec
 capabilities. After this introduction you should move on to
 L<Fennec::Manual::TestSuite> for more info.
 
@@ -203,33 +203,32 @@ failure in the grand scheme.
 
     1;
 
-=head1 NEXT STEPS - BETTER MANAGING YOUR TEST SUITE
+=head1 USER DOCUMENTATION
 
-Next you should read the TestSuite documentation.
-
-L<Fennec::Manual::TestSuite>
-
-=head1 DOCUMENTATION
+User documentation is for those who wish to use Fennec to write simple tests,
+or manage a test suite for a project.
 
 =over 4
 
-=item STANDALONE
-
-L<Fennec::Manual::Standalone> - Write fennec tests that stand on their own.
-
-=item FENNEC BASED TEST SUITE
-
-L<Fennec::Manual::TestSuite> - How to create a Fennec based test suite.
-
-=item MISSION
-
-L<Fennec::Manual::Mission> - Why does Fennec exist?
-
-=item MANUAL
-
-L<Fennec::Manual> - Advanced usage and extending Fennec.
+=item L<Fennec::UserManual>
 
 =back
+
+=head1 DEVELOPER DOCUMENTATION
+
+Developer documentation is for those who wish to extend Fennec, or contribute
+to overall Fennec development.
+
+=over 4
+
+=item L<Fennec::DeveloperManual>
+
+=back
+
+=head1 API DOCUMENTATION
+
+API Documentation covers object internals. See the POD within each individual
+module.
 
 =head1 AUTHORS
 

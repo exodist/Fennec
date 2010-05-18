@@ -26,7 +26,7 @@ sub import {
             my ($package, @args) = @_;
             unless (eval { Fennec::_use_or_skip($package, @args); 1 }) {
                 print "Skipping\n";
-                skip( [caller], $@ );
+                _skip( [caller], $@ );
                 $runner->finish;
                 exit 0;
             }
@@ -34,7 +34,7 @@ sub import {
         *{ $caller . '::require_or_skip' } = sub(*) {
             my ($package) = @_;
             unless (eval { Fennec::_require_or_skip($package); 1 }) {
-                skip( [caller], $@ );
+                _skip( [caller], $@ );
                 $runner->finish;
                 exit 0;
             }
@@ -50,7 +50,7 @@ sub import {
     $runner->reset_benchmark;
 }
 
-sub skip {
+sub _skip {
     my ( $caller, $message ) = @_;
     die( $@ ) unless $message =~ m/SKIP:\s*(.*)/;
     Fennec::Output::Result->new(
@@ -73,9 +73,28 @@ Fennec::Standalone - Standalone Fennec test module
 Use this instead of L<Fennec> when writing standlone tests. Creates a runner,
 starts a root workflow, provides done_testing() to finish things up.
 
-=head1 SEE ALSO
+=head1 HOWTO DOCUMENTATION
 
-L<Fennec::Manual::Quickstart>
+L<Fennec::Manual::Standalone>
+
+How to write standalone tests.
+
+=head1 DEVELOPER API
+
+B<This documentation contains developer documentation for those wishing to
+develop Fennec.> For usage information see the L<Fennec::Manual>.
+
+=over 4
+
+=item import( runner => {...}, %fennec_args )
+
+import() will initialize a runner, call fennec::import(), and override some of
+the functions exported by fennec to work in a standalone setting.
+
+You can specify arguments for the runner with runner => {...}. Any other
+arguments will be passed along to the L<Fennec> module.
+
+=back
 
 =head1 AUTHORS
 

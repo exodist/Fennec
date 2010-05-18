@@ -26,18 +26,13 @@ test files and test groups.
     use warnings;
     use Fennec::Standalone;
 
-    # If the module specified is not installed all tests will be skipped
     use_or_skip 'Module::Name';
 
-    # See Fennec::Manual::Tests for more tools
     tests hello_world_group {
         ok( 1, "Hello world" );
     }
 
-    #done_testing must be called at the end of your workflow declarations
     done_testing();
-
-    1;
 
 =head2 Breakdown
 
@@ -50,42 +45,63 @@ objects.
 
 =item use Fennec::Standalone;
 
-Use the standalone fennec package.
+Use the standalone fennec package. You can specify any options L<Fennec> will
+accept. You can also configure the temporary runner that will be used. B<Note>
+none of these options are required, reasonable defaults will be chosen in most
+cases.
+
+    use Fennec::Standalone
+        random    => $bool,
+        sort      => $bool,
+        asserts   => \@list,
+        workflows => \@list,
+        meta      => { ... },
+        runner    => {
+            collector => 'Files',
+            cull_delay => .01,
+            handlers => [qw/ TAP /],
+            parallel_files => 2,
+            parallel_tests => 2,
+        };
 
 =item tests name { ... }
 
-You should also read L<Fennec::Manual::Tests> for more information.
+See L<Fennec::UserManual::Tests>
 
 =item done_testing()
 
 Fennec runs your test groups and workflows after the package is loaded. In
 normal Fennec tests done_testing() is not necessary. However in Standalone
 tests fennec needs a trigger to tell it that the workflows are ready to be run.
-I appologise for this boilderplate, but it is safer than an END block.
 
 =back
 
-=head1 DOCUMENTATION
+=head1 USER DOCUMENTATION
+
+User documentation is for those who wish to use Fennec to write simple tests,
+or manage a test suite for a project.
 
 =over 4
 
-=item TESTS
-
-L<Fennec::Manual::Tests> - Examples of different fennec tools.
-
-=item FENNEC BASED TEST SUITE
-
-L<Fennec::Manual::TestSuite> - How to create a Fennec based test suite.
-
-=item MISSION
-
-L<Fennec::Manual::Mission> - Why does Fennec exist?
-
-=item MANUAL
-
-L<Fennec::Manual> - Advanced usage and extending Fennec.
+=item L<Fennec::UserManual>
 
 =back
+
+=head1 DEVELOPER DOCUMENTATION
+
+Developer documentation is for those who wish to extend Fennec, or contribute
+to overall Fennec development.
+
+=over 4
+
+=item L<Fennec::DeveloperManual>
+
+=back
+
+=head1 API DOCUMENTATION
+
+API Documentation covers object internals. See the POD within each individual
+module.
 
 =head1 AUTHORS
 

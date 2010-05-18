@@ -2,7 +2,8 @@
 
 =head1 NAME
 
-Fennec::Manual::TBAssertions - Using Test::Builder based tools with Fennec.
+Fennec::DeveloperManual::TBAssertions - Using Test::Builder based tools with
+Fennec.
 
 =head1 THEY JUST WORK
 
@@ -101,6 +102,33 @@ Or you can load them individually:
     use Fennec::Assert::TBCore::More;
     use Fennec::Assert::TBCore::Warn;
     use Fennec::Assert::TBCore::Exception;
+
+=head1 USER DOCUMENTATION
+
+User documentation is for those who wish to use Fennec to write simple tests,
+or manage a test suite for a project.
+
+=over 4
+
+=item L<Fennec::UserManual>
+
+=back
+
+=head1 DEVELOPER DOCUMENTATION
+
+Developer documentation is for those who wish to extend Fennec, or contribute
+to overall Fennec development.
+
+=over 4
+
+=item L<Fennec::DeveloperManual>
+
+=back
+
+=head1 API DOCUMENTATION
+
+API Documentation covers object internals. See the POD within each individual
+module.
 
 =head1 AUTHORS
 

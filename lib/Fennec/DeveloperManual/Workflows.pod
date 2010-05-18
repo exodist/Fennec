@@ -2,7 +2,8 @@
 
 =head1 NAME
 
-Fennec::Manual::Workflows - Writing custom workflow plugins for Fennec.
+Fennec::DeveloperManual::Workflows - Writing custom workflow plugins for
+Fennec.
 
 =head1 WHY WRITE A WORKFLOW
 
@@ -234,6 +235,33 @@ This is a subclass of TestSet which lets you group TestSets together with
 setups and teardowns wrapped around them.
 
 =back
+
+=head1 USER DOCUMENTATION
+
+User documentation is for those who wish to use Fennec to write simple tests,
+or manage a test suite for a project.
+
+=over 4
+
+=item L<Fennec::UserManual>
+
+=back
+
+=head1 DEVELOPER DOCUMENTATION
+
+Developer documentation is for those who wish to extend Fennec, or contribute
+to overall Fennec development.
+
+=over 4
+
+=item L<Fennec::DeveloperManual>
+
+=back
+
+=head1 API DOCUMENTATION
+
+API Documentation covers object internals. See the POD within each individual
+module.
 
 =head1 AUTHORS
 

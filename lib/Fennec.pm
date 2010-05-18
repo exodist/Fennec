@@ -210,17 +210,17 @@ loaders.
             ok( 1, "1 is true!" )
         }
 
-        describe { ... };
+        describe nested { ... };
     }
 
     cases some_primes {
         my $var;
-        case two { $var = 2 };
-        case three { $var = 3 };
+        case two { $var = 2 }
+        case three { $var = 3 }
 
         tests is_prime {
             ok( is_prime($var), "var is prime" )
-        };
+        }
     }
 
     1;
@@ -251,95 +251,72 @@ Fennec offers the following features, among others.
 
 =item Declarative syntax
 
-Fennec uses L<Devel::Declare> via L<Exporter::Declare> to provide a nice, clean
-declarative syntax.
-
-=item Large library of core test functions
-
-L<Fennec::Assert::Core>
+=item Large library of core assert functions
 
 =item Plays nicely with L<Test::Builder> tools
 
-L<Fennec::Manual::TBAssertions>
-
 =item Better diagnostics
-
-No STDERR and STDOUT disconnect between a failure and its output. If a tool
-does not provide helpful output Fennec tries to give you some anyway.
 
 =item Highly Extendable
 
-Thats the goal
-
-=item Lite benchmarking for free
-
-Time between results in each process is timed.
-
 =item Works with prove
-
-t/Fennec.t as a runner, or L<Fennec::Standalone>
 
 =item Full-Suite management
 
-L<Fennec::Manual::TestSuite>
-
 =item Standalone test support
-
-L<Fennec::Manual::Standalone>
 
 =item Support for SPEC and other test workflows
 
-L<Fennec::Workflow::SPEC> and L<Fennec::Workflow::Case>
-
-=item Forking works
-
-Results are process-aware, no mangled test numbers.
+=item Forking just works
 
 =item Run only specific test sets within test files (for development)
 
-Don't run an entire test file to debug a single section
-
 =item Intercept or hook into most steps or components by design
-
-No limits.
 
 =item No large dependancy chains
 
-Mostly core dependancies, only a couple cpan modules.
-
-=item No attributes
-
-By attrivutes we mean: L<http://perldoc.perl.org/attributes.html>
+=item No attributes (none of these: L<http://perldoc.perl.org/attributes.html>)
 
 =item No use of END blocks
 
-Thar be dragons.
-
 =item No use of Sub::Uplevel
-
-Known to cause problems with Carp, L<Test::Exception>, and others.
 
 =item No source filters
 
-Never.
-
 =back
 
-=head1 FENNEC DEVELOPER DOCUMENTATION
+=head1 MISSION
+
+L<Fennec::Mission> - Why does Fennec exist?
+
+=head1 USER DOCUMENTATION
+
+User documentation is for those who wish to use Fennec to write simple tests,
+or manage a test suite for a project.
 
 =over 4
 
-=item MISSION
-
-L<Fennec::Manual::Mission> - Why does Fennec exist?
-
-=item MANUAL
-
-L<Fennec::Manual> - Advanced usage and extending Fennec.
+=item L<Fennec::UserManual>
 
 =back
 
-=head2 MODULE API
+=head1 DEVELOPER DOCUMENTATION
+
+Developer documentation is for those who wish to extend Fennec, or contribute
+to overall Fennec development.
+
+=over 4
+
+=item L<Fennec::DeveloperManual>
+
+=back
+
+=head1 API DOCUMENTATION
+
+API Documentation covers object internals. See the POD within each individual
+module.
+
+=head1 FENNEC MODULE API
 
 B<This section only covers the API for Fennec.pm. See L<Fennec::Manual> and other
 documentation for other module API's.>
@@ -347,7 +324,7 @@ documentation for other module API's.>
 B<This section is not for those who simply wish to write tests, this is for
 people who want to extend Fennec.>
 
-=head3 Class methods
+=head2 Class methods
 
 =over 4
 
@@ -356,8 +333,8 @@ people who want to extend Fennec.>
     use Fennec %proto;
 
 Called when you use the Fennec module. %proto is key/value pairs for
-configuration and/or test class meta data. Meta data keys may be mixed in or
-placed in a hashref under the 'meta' key.
+configuration. Meta data keys should be placed in a hashref under the 'meta'
+key.
 
 =item my $obj = $class->new( %proto )
 
@@ -368,7 +345,7 @@ filename, and line number for the test file.
 
 =back
 
-=head3 Object methods
+=head2 Object methods
 
 When you use Fennec, it will create an object internally to do some
 initialization and exporting. These are it's methods.
