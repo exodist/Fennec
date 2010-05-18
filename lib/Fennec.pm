@@ -229,15 +229,15 @@ loaders.
 
 =over 4
 
-=item L<Fennec::Manual::Tests>
+=item L<Fennec::UserManual::Tests>
 
 Primer on Fennec's core tools
 
-=item L<Fennec::Manual::TestSuite>
+=item L<Fennec::UserManual::TestSuite>
 
 Using Fennec as a runner to better manage your test suite.
 
-=item L<Fennec::Manual::Standalone>
+=item L<Fennec::UserManual::Standalone>
 
 Writing standalone tests that exist isolated in .t files.
 
@@ -318,7 +318,7 @@ module.
 
 =head1 FENNEC MODULE API
 
-B<This section only covers the API for Fennec.pm. See L<Fennec::Manual> and other
+B<This section only covers the API for Fennec.pm. See L<Fennec::UserManual> and other
 documentation for other module API's.>
 
 B<This section is not for those who simply wish to write tests, this is for

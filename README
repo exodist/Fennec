@@ -57,13 +57,13 @@ SYNOPSIS
         1;
 
 FURTHER READING
-    Fennec::Manual::Tests
+    Fennec::UserManual::Tests
         Primer on Fennec's core tools
 
-    Fennec::Manual::TestSuite
+    Fennec::UserManual::TestSuite
         Using Fennec as a runner to better manage your test suite.
 
-    Fennec::Manual::Standalone
+    Fennec::UserManual::Standalone
         Writing standalone tests that exist isolated in .t files.
 
 FEATURES
@@ -107,8 +107,8 @@ API DOCUMENTATION
     individual module.
 
 FENNEC MODULE API
-    This section only covers the API for Fennec.pm. See Fennec::Manual and
-    other documentation for other module API's.
+    This section only covers the API for Fennec.pm. See Fennec::UserManual
+    and other documentation for other module API's.
 
     This section is not for those who simply wish to write tests, this is
     for people who want to extend Fennec.
