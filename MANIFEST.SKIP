@@ -49,3 +49,7 @@
 
 # Avoid archives of this distribution
 \bFennec-[\d\.\_]+
+
+\bpresentation/
+\bres/
+^Fennec-

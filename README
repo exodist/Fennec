@@ -41,17 +41,17 @@ SYNOPSIS
                 ok( 1, "1 is true!" )
             }
 
-            describe { ... };
+            describe nested { ... };
         }
 
         cases some_primes {
             my $var;
-            case two { $var = 2 };
-            case three { $var = 3 };
+            case two { $var = 2 }
+            case three { $var = 3 }
 
             tests is_prime {
                 ok( is_prime($var), "var is prime" )
-            };
+            }
         }
 
         1;
@@ -61,92 +61,65 @@ FURTHER READING
         Primer on Fennec's core tools
 
     Fennec::Manual::TestSuite
-        Writing standalone tests that exist isolated in .t files.
+        Using Fennec as a runner to better manage your test suite.
 
     Fennec::Manual::Standalone
-        Using Fennec as a runner to better manage your test suite.
+        Writing standalone tests that exist isolated in .t files.
 
 FEATURES
     Fennec offers the following features, among others.
 
     Declarative syntax
-        Fennec uses Devel::Declare via Exporter::Declare to provide a nice,
-        clean declarative syntax.
-
-    Large library of core test functions
-        Fennec::Assert::Core
-
+    Large library of core assert functions
     Plays nicely with Test::Builder tools
-        Fennec::Manual::TBAssertions
-
     Better diagnostics
-        No STDERR and STDOUT disconnect between a failure and its output. If
-        a tool does not provide helpful output Fennec tries to give you some
-        anyway.
-
     Highly Extendable
-        Thats the goal
-
-    Lite benchmarking for free
-        Time between results in each process is timed.
-
     Works with prove
-        t/Fennec.t as a runner, or Fennec::Standalone
-
     Full-Suite management
-        Fennec::Manual::TestSuite
-
     Standalone test support
-        Fennec::Manual::Standalone
-
     Support for SPEC and other test workflows
-        Fennec::Workflow::SPEC and Fennec::Workflow::Case
-
-    Forking works
-        Results are process-aware, no mangled test numbers.
-
+    Forking just works
     Run only specific test sets within test files (for development)
-        Don't run an entire test file to debug a single section
-
     Intercept or hook into most steps or components by design
-        No limits.
-
     No large dependancy chains
-        Mostly core dependancies, only a couple cpan modules.
-
-    No attributes
-        By attrivutes we mean: <http://perldoc.perl.org/attributes.html>
-
+    No attributes (none of these: <http://perldoc.perl.org/attributes.html>)
     No use of END blocks
-        Thar be dragons.
-
     No use of Sub::Uplevel
-        Known to cause problems with Carp, Test::Exception, and others.
-
     No source filters
-        Never.
 
-FENNEC DEVELOPER DOCUMENTATION
-    MISSION
-        Fennec::Manual::Mission - Why does Fennec exist?
+MISSION
+    Fennec::Mission - Why does Fennec exist?
 
-    MANUAL
-        Fennec::Manual - Advanced usage and extending Fennec.
+USER DOCUMENTATION
+    User documentation is for those who wish to use Fennec to write simple
+    tests, or manage a test suite for a project.
 
-  MODULE API
+    Fennec::UserManual
+
+DEVELOPER DOCUMENTATION
+    Developer documentation is for those who wish to extend Fennec, or
+    contribute to overall Fennec development.
+
+    Fennec::DeveloperManual
+
+API DOCUMENTATION
+    API Documentation covers object internals. See the POD within each
+    individual module.
+
+FENNEC MODULE API
     This section only covers the API for Fennec.pm. See Fennec::Manual and
     other documentation for other module API's.
 
     This section is not for those who simply wish to write tests, this is
     for people who want to extend Fennec.
 
-   Class methods
+  Class methods
     import( %proto )
             use Fennec %proto;
 
         Called when you use the Fennec module. %proto is key/value pairs for
-        configuration and/or test class meta data. Meta data keys may be
-        mixed in or placed in a hashref under the 'meta' key.
+        configuration. Meta data keys should be placed in a hashref under
+        the 'meta' key.
 
     my $obj = $class->new( %proto )
         Create a new instance. %proto can be all the same key/value pairs as
@@ -155,7 +128,7 @@ FENNEC DEVELOPER DOCUMENTATION
         containing a package name, filename, and line number for the test
         file.
 
-   Object methods
+  Object methods
     When you use Fennec, it will create an object internally to do some
     initialization and exporting. These are it's methods.
 

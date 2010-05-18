@@ -32,7 +32,7 @@ Identical to:
 
 =head1 ABOUT
 
-Please read the L<Fennec> docs L<Fennec::Manual>
+Please read the L<Fennec> docs L<Fennec::UserManual>
 
 =head1 AUTHORS
 
