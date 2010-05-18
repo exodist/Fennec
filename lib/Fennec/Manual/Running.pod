@@ -41,19 +41,19 @@ be the first line number for the group/workflow.
 In this example line 2 will be considered the first line of the 'example a'
 test group.
 
-    1: tests 'example a' => sub {
+    1: tests 'example a' {
     2:     my $x = 'x';
-    2: };
+    2: }
 
 In this example line 5 is the line returned by L<B> when checking the line
 number for the test group 'example b'.
 
-    1: tests 'example b' => sub {
+    1: tests 'example b' {
     2:    thing_that_takes_code_block {
     3:        ...
     4:    };
     5:    my $x = 'x';
-    6: };
+    6: }
 
 =head2 Future fixes
 

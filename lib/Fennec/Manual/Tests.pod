@@ -14,7 +14,7 @@ L<Fennec::Manual::TestSuite> for more info.
 
 This is an example fennec test using all default workflow styles.
 
-=head2 t/MyTest.pm
+=head2 t/MyTest.t
 
 =head3 Boilerplate
 
@@ -22,7 +22,7 @@ This is an example fennec test using all default workflow styles.
     package TEST::MyTest;
     use strict;
     use warnings;
-    use Fennec;
+    use Fennec::Standalone;
 
     # If the module specified is not installed all tests will be skipped
     use_or_skip 'Module::Name';
@@ -30,7 +30,8 @@ This is an example fennec test using all default workflow styles.
     # Tests and workflows (See following headings)
     ...
 
-    1;
+    # Standalone tests need this
+    done_testing;
 
 =head3 Tests in package space
 
@@ -42,40 +43,36 @@ Tests can be made script style, but you loose parallelization
 
 =head3 Tests in groups
 
-It is much better to put tests into parallelizable groups.
+It is much better to put tests into parallelizable groups. L<Devel::Declare> is
+used to provide a freindly syntax. As well all test groups are run as methods
+against an instance of your test class, $self is automatically shifted for you.
 
-    tests hello_world_group => sub {
-        my $self = shift;
+    tests "hello world group" {
+        ok( $self, 'Automatically get $self' );
         ok( 1, "Hello world" );
-    };
+    }
 
 =head3 RSPEC like testing
 
-    describe 'my group' => sub {
-        my $self = shift;
-
-        before_each { $self->reset };
+    describe 'my group' {
+        before_each { $self->reset }
 
         # 'it()' is an alias to 'tests()'
-        it 'my test' => sub {
-            my $self = shift;
-            ok( 1, 'spec test!' );
-        };
+        it 'my test' {
+            ok( 1, 'spec test!' )
+        }
 
         # Nested!
         describe ...;
-    };
+    }
 
 =head3 Tests under multiple cases
 
-    You can run the same TestSets under multiple cases using the Case workfow
-    (loaded by default).
-    cases {
-        my $self = shift;
-        case a => sub {
-            my $self = shift;
-            ...
-        }
+You can run the same TestSets under multiple cases using the Case workfow
+(loaded by default).
+
+    cases some_cases {
+        case a => sub { ... }
         case b => sub { ... }
         tests a => sub { ... }
         tests b => sub { ... }

@@ -77,10 +77,9 @@ t/MyPackage/MyThing.pm:
     use warnings;
     use Fennec;
 
-    tests hello_world_group => sub {
-        my $self = shift;
+    tests hello_world_group {
         ok( 1, "Hello world" );
-    };
+    }
 
     1;
 
@@ -189,7 +188,7 @@ formula:
     $max_processes = 1 +
                     ( $parallel_files >= 2
                         ? $parallel_files
-                        : 0
+                        : 1
                     ) +
                     ( $parallel_tests
                         ? $parallel_files * $parallel_tests

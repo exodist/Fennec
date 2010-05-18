@@ -7,7 +7,7 @@ use Fennec::Assert::Interceptor;
 
 our $CLASS = 'Fennec::Assert::Core::Warn';
 
-tests 'warning is' => sub {
+tests 'warning is' {
     my $res = capture {
         warning_is {
             warn 'apple'
@@ -21,7 +21,7 @@ tests 'warning is' => sub {
     is( $res->[2]->stderr->[0], "Too many warnings:", "multiple warnings" );
     like( $res->[2]->stderr->[1], qr/\ta at/, "Warning 1" );
     like( $res->[2]->stderr->[2], qr/\tb at/, "Warning 2" );
-};
+}
 
 tests 'warnings are' => sub {
     my $res = capture {

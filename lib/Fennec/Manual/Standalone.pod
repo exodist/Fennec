@@ -30,10 +30,9 @@ test files and test groups.
     use_or_skip 'Module::Name';
 
     # See Fennec::Manual::Tests for more tools
-    tests hello_world_group => sub {
-        my $self = shift;
+    tests hello_world_group {
         ok( 1, "Hello world" );
-    };
+    }
 
     #done_testing must be called at the end of your workflow declarations
     done_testing();
@@ -53,7 +52,7 @@ objects.
 
 Use the standalone fennec package.
 
-=item tests name => sub { ... }
+=item tests name { ... }
 
 You should also read L<Fennec::Manual::Tests> for more information.
 

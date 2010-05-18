@@ -180,71 +180,66 @@ loaders.
 
 =head1 SYNOPSIS
 
-Create t/Fennec.t, which serves as your test runner and config file:
-
-    $ cd myproject
-    $ fennec_init
-
-Run this any time to create a basic scaffold test for every module under lib/
-
-    $ fennec_scaffold
-
-An example test (t/MyModule.pm)
-
-    package MyModule;
+    package TEST::MyModule;
     use strict;
     use warnings;
-    use Fennec;
+    use Fennec::Standalone;
 
-    # Skip this test unless a dependancy is avialable
     use_or_skip 'Dependancy::Module';
 
-    sub module { 'MyModule' };
+    use_ok 'MyModule';
 
-    # Tests can be outside groups
-    ok( 1, "Not grouped" );
+    tests simple {
+        can_ok( 'MyModule', 'new' );
+        isa_ok( MyModule->new(), 'MyModule' );
+        dies_ok { MyModule->Thing_that_dies } "thing dies";
+        warning_like { MyModule->Thing_that_warns } qr/.../, "thing warns";
 
-    # Everything Test::More has is provided
-    tests 'load module' => sub {
-        my $self = shift;
-        use_ok $self->module();
-        can_ok( $self->module, 'new' );
-        isa_ok( $self->module->new(), $self->module );
-    };
-
-    # Everything Test::Warn and Test::Exception have is also here
-    tests 'More Tests' => sub {
-        dies_ok { die 'x' } "die dies";
-        warning_like { warn 'x' } qr/^x/, "warn warns";
+        is_deeply( ... );
+        ...
     }
 
-    describe 'RSPEC Tests' => sub {
-        my $self = shift;
-        before_each { $self->do_something };
-        it { ok( 1, "1 is true!" ) };
-        it { ok( 2, "2 is true!" ) };
-        after_each { $self->do_something_else };
+    describe 'RSPEC Tests' {
+        # Automatically get $self
+        before_each { $self->do_something }
+        after_each { $self->do_something_else }
 
-        # Nested!
+        it test_one {
+            ok( 1, "1 is true!" )
+        }
+
         describe { ... };
-    };
+    }
 
-    # Run each test group under each case.
-    cases {
-        my $self = shift;
+    cases some_primes {
         my $var;
-        case { $var = 1 };
-        case { $var = 2 };
-        tests { ok( $var, "var is true" ) };
-        tests {
-            my $self = shift;
+        case two { $var = 2 };
+        case three { $var = 3 };
+
+        tests is_prime {
             ok( is_prime($var), "var is prime" )
         };
     }
 
     1;
 
-Please see L<Fennec::Manual::Testing> for a breakdown of everything seen above.
+=head1 FURTHER READING
+
+=over 4
+
+=item L<Fennec::Manual::Tests>
+
+Primer on Fennec's core tools
+
+=item L<Fennec::Manual::TestSuite>
+
+Writing standalone tests that exist isolated in .t files.
+
+=item L<Fennec::Manual::Standalone>
+
+Using Fennec as a runner to better manage your test suite.
+
+=back
 
 =head1 FEATURES
 
@@ -252,29 +247,10 @@ Fennec offers the following features, among others.
 
 =over 4
 
-=item No large dependancy chains
+=item Declarative syntax
 
-Mostly core dependancies, only a couple cpan modules.
-
-=item No attributes
-
-By attrivutes we mean: L<http://perldoc.perl.org/attributes.html>
-
-=item No use of END blocks
-
-Thar be dragons.
-
-=item No Devel::Declare magic
-
-Unles you use L<Fennec::Declare>, which is not part of core.
-
-=item No use of Sub::Uplevel
-
-Known to cause problems with Carp, L<Test::Exception>, and others.
-
-=item No source filters
-
-Never.
+Fennec uses L<Devel::Declare> via L<Exporter::Declare> to provide a nice, clean
+declarative syntax.
 
 =item Large library of core test functions
 
@@ -325,24 +301,31 @@ Don't run an entire test file to debug a single section
 
 No limits.
 
+=item No large dependancy chains
+
+Mostly core dependancies, only a couple cpan modules.
+
+=item No attributes
+
+By attrivutes we mean: L<http://perldoc.perl.org/attributes.html>
+
+=item No use of END blocks
+
+Thar be dragons.
+
+=item No use of Sub::Uplevel
+
+Known to cause problems with Carp, L<Test::Exception>, and others.
+
+=item No source filters
+
+Never.
+
 =back
 
-=head1 DOCUMENTATION
+=head1 FENNEC DEVELOPER DOCUMENTATION
 
 =over 4
-
-=item INTRODUCTION TO FENNEC TESTS
-
-L<Fennec::Manual::Testing> - Introduction to testing with Fennec.
-
-=item FENNEC BASED TEST SUITE
-
-L<Fennec::Manual::TestSuite> - How to create a Fennec based test suite.
-
-=item STAND ALONE TESTS
-
-L<Fennec::Manual::StandAlone> - Drop Fennec standalone tests into an existing
-suite.
 
 =item MISSION
 
@@ -354,12 +337,15 @@ L<Fennec::Manual> - Advanced usage and extending Fennec.
 
 =back
 
-=head1 DEVELOPER API
+=head2 MODULE API
 
 B<This section only covers the API for Fennec.pm. See L<Fennec::Manual> and other
 documentation for other module API's.>
 
-=head2 Class methods
+B<This section is not for those who simply wish to write tests, this is for
+people who want to extend Fennec.>
+
+=head3 Class methods
 
 =over 4
 
@@ -380,7 +366,10 @@ filename, and line number for the test file.
 
 =back
 
-=head2 Object methods
+=head3 Object methods
+
+When you use Fennec, it will create an object internally to do some
+initialization and exporting. These are it's methods.
 
 =over 4
 
@@ -392,15 +381,15 @@ key.
 
 =item test_file()
 
-Returns the test class. This will either be determined by import() or provided
+Returns the test filename. This will either be determined by import() or provided
 to import/new via the second element of the arrayref provided under the
 'caller' key.
 
 =item imported_line()
 
-Returns the test class. This will either be determined by import() or provided
-to import/new via the third element of the arrayref provided under the 'caller'
-key.
+Returns the line number where fennec was used. This will either be determined
+by import() or provided to import/new via the third element of the arrayref
+provided under the 'caller' key.
 
 =item workflows()
 

@@ -16,7 +16,7 @@ cases 'Multi-Line' => sub {
     my $self = shift;
     my ( $start, $end ) = map { ln($_) } 3, 7;
     for my $type ( Workflow(), TestSet() ) {
-        case( "$type" => sub {
+        case $type => sub {
             my $item = $type->new( 'Example', sub {
                 my $x = 1;
 
@@ -24,7 +24,7 @@ cases 'Multi-Line' => sub {
             });
             $item->observed(1) if $item->can( 'observed' );
             $self->item( $item );
-        })
+        }
     }
 
     tests 'proper start and end' => sub {
@@ -44,11 +44,11 @@ cases 'Single-Line' => sub {
     my $self = shift;
     my $line = ln(3);
     for my $type ( Workflow(), TestSet() ) {
-        case( "$type" => sub {
+        case $type => sub {
             my $item = $type->new( 'Example', sub { 1 });
             $item->observed(1) if $item->can( 'observed' );
             $self->item( $item );
-        })
+        }
     }
 
     tests 'proper start and end' => sub {

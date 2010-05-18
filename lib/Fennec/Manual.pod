@@ -21,10 +21,10 @@ does for you that not everything else thinks of:
 
 =head2 Test grouping
 
-    tests 'Group A' => sub {
+    tests 'Group A' {
         ok( 1, "1 is true!" );
         ok( 2, "2 is too!" );
-    };
+    }
 
 Usually you group similar tests together anyway, why not isolate them? Doing
 this also allows you to run groups in parallel, or run only the group on which
@@ -34,22 +34,21 @@ you are currently working.
 
 RSPEC like:
 
-    describe 'Workflow' => sub {
-        my $self = shift;
-        before_each { $self->do_something };
-        it { ok( 1, "1 is true!" ) };
-        it { ok( 2, "2 is true!" ) };
-        after_each { $self->do_something_else };
-    };
+    describe 'Workflow' {
+        before_each { $self->do_something }
+        it { ok( 1, "1 is true!" ) }
+        it { ok( 2, "2 is true!" ) }
+        after_each { $self->do_something_else }
+    }
 
 Case:
 
-    cases {
+    cases name {
         my $var;
-        case { $var = 1 };
-        case { $var = 2 };
-        tests { ok( $var, "var is true" ) };
-        tests { ok( is_prime($var), "var is prime" )};
+        case { $var = 1 }
+        case { $var = 2 }
+        tests { ok( $var, "var is true" ) }
+        tests { ok( is_prime($var), "var is prime" )}
     }
 
 These workflows come with Fennec, they sure do make life easier! It is also

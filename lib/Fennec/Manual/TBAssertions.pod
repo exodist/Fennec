@@ -12,9 +12,9 @@ Fennec::Manual::TBAssertions - Using Test::Builder based tools with Fennec.
 
     ok( 1, "pass w/ Test::Builder" );
 
-    tests grouped => sub {
+    tests grouped {
         ok( 1, "still used Test::Builder" );
-    };
+    }
 
     # This is Fennecs, not Test::Mores.
     # That means you can use TB tools in standalone as well.
