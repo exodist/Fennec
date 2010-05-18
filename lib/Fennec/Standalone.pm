@@ -5,6 +5,7 @@ require Fennec;
 use Fennec::Util::TBOverride;
 use Fennec::Runner;
 use Fennec::Workflow;
+use Fennec::Output::Result;
 
 sub import {
     my $class = shift;
@@ -20,7 +21,24 @@ sub import {
     {
         no warnings 'redefine';
         no strict 'refs';
-        *{ $caller . '::done_testing' } = sub { $runner->finish }
+        *{ $caller . '::done_testing' } = sub { $runner->finish };
+        *{ $caller . '::use_or_skip' } = sub(*;@) {
+            my ($package, @args) = @_;
+            unless (eval { Fennec::_use_or_skip($package, @args); 1 }) {
+                print "Skipping\n";
+                skip( [caller], $@ );
+                $runner->finish;
+                exit 0;
+            }
+        };
+        *{ $caller . '::require_or_skip' } = sub(*) {
+            my ($package) = @_;
+            unless (eval { Fennec::_require_or_skip($package); 1 }) {
+                skip( [caller], $@ );
+                $runner->finish;
+                exit 0;
+            }
+        };
     }
 
     $runner->add_finish_hook( sub {
@@ -30,6 +48,18 @@ sub import {
         );
     });
     $runner->reset_benchmark;
+}
+
+sub skip {
+    my ( $caller, $message ) = @_;
+    die( $@ ) unless $message =~ m/SKIP:\s*(.*)/;
+    Fennec::Output::Result->new(
+        pass => 0,
+        skip => $1,
+        line => $caller->[1],
+        file => $caller->[2],
+        name => $caller->[2],
+    )->write;
 }
 
 1;

@@ -11,6 +11,7 @@ use Fennec::Util::Alias qw/
     Fennec::TestFile
     Fennec::Assert
     Fennec::TestFile::Meta
+    Devel::Declare::Interface
 /;
 
 our $VERSION = "0.021";
@@ -111,6 +112,7 @@ sub export_tools {
     *{ $self->test_class . '::done_testing' } = \&_done_testing;
     *{ $self->test_class . '::use_or_skip' } = \&_use_or_skip;
     *{ $self->test_class . '::require_or_skip' } = \&_require_or_skip;
+    Interface->enhance( $self->test_class, $_, 'begin' ) for qw/use_or_skip require_or_skip/;
 }
 
 sub export_workflows {
@@ -233,11 +235,11 @@ Primer on Fennec's core tools
 
 =item L<Fennec::Manual::TestSuite>
 
-Writing standalone tests that exist isolated in .t files.
+Using Fennec as a runner to better manage your test suite.
 
 =item L<Fennec::Manual::Standalone>
 
-Using Fennec as a runner to better manage your test suite.
+Writing standalone tests that exist isolated in .t files.
 
 =back
 
