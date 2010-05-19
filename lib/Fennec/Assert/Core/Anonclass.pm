@@ -170,6 +170,33 @@ valid until the anonclass object is destroyed.
 
 =back
 
+=head1 USER DOCUMENTATION
+
+User documentation is for those who wish to use Fennec to write simple tests,
+or manage a test suite for a project.
+
+=over 4
+
+=item L<Fennec::UserManual>
+
+=back
+
+=head1 DEVELOPER DOCUMENTATION
+
+Developer documentation is for those who wish to extend Fennec, or contribute
+to overall Fennec development.
+
+=over 4
+
+=item L<Fennec::DeveloperManual>
+
+=back
+
+=head1 API DOCUMENTATION
+
+API Documentation covers object internals. See the POD within each individual
+module.
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

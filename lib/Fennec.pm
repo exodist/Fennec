@@ -14,7 +14,7 @@ use Fennec::Util::Alias qw/
     Devel::Declare::Interface
 /;
 
-our $VERSION = "0.022";
+our $VERSION = "0.023";
 our @META_DATA = qw/todo skip random sort no_fork/;
 
 sub import {

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Devel::Declare::Interface;
-use base 'Devel::Declare::Parser::Export';
+use base 'Exporter::Declare::Export';
 BEGIN { Devel::Declare::Interface::register_parser( 'fennec' )};
 
 our %NAMELESS;

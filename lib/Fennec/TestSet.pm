@@ -23,6 +23,7 @@ use Time::HiRes qw/time/;
 Accessors qw/ workflow no_result observed created_in /;
 
 export 'tests' fennec {
+    my $name = shift;
     my %proto = @_ > 1 ? @_ : (method => shift( @_ ));
     my ( $caller, $file, $line ) = caller;
     $caller->fennec_meta->workflow->add_item(
