@@ -7,17 +7,19 @@ use File::Path qw(make_path);
 
 our %MODULES;
 
+our $lib_dir = $ENV{FENNEC_LIB_DIR} || $ARGV[0] || './lib';
+
 find(
     sub {
         my $name = $File::Find::name;
         return unless $name =~ m/\.pm$/;
         $MODULES{ $name } = [ $File::Find::dir, $_ ];
     },
-    './lib'
+    $lib_dir
 );
 
 for my $item ( values %MODULES ) {
-    $item->[0] =~ s|^\./lib|./t|;
+    $item->[0] =~ s|^\Q$lib_dir\E|./t|;
     my $test = join( '/', @$item );
     next if -e $test;
     mktest( $item, $test );
