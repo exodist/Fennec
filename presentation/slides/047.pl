@@ -15,10 +15,10 @@ cases "Act the same in these cases" {
         $self->reset_data( 'b' );
     }
 
-    tests {
+    tests has_data {
         ok( $self->have_data, "have data" );
     }
-    tests {
+    tests works {
         ok( $self->works, "it works" );
     }
 }
