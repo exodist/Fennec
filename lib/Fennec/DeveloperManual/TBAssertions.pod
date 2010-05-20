@@ -63,7 +63,7 @@ This is how Fennec wraps Test::Warn in version 0.17
     1;
 
 Fennec loads Test::Warn, it then iterates a list of functions Test::Warn
-provides. It first checks that the loaded version of TesT::More implements the
+provides. It first checks that the loaded version of Test::More implements the
 function. When it finds a function that is implemented it will wrap it using
 tb_wrapper. The wrapped function is then exported using the standard Custom
 Assertion utilities. See L<Fennec::Manual::Assertions> for mroe details.
