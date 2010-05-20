@@ -71,7 +71,6 @@ is( 'a', 'a', "" );
 
 #It is much better to put tests into parallelizable groups.
 tests hello_world_group {
-    my $self = shift;
     ok( 1, "Hello world" );
 }
 
@@ -115,7 +114,6 @@ __END__
 
 ---- perl
     describe 'Workflow' {
-        my $self = shift;
 
         before_each { $self->do_something }
 
@@ -363,7 +361,6 @@ Grouping tests
 ---- perl
 
 tests Simple {
-    my $self = shift;
     ok( 1, "Passing" );
     ok( 0, "Failing" );
 }
@@ -640,14 +637,12 @@ use warnings;
 use Fennec;
 
 describe 'my group' {
-    my $self = shift;
 
     before_each { $self->load_data }
     after_each { $self->unload_data }
 
     # it is an alias to 'tests'
     it 'my test' {
-        my $self = shift;
         ok( 1, 'spec test!' );
     }
 
@@ -659,40 +654,32 @@ describe 'my group' {
 ---- perl
 
 cases "Act the same in these cases" {
-    my $self = shift;
 
     case a {
-        my $self = shift;
         $self->reset_data( 'a' );
     }
     case b {
-        my $self = shift;
         $self->reset_data( 'b' );
     }
 
     tests {
-        my $self = shift;
         ok( $self->have_data, "have data" );
     }
     tests {
-        my $self = shift;
         ok( $self->works, "it works" );
     }
 }
 
 ---- perl
 sub setup_my_setup {
-    my $self = shift;
     print "methods prefixed by setup_ will be run before tests defined as methods.";
 }
 
 sub test_method_as_test_by_prefix {
-    my $self = shift;
     ok( 1, "methods prefixed by test_ will be run as method." );
 }
 
 sub teardown_my_teardown {
-    my $self = shift;
     print "method prefixed by teardown_ will be run after tests defined as methods."
 }
 
