@@ -1,6 +1,5 @@
 
     describe 'Workflow' {
-        my $self = shift;
 
         before_each { $self->do_something }
 
@@ -29,6 +28,7 @@ Handy workflows to make testing tasks easier
  * These workflows come with Fennec
 
  * It is also fairly easy to use the Fennec framework to write custom workflows.
+
 
 
 

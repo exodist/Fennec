@@ -4,6 +4,7 @@
 
 
 
+
 package TEST::MyTest;
 use strict;
 use warnings;
@@ -18,7 +19,6 @@ is( 'a', 'a', "" );
 
 #It is much better to put tests into parallelizable groups.
 tests hello_world_group {
-    my $self = shift;
     ok( 1, "Hello world" );
 }
 

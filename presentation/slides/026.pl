@@ -5,8 +5,8 @@
 
 
 
+
 tests Simple {
-    my $self = shift;
     ok( 1, "Passing" );
     ok( 0, "Failing" );
 }
