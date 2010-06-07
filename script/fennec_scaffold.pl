@@ -36,9 +36,9 @@ use strict;
 use warnings;
 use Fennec;
 
-tests load => sub {
+tests load {
     require_ok( '$package' );
-};
+}
 
 1;
 EOT
