@@ -186,7 +186,7 @@ sub _result_line {
     my $status = $self->_status( $result );
     my $count = $self->_test_count;
     my $benchmark = $self->_benchmark( $result->benchmark );
-    my $name = $result->name || "[UNNAMED TEST]";
+    my $name = $result->name || sprintf q{[UNNAMED TEST: %s line %s ]}, $result->file || $result->workflow_stack || 'unkown file', $result->line || 'unkonwn';
     my $postfix = $self->_postfix( $result );
     my $out = join( ' ', $status, $count, $benchmark, '-', $name, $postfix );
 
