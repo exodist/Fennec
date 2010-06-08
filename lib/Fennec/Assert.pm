@@ -95,7 +95,7 @@ sub _process_wrapped_results {
         # Try to provide a minimum diag for failed tests that do not provide
         # their own.
         if ( !$outresult->{ pass } && !$outresult->{ stderr }) {
-            my @diag;
+            my @diag = ("Test arguments:");
             $outresult->{ stderr } = \@diag;
             for my $i ( 0 .. (@$args - 1)) {
                 my $arg = $args->[$i];

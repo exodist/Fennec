@@ -69,7 +69,10 @@ tests declare_exports => sub {
     ok( $cap->[0]->benchmark, "Added benchmark" );
     is_deeply(
         $cap->[1]->stderr,
-        ['$_[0] = \'0\''],
+        [
+            'Test arguments:',
+            '$_[0] = \'0\''
+        ],
         "Added diag when missing"
     );
     ok( $cap->[0]->pass, "First result passed" );
