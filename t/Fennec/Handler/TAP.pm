@@ -187,6 +187,12 @@ tests result_line => sub {
         qr/ok 0001 \[[\d.]+\] - hello world/,
         "result line"
     );
+    $one->_result_line( Result->new( pass => 1, name => undef )),
+    like(
+        $out,
+        qr/ok 0002 \[[\d.]+\] - \[UNNAMED TEST: unknown file line unknown \]/,
+        "unamed result line"
+    );
 };
 
 tests 'result diag' => sub {
