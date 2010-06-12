@@ -15,8 +15,8 @@ use Fennec::Util::Alias qw/
     Fennec::Runner
 /;
 
-our @ANY_ACCESSORS = qw/ skip todo name line/;
-our @SIMPLE_ACCESSORS = qw/ pass benchmark /;
+our @ANY_ACCESSORS = qw/ skip todo name line /;
+our @SIMPLE_ACCESSORS = qw/ pass benchmark finishes testset_name /;
 our @PROPERTIES = (
     @SIMPLE_ACCESSORS,
     @ANY_ACCESSORS,
@@ -117,6 +117,7 @@ for my $type ( qw/workflow testset/ ) {
             $type => $item,
             $item->can( 'name' ) ? ( name => $item->name ) : (),
             stderr => \@stderr,
+            finishes => $type,
         )->write;
     };
     my $pass = sub {
@@ -128,6 +129,7 @@ for my $type ( qw/workflow testset/ ) {
             name => $item->name,
             benchmark => $benchmark,
             stderr => \@stderr,
+            finishes => $type,
         )->write;
     };
     my $skip = sub {
@@ -140,6 +142,7 @@ for my $type ( qw/workflow testset/ ) {
             name => $item->name,
             skip => $reason,
             stderr => \@stderr,
+            finishes => $type,
         )->write;
     };
     no strict 'refs';

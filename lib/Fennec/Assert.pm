@@ -147,6 +147,8 @@ sub _current_conditions {
     my %out;
     $out{ todo } = $current->todo if $current->todo;
     $out{ skip } = $current->skip if $current->skip;
+    $out{ workflow_stack } = [ Fennec::Util->workflow_stack( $current->workflow )];
+    $out{ testset_name } = $current->name;
     return %out;
 }
 

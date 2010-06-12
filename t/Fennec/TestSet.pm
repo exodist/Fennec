@@ -55,6 +55,21 @@ tests test_todo {
     is( $results->[0]->todo, 'this is todo', "Test marked todo" );
 }
 
+tests finishing {
+    my $set = Fennec::TestSet->new(
+        'finishing',
+        method => sub { },
+        line => 999,
+        file => 'none',
+        observed => 1,
+        workflow => __PACKAGE__->fennec_meta->root_workflow,
+    );
+
+    my $results = capture {
+        $set->run();
+    }
+    is( $results->[0]->finishes, 'testset', "finished testset" );
+}
 1;
 
 =head1 AUTHORS
