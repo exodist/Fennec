@@ -54,8 +54,8 @@ tests exports => sub {
         qr/SKIP: XXX::Fake::Package is not installed or insufficient version:/,
         "use_or_skip";
 
-    throws_ok { use_or_skip Fennec, 100000 }
-        qr/SKIP: Fennec is not installed or insufficient version: Fennec version 100000 required/,
+    throws_ok { use_or_skip Data::Dumper, 1000000 }
+        qr/SKIP: Data::Dumper is not installed or insufficient version: Data::Dumper version 1000000 required/,
         "use_or_skip w/ version";
 
     throws_ok { require_or_skip XXX::Fake::Package }
