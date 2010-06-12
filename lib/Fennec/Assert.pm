@@ -95,13 +95,14 @@ sub _process_wrapped_results {
         # Try to provide a minimum diag for failed tests that do not provide
         # their own.
         if ( !$outresult->{ pass } && !$outresult->{ stderr }) {
-            my @diag = ("Test arguments:");
+            my @diag = ("Assertion arguments were:");
             $outresult->{ stderr } = \@diag;
             for my $i ( 0 .. (@$args - 1)) {
                 my $arg = $args->[$i];
-                $arg = 'undef' unless defined( $arg );
-                next if "$arg" eq $outresult->{ name } || "";
-                push @diag => "\$_[$i] = '$arg'";
+                next if defined $arg
+                     && "$arg" eq $outresult->{ name } || "";
+                $arg = defined( $arg ) ? "'$arg'" : 'undef';
+                push @diag => "\t$i: $arg";
             }
         }
 

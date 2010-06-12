@@ -70,8 +70,8 @@ tests declare_exports => sub {
     is_deeply(
         $cap->[1]->stderr,
         [
-            'Test arguments:',
-            '$_[0] = \'0\''
+            'Assertion arguments were:',
+            "\t0: '0'"
         ],
         "Added diag when missing"
     );
