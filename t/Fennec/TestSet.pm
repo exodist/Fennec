@@ -37,6 +37,24 @@ tests 'warn for unobserved' => sub {
     is( shift( @parts ), "No Workflow", "Warning Part " . ($total - @parts ));
 };
 
+tests test_todo {
+    my $set = Fennec::TestSet->new(
+        'todo stuff',
+        method => sub { ok( 0, "false result" ) },
+        todo => 'this is todo',
+        line => 999,
+        file => 'none',
+        observed => 1,
+        workflow => __PACKAGE__->fennec_meta->root_workflow,
+    );
+
+    my $results = capture {
+        $set->run();
+    }
+    is( $results->[0]->pass, 0, "test did not pass" );
+    is( $results->[0]->todo, 'this is todo', "Test marked todo" );
+}
+
 1;
 
 =head1 AUTHORS

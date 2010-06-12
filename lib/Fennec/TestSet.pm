@@ -19,6 +19,8 @@ use Fennec::Util::Alias qw/
 /;
 
 use Time::HiRes qw/time/;
+our $CURRENT;
+sub current { $CURRENT };
 
 Accessors qw/ workflow no_result observed created_in /;
 
@@ -45,6 +47,7 @@ sub run {
     return Result->skip_testset( $self, $self->skip )
         if $self->skip;
 
+    local $CURRENT = $self;
     try {
         my $start = time;
         $self->run_on( $self->testfile );

@@ -25,13 +25,15 @@ tests old_deep => (
     method => sub { ok( 1, "old with depth" )},
 );
 
-tests add_specs ( todo => 'not really todo' ) {
+tests magic {
     ok( $self, "Magically got self" );
     $self->isa_ok( 'TEST::Fennec::Declare' );
     $self->isa_ok( 'Fennec::TestFile' );
-    TODO {
-        ok( 0, "This should be todo" );
-    } "Todo from Fennec bug #58";
+}
+
+tests add_specs ( todo => 'Testing todo' ) {
+    ok( 0, "This should be todo" );
+    die( "Should be handled by todo" );
 }
 
 tests open_next_line

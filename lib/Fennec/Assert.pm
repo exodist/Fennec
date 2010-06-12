@@ -133,10 +133,20 @@ sub result {
     my %proto = @_;
     my $res = Result->new(
         @proto{qw/file line/} ? () : test_caller(),
+        _current_conditions(),
         %proto,
     );
     $res->write;
     return $res->pass;
+}
+
+sub _current_conditions {
+    my $current = Fennec::TestSet->current;
+    return unless $current;
+    my %out;
+    $out{ todo } = $current->todo if $current->todo;
+    $out{ skip } = $current->skip if $current->skip;
+    return %out;
 }
 
 sub tb_wrapper(&) {
