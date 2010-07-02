@@ -46,6 +46,13 @@ In most cases workflows and groups will be run in random order, and in
 parrallel. See the configuration section for details on modifying this
 behavior.
 
+=head2 CHAPTER 1.1 - ASSERTIONS
+
+Fennec refers to test functions such as ok(), is(), and is_deeply() by the term
+'assertion'. Using Fennec automatically gives you all the assertions normally
+provided by L<Test::More>, L<Test::Warn>, and L<Test::Exception>. Please see
+L<Test::Simple> if you are not already familiar with testing in perl.
+
 =head1 CHAPTER 2 - SUITE MANAGEMENT
 
 There are two ways to manage a test suite with Fennec. The simple way is to
@@ -84,15 +91,17 @@ has solutions to most of the problems typically associated with runners.
 
 =head2 CHAPTER 2.3 - CONFIGURATION
 
-=head1 CHAPTER 3 - WORKFLOWS
+=head1 CHAPTER 3 - WORKFLOWS AND GROUPS
 
 =head2 CHAPTER 3.1 - OLD SCHOOL
 
-=head2 CHAPTER 3.2 - RSPEC
+=head2 CHAPTER 3.2 - SIMPLE TEST GROUPS
 
-=head2 CHAPTER 3.3 - CASES
+=head2 CHAPTER 3.3 - RSPEC
 
-=head2 CHAPTER 3.4 - OBJECT METHODS
+=head2 CHAPTER 3.4 - CASES
+
+=head2 CHAPTER 3.5 - OBJECT METHODS
 
 =head1 CHAPTER 4 - ASSERTIONS
 
