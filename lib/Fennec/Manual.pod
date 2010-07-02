@@ -8,17 +8,17 @@ Fennec::Manual - The Fennec Manual
 
 =over 4
 
-=item USER MANUAL
-
-Covers usage of Fennec when writing tests and managing test suites.
-
-L<Fennec::Manual::User>
-
 =item QUICKSTART
 
 If you want to jump right into using Fennec without reading the user manual.
 
 L<Fennec::Manual::Quickstart>
+
+=item USER MANUAL
+
+Covers usage of Fennec when writing tests and managing test suites.
+
+L<Fennec::Manual::User>
 
 =item DEVELOPER MANUAL
 
