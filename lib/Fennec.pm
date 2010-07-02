@@ -165,21 +165,18 @@ sub _require_or_skip(*) {
 
 =head1 NAME
 
-Fennec - Full Featured Testing Toolbox And Development Kit
+Fennec - Workflow based testing framework for Perl.
 
 =head1 DESCRIPTION
 
-Fennec is a full featured testing toolbox. Fennec provides all the tools your
-used to, but in a framework that allows for greater interopability of third
-party tools. Along with the typical set of tools, Fennec addresses many common
-problems, complaints, and wish list items.
-
-In addition to the provided tools, Fennec provides a solid framework and highly
-extendable API. Using Fennec you can write custom workflows, assertions,
-testers, and output plugins. You can even define custom file types and file
-loaders.
+Fennec is a workflow based testing framework for Perl. It is designed to be
+easy to use, easy to extend, and to provide an incredible array of tools while
+staying out of your way. Fennec provides everything your used to in Perl
+testing framework along with enhancements inspired from other frameworks.
 
 =head1 SYNOPSIS
+
+t/MyModule.t:
 
     package TEST::MyModule;
     use strict;
@@ -222,7 +219,7 @@ loaders.
         }
     }
 
-    1;
+    done_testing;
 
 =head1 FURTHER READING
 

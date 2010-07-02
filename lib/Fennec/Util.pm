@@ -7,6 +7,7 @@ use base 'Exporter';
 our @EXPORT_OK = qw/test_caller/;
 
 use Carp qw/carp confess croak cluck/;
+use Devel::CallerStack qw/caller_stack/;
 
 sub workflow_stack {
     my $class = shift;
@@ -46,16 +47,13 @@ sub package_sub_map {
 }
 
 sub test_caller {
-    my $current = 1;
-    my ( $caller, $file, $line );
-    do {
-        ( $caller, $file, $line ) = caller( $current );
-        $current++;
-    } while $caller && !$caller->isa( 'Fennec::TestFile' );
-
+    my $stack = caller_stack;
+    $stack->filter( 'package', sub { shift->isa( 'Fennec::TestFile' )});
+    my $level = $stack->recent;
+    return unless $level;
     return (
-        file => $file || "N/A",
-        line => $line || "N/A",
+        file => $level->filename || "N/A",
+        line => $level->line || "N/A",
     );
 }
 
