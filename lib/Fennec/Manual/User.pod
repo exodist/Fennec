@@ -8,7 +8,73 @@ Covers usage of Fennec when writing tests and managing test suites.
 
 =head1 CHAPTER 1 - OVERVIEW
 
+Fennec works just like traiditional L<Test::Builder> tools in that it allows
+you to write script style tests. Fennec takes this a step further by
+introducing the concepts of test groups and workflows. Fennec also requires
+that each test file define a class which Fennec will instantiate.
+
+=over 4
+
+=item Test Groups
+
+Test groups are tests placed inside a grouping method. Grouping methods are
+typically defined using the 'tests' keyword. The 'tests' keyword uses
+L<Devel::Declare> to work similar to the 'sub' keyword, that is no semicolon is
+required after the defenition. The keyword is further enhanced allowing for
+quoted method names.
+
+    tests 'name of group' {
+        ok( 1, "name" );
+        ...
+    }
+
+=item Test Workflows
+
+Workflows are how Fennec implements Behavior Driven Development or BDD. BDD is
+a way to structure tests in a more readable or managable way than script style
+tests. The most well known example of BDD is Ruby's RSPEC, of which Fennec has
+an implementation.
+
+=back
+
+When a Fennec test is run, it will first run all your package level assertions
+(ok, is, is_deeply, etc). While doing so it will also build and prepare your
+test groups and workflows. Once the building phase is complete, Fennec will
+instantiate your test class, and run all groups and workflows on it.
+
+In most cases workflows and groups will be run in random order, and in
+parrallel. See the configuration section for details on modifying this
+behavior.
+
 =head1 CHAPTER 2 - SUITE MANAGEMENT
+
+There are two ways to manage a test suite with Fennec. The simple way is to
+simply write .t files that use L<Fennec::Standalone>. You can also turn control
+over to a Fennec 'runner'.
+
+=over 4
+
+=item Fennec::Standalone
+
+Each Fennec test file is independent. Prove iterates the files for you running
+them in order. Every test has the overheard of re-loading Fennec and its tools.
+Files will not share a common configuration unless you manually enter that
+configuration into each file.
+
+=item 'Runner' managed suite
+
+Fennec will be configured in t/Fennec.t, which will also serve as a runner. The
+runner will find all your test files and run them for you. The benefits of this
+system are reduced overhead, shared configuration, and the ability to
+potentially pre-load items that are cpu intensive to load.
+
+The downside of a runner system is that it basically hijacks prove. Runners
+have been used in other perl testing frameworks such as L<Test::Class>. Some
+people have strong opinions about runners, usually unfavorable ones. Usually
+runners have the problem that it is difficult to run a single test file, Fennec
+has solutions to most of the problems typically associated with runners.
+
+=back
 
 =head2 CHAPTER 2.1 - STANDALONE
 
