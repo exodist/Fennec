@@ -1,0 +1,55 @@
+=head1 NAME
+
+Fennec::Manual::User - The user manual for Fennec
+
+=head1 DESCRIPTION
+
+Covers usage of Fennec when writing tests and managing test suites.
+
+=head1 CHAPTER 1 - OVERVIEW
+
+=head1 CHAPTER 2 - SUITE MANAGEMENT
+
+=head2 CHAPTER 2.1 - STANDALONE
+
+=head2 CHAPTER 2.2 - SINGLE RUNNER
+
+=head3 CHAPTER 2.2.1 - COMMAND LINE TOOLS
+
+=head2 CHAPTER 2.3 - CONFIGURATION
+
+=head1 CHAPTER 3 - WORKFLOWS
+
+=head2 CHAPTER 3.1 - OLD SCHOOL
+
+=head2 CHAPTER 3.2 - RSPEC
+
+=head2 CHAPTER 3.3 - CASES
+
+=head2 CHAPTER 3.4 - OBJECT METHODS
+
+=head1 CHAPTER 4 - ASSERTIONS
+
+=head1 CHAPTER 5 - ADVANCED TOPICS
+
+=head2 CHAPTER 5.1 - CUSTOM FILE TYPES
+
+=head2 CHAPTER 5.1 - OUTPUT HANDLERS
+
+=head2 CHAPTER 5.2 - COLLECTORS
+
+=head1 CHAPTER 6 - VIM INTEGRATION
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.

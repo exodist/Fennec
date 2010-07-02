@@ -1,0 +1,41 @@
+=head1 NAME
+
+Fennec::Manual::Developer - Developer manual for extending or enhancing Fennec.
+
+=head1 DESCRIPTION
+
+Guide to developing plugins or enhancements for Fennec.
+
+=head1 CHAPTER 1 - INNER WORKINGS
+
+=head2 CHAPTER 1.1 - STANDALONE WORKFLOW
+
+=head2 CHAPTER 1.2 - SUITE WORKFLOW
+
+=head1 CHAPTER 2 - TESTING FENNEC ITSELF
+
+=head1 CHAPTER 3 - WRITING ASSERTION LIBRARIES
+
+=head2 CHAPTER 3.1 - WRAPPING TEST::BUILDER BASED TOOLS
+
+=head1 CHAPTER 4 - WRITING CUSTOM FILE TYPES
+
+=head1 CHAPTER 5 - WRITING OUTPUT HANDLERS
+
+=head1 CHAPTER 6 - WRITING OUTPUT COLLECTORS
+
+=head1 CHAPTER 7 - WRITING WORKFLOWS
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.
