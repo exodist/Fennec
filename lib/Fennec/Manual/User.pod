@@ -6,12 +6,197 @@ Fennec::Manual::User - The user manual for Fennec
 
 Covers usage of Fennec when writing tests and managing test suites.
 
-=head1 CHAPTER 1 - OVERVIEW
+=head1 CHAPTER 1 - INTRODUCTION
 
 Fennec works just like traiditional L<Test::Builder> tools in that it allows
 you to write script style tests. Fennec takes this a step further by
-introducing the concepts of test groups and workflows. Fennec also requires
-that each test file define a class which Fennec will instantiate.
+introducing behavior driven development with the concepts of test groups and
+workflows. Fennec also requires that each test file define a class which Fennec
+will instantiate.
+
+=head2 CHAPTER 1.1 - ASSERTIONS
+
+Fennec refers to test functions such as ok(), is(), and is_deeply() by the term
+'assertion'. Using Fennec automatically gives you all the assertions normally
+provided by L<Test::More>, L<Test::Warn>, and L<Test::Exception>. Please see
+L<Test::Simple> if you are not already familiar with testing in perl.
+
+sample assertions:
+
+    ok( $true, "name of check" );
+    is( $var_a, $var_b, "name of other check" );
+
+Fennec also allows for traditional assertions which die on failure, but only
+when tests are grouped. See Chapter 3.2 for more on groups.
+
+    tests my_tests {
+        die "check failed" unless $a == $b;
+    }
+
+=head2 CHAPTER 1.2 - WRITING A BASIC TEST CLASS
+
+The most simple Fennec test class is a script that declares a package, uses
+L<Fennec::Standalone> and makes assertions.
+
+t/my_test.t:
+
+    #!/usr/bin/perl
+    package My::Test
+    use strict;
+    use warnings;
+    use Fennec::Standalone;
+
+    ok( 1, "1 is true, perl is not broken" );
+
+    done_testing();
+
+*done_testing() is required at the end of all standalone tests.
+
+=head2 CHAPTER 1.3 - DEFAULT ASSERTIONS
+
+By default, Fennec will provide the following assert functions. See each
+referenced package fore more details.
+
+=over 2
+
+=item L<Fennec::Assert::Core::Simple>
+
+=over 2
+
+=item ok( $check, $name )
+
+=back
+
+=item L<Fennec::Assert::Core::More>
+
+=over 2
+
+=item is( $val_a, $val_b, $name )
+
+=item isnt($got, $want; $name)
+
+=item like($got, $want; $name)
+
+=item unlike($got, $want; $name)
+
+=item can_ok(*thing; @list )
+
+=item isa_ok(*thing; @list )
+
+=item is_deeply($got, $want; $name)
+
+=item advanced_is(got => $got, want => $want, name => $name, %options)
+
+=back
+
+=item L<Fennec::Assert::Core::Exception>
+
+=over 2
+
+=item lives_ok { ... } $name
+
+=item dies_ok { ... } $name
+
+=item throws_ok { ... } qr/.../, $name
+
+=item lives_and { ... } $name
+
+=back
+
+=item L<Fennec::Assert::Core::Warn>
+
+=over 2
+
+=item @list = capture_warnings { ... }
+
+=item warning_is { ... } $want, $name
+
+=item warnings_are { ... } \@want, $name
+
+=item warning_like { ... } qr/.../, $name
+
+=item warnings_like { ... } [ qr/.../, ... ], $name
+
+=item warnings_exist { ... } [ $string, $regex, ... ], $name
+
+=back
+
+=item L<Fennec::Assert::Core::Package>
+
+=over 2
+
+=item require_ok Package::Bareword
+
+=item require_ok( $package )
+
+=item use_ok Package::Bareword
+
+=item use_ok( $package, @args )
+
+=item use_into_ok( $package, $dest_package, @args )
+
+=back
+
+=item L<Fennec::Assert::Core::Anonclass>
+
+=over 2
+
+=item $anonclass = anonclass( ... )
+
+=back
+
+=back
+
+=head2 CHAPTER 1.4 - CUSTOM INLINE ASSERTIONS
+
+TODO - http://github.com/exodist/Fennec/issues/#issue/60
+
+=head1 CHAPTER 2 - SUITE MANAGEMENT
+
+There are two ways to manage a test suite with Fennec. The simple way is to
+simply write .t files that use L<Fennec::Standalone>. The other way is to turn
+control over to the Fennec 'runner' script.
+
+=head2 CHAPTER 2.1 - STANDALONE
+
+Each Fennec test file is independent. Prove iterates the files for you running
+them in order. Every test has the overheard of re-loading Fennec and its tools.
+Files will not share a common configuration you must manually enter your
+configuration into each file.
+
+Using L<Fennec::Standalone> has already been introduced in Chapter 1.2.
+
+=head2 CHAPTER 2.2 - SINGLE RUNNER
+
+Fennec will be configured in t/Fennec.t, which will also serve as a runner. The
+runner will find all your test files and run them for you. The benefits of this
+system are reduced overhead, shared configuration, and the ability to
+potentially pre-load items that are cpu intensive to load.
+
+The downside of a runner system is that it hijacks prove. Runners
+have been used in other perl testing frameworks such as L<Test::Class>. Some
+people have strong opinions about runners, usually unfavorable ones. Runners
+often have the problem that it is difficult to run a single test file.
+
+Fennec has many command-line and editor integration tools that solve the most
+commn complaints about runners. See Chapter 2.2.1 and Chapter 5 for more
+details.
+
+To generate t/Fennec.t use the fennec_init command. This will create the file
+with the default Fennec configuration. This file doubles as a configuration
+file. See Chapter 2.3 - Configuration for more details.
+
+=head3 CHAPTER 2.2.1 - COMMAND LINE TOOLS
+
+
+
+=head2 CHAPTER 2.3 - CONFIGURATION
+
+=head1 CHAPTER 3 - WORKFLOWS AND GROUPS
+
+=head2 CHAPTER 3.1 - OLD SCHOOL
+
+=head2 CHAPTER 3.2 - SIMPLE TEST GROUPS
 
 =over 4
 
@@ -46,56 +231,6 @@ In most cases workflows and groups will be run in random order, and in
 parrallel. See the configuration section for details on modifying this
 behavior.
 
-=head2 CHAPTER 1.1 - ASSERTIONS
-
-Fennec refers to test functions such as ok(), is(), and is_deeply() by the term
-'assertion'. Using Fennec automatically gives you all the assertions normally
-provided by L<Test::More>, L<Test::Warn>, and L<Test::Exception>. Please see
-L<Test::Simple> if you are not already familiar with testing in perl.
-
-=head1 CHAPTER 2 - SUITE MANAGEMENT
-
-There are two ways to manage a test suite with Fennec. The simple way is to
-simply write .t files that use L<Fennec::Standalone>. You can also turn control
-over to a Fennec 'runner'.
-
-=over 4
-
-=item Fennec::Standalone
-
-Each Fennec test file is independent. Prove iterates the files for you running
-them in order. Every test has the overheard of re-loading Fennec and its tools.
-Files will not share a common configuration unless you manually enter that
-configuration into each file.
-
-=item 'Runner' managed suite
-
-Fennec will be configured in t/Fennec.t, which will also serve as a runner. The
-runner will find all your test files and run them for you. The benefits of this
-system are reduced overhead, shared configuration, and the ability to
-potentially pre-load items that are cpu intensive to load.
-
-The downside of a runner system is that it basically hijacks prove. Runners
-have been used in other perl testing frameworks such as L<Test::Class>. Some
-people have strong opinions about runners, usually unfavorable ones. Usually
-runners have the problem that it is difficult to run a single test file, Fennec
-has solutions to most of the problems typically associated with runners.
-
-=back
-
-=head2 CHAPTER 2.1 - STANDALONE
-
-=head2 CHAPTER 2.2 - SINGLE RUNNER
-
-=head3 CHAPTER 2.2.1 - COMMAND LINE TOOLS
-
-=head2 CHAPTER 2.3 - CONFIGURATION
-
-=head1 CHAPTER 3 - WORKFLOWS AND GROUPS
-
-=head2 CHAPTER 3.1 - OLD SCHOOL
-
-=head2 CHAPTER 3.2 - SIMPLE TEST GROUPS
 
 =head2 CHAPTER 3.3 - RSPEC
 
@@ -103,17 +238,15 @@ has solutions to most of the problems typically associated with runners.
 
 =head2 CHAPTER 3.5 - OBJECT METHODS
 
-=head1 CHAPTER 4 - ASSERTIONS
+=head1 CHAPTER 4 - ADVANCED TOPICS
 
-=head1 CHAPTER 5 - ADVANCED TOPICS
+=head2 CHAPTER 4.1 - CUSTOM FILE TYPES
 
-=head2 CHAPTER 5.1 - CUSTOM FILE TYPES
+=head2 CHAPTER 4.1 - OUTPUT HANDLERS
 
-=head2 CHAPTER 5.1 - OUTPUT HANDLERS
+=head2 CHAPTER 4.2 - COLLECTORS
 
-=head2 CHAPTER 5.2 - COLLECTORS
-
-=head1 CHAPTER 6 - VIM INTEGRATION
+=head1 CHAPTER 5 - EDITOR INTEGRATION
 
 =head1 AUTHORS
 

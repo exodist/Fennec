@@ -73,12 +73,6 @@ Fennec::Standalone - Standalone Fennec test module
 Use this instead of L<Fennec> when writing standlone tests. Creates a runner,
 starts a root workflow, provides done_testing() to finish things up.
 
-=head1 HOWTO DOCUMENTATION
-
-L<Fennec::Manual::Standalone>
-
-How to write standalone tests.
-
 =head1 DEVELOPER API
 
 B<This documentation contains developer documentation for those wishing to

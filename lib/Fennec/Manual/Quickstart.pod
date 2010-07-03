@@ -37,7 +37,7 @@ You must call this at the end of your test file.
 =item Tests in package space
 
 Tests can be written directly in package space just like traditional perl
-testing. By default you get all the toold provided by L<Test::More>,
+testing. By default you get all the tools provided by L<Test::More>,
 L<Test::Exception>, and L<Test::Warn>.
 
 =back
