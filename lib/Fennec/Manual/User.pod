@@ -23,9 +23,10 @@ L<Test::Simple> if you are not already familiar with testing in perl.
 
 It is worth noting that these asserts are re-implemented the Fennec way. They
 do not use Test::Builder. This was done in order to provide bette diagnostics
-and output. Test::Builder tools will work underr Fennec, in most cases
-withought any modification. See CHAPTER 7.3 - MORE ON TEST::BUILDER for more
-info.
+and output. Test::Builder tools will work under Fennec, in most cases
+withought any modification. It is also possible to tell Fennec to use the
+Test::Builder based tools instead of its own implementations, See CHAPTER 7.3 -
+MORE ON TEST::BUILDER.
 
 sample assertions:
 
@@ -544,7 +545,13 @@ tests will run in hash key order, which is consistant though unpredictable.
 
 =head3 CHAPTER 5.2.2 - Overriding Runner Options on The Command-Line
 
+Almost every option above can be overridden on the command line using
+environment variables. Each items variable is its name in all caps prefixed by
+FENNEC_.
 
+Example:
+
+    $ FENNEC_PARRALLEL_FILES=5 FENNEC_PARRALLEL_TESTS=3 prove -I lib t/Fennec.t
 
 =head1 CHAPTER 6 - EDITOR INTEGRATION
 
