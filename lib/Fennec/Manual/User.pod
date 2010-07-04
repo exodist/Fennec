@@ -21,6 +21,12 @@ Fennec refers to test functions such as ok(), is(), and is_deeply() by the term
 provided by L<Test::More>, L<Test::Warn>, and L<Test::Exception>. Please see
 L<Test::Simple> if you are not already familiar with testing in perl.
 
+It is worth noting that these asserts are re-implemented the Fennec way. They
+do not use Test::Builder. This was done in order to provide bette diagnostics
+and output. Test::Builder tools will work underr Fennec, in most cases
+withought any modification. See CHAPTER 7.3 - MORE ON TEST::BUILDER for more
+info.
+
 sample assertions:
 
     ok( $true, "name of check" );
@@ -32,6 +38,12 @@ when tests are grouped. See Chapter 3.2 for more on groups.
     tests my_tests {
         die "check failed" unless $a == $b;
     }
+
+Using a Test::Builder library usually just works:
+
+    use Test::Thing qw( my_assert );
+
+    my_assert( ... );
 
 =head2 CHAPTER 1.2 - WRITING A BASIC TEST CLASS
 
@@ -547,6 +559,8 @@ tests will run in hash key order, which is consistant though unpredictable.
 =head2 CHAPTER 7.1 - OUTPUT HANDLERS
 
 =head2 CHAPTER 7.2 - COLLECTORS
+
+=head2 CHAPTER 7.3 - MORE ON TEST::BUILDER
 
 =head1 AUTHORS
 
