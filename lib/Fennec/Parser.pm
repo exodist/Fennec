@@ -69,6 +69,20 @@ __END__
 
 Devel::Declare::Parser::Export - The parser behind the export() magic.
 
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=head2 nameless
+
+=head2 is_nameless
+
+=head2 args
+
+=head2 inject
+
+=head2 rewrite
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

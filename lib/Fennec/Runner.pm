@@ -227,6 +227,47 @@ EOT
 
 1;
 
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=head2 alias
+
+=head2 init
+
+=head2 run_tests
+
+=head2 _test_thread
+
+=head2 _init_file
+
+=head2 _init_workflow
+
+=head2 process_workflow
+
+=head2 start
+
+=head2 _reap_callback
+
+=head2 finish
+
+=head2 add_finish_hook
+
+=head2 pid_changed
+
+=head2 is_parent
+
+=head2 is_subprocess
+
+=head2 run_with_collector
+
+=head2 reset_benchmark
+
+=head2 benchmark
+
+=head2 DESTROY
+
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

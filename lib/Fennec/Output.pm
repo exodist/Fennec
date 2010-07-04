@@ -73,6 +73,22 @@ sub workflow {
 
 1;
 
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=head2 workflow_stack
+
+=head2 serialize
+
+=head2 deserialize
+
+=head2 write
+
+=head2 testfile
+
+=head2 workflow
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

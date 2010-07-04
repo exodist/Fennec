@@ -162,6 +162,20 @@ sub serialize {
 
 1;
 
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=head2 TODO
+
+=head2 fail
+
+=head2 new
+
+=head2 file
+
+=head2 serialize
+
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

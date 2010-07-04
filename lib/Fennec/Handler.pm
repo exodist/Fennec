@@ -23,6 +23,21 @@ sub starting_file {1}
 sub fennec_error {1}
 
 1;
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=head2 new
+
+=head2 handle
+
+=head2 finish
+
+=head2 start
+
+=head2 starting_file
+
+=head2 fennec_error
 
 =head1 AUTHORS
 
