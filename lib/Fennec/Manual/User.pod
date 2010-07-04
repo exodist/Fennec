@@ -310,9 +310,47 @@ instantiate your test class, and run all groups and workflows on that instance.
 
 =head2 CHAPTER 4.1 - RSPEC
 
+RSPEC is a workflow origonally created for Ruby. this manual will not go over
+RSPEC in detail. Here is an example to get you started. It is worth noting that
+describe blocks are run as methods and get $self automatically.
 
+    describe 'test feature a' {
+        my $target;
+
+        before_each { $target = My::Class->new }
+        after_each { My::Class->reset_test_data }
+
+        # These will run in random order wrapped with the before and after:
+        it { ok( $target->feature_a( 'a' ), 'takes arg a' }
+        it { ok( $target->feature_a( 'b' ), 'takes arg b' }
+        it { ok( $target->feature_a( 'c' ), 'takes arg c' }
+
+        # You can nest describe methods
+        describe 'feature a other stuff' { ... }
+    }
 
 =head2 CHAPTER 4.2 - CASES
+
+Cases are a way to run the same assertions under multiple scenarios. In the
+following example each tests block will be run 4 times each with different
+values in var_a and var_b.
+
+    cases 'test all combinations' {
+        my ( $var_a, $var_b );
+
+        # Scenarios
+        case set_a { ( $var_a, $var_b ) = ( 5, 5 )}
+        case set_b { ( $var_a, $var_b ) = ( 4, 6 )}
+        case set_c { ( $var_a, $var_b ) = ( 3, 7 )}
+        case set_d { ( $var_a, $var_b ) = ( 2, 8 )}
+
+        # Checks
+        tests 'equals 10' { is( $var_a + $var_b, 10, "sum is ten" )}
+        tests 'both vars are true' {
+            ok( $var_a, "var_a is true" );
+            ok( $var_b, "var_b is true" );
+        }
+    }
 
 =head2 CHAPTER 4.3 - OBJECT METHODS
 
