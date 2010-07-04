@@ -661,7 +661,7 @@ tools can be wrapped by Fennec to improve diagnostic output.
 
 =head2 CHAPTER 7.1 - USING TEST::BUILDER TOOLS
 
-L<Fennec::Util::TBOverride> is loaded by default when Fennec loads. that means
+L<Fennec::Util::TBOverride> is loaded by default when Fennec loads. That means
 that in most cases you can simply import the Test::Builder tool and expect it
 to work fine. Fennec also provides wrappers around the most common
 Test::Builder tools for people that prefer them to the Fennec implementations.
