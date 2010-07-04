@@ -22,11 +22,10 @@ provided by L<Test::More>, L<Test::Warn>, and L<Test::Exception>. Please see
 L<Test::Simple> if you are not already familiar with testing in perl.
 
 It is worth noting that these asserts are re-implemented the Fennec way. They
-do not use Test::Builder. This was done in order to provide bette diagnostics
+do not use Test::Builder. This was done in order to provide better diagnostics
 and output. Test::Builder tools will work under Fennec, in most cases
 withought any modification. It is also possible to tell Fennec to use the
-Test::Builder based tools instead of its own implementations, See CHAPTER 7.3 -
-MORE ON TEST::BUILDER.
+Test::Builder based tools instead of its own implementations, See Chapter 7.2.
 
 sample assertions:
 
@@ -652,13 +651,77 @@ the current file.
 Currently there are no emacs users developing Fennec. We welcome anyone who
 would fill in this section.
 
-=head1 CHAPTER 7 - ADVANCED TOPICS
+=head1 CHAPTER 7 - TEST::BUILDER INFORMATION
 
-=head2 CHAPTER 7.1 - OUTPUT HANDLERS
+Fennec does not use or depend on Test::Builder. However it has a module that
+allows Test::Builder based tools to work with Fennec.
+L<Fennec::Util::TBOverride> overrides several parts of Test::Builder in order
+to send results to Fennec. It also provides a mechanism by which Test::Builder
+tools can be wrapped by Fennec to improve diagnostic output.
 
-=head2 CHAPTER 7.2 - COLLECTORS
+=head2 CHAPTER 7.1 - USING TEST::BUILDER TOOLS
 
-=head2 CHAPTER 7.3 - MORE ON TEST::BUILDER
+L<Fennec::Util::TBOverride> is loaded by default when Fennec loads. that means
+that in most cases you can simply import the Test::Builder tool and expect it
+to work fine. Fennec also provides wrappers around the most common
+Test::Builder tools for people that prefer them to the Fennec implementations.
+
+=head2 CHAPTER 7.2 - USING TEST::BUILDER INSTEAD OF FENNEC ASSERTS
+
+By default Fennec Loads the Core assertion library (L<Fennec::Assert::Core>)
+which in turn loads the following (among others):
+
+=over 4
+
+=item L<Fennec::Assert::Core::Simple>
+
+=item L<Fennec::Assert::Core::More>
+
+=item L<Fennec::Assert::Core::Exception>
+
+=item L<Fennec::Assert::Core::Warn>
+
+=back
+
+B<These are re-implementations of their Test::Builder namesakes.> Fennec also
+provides a way to use the original implementations.
+
+    use Fennec asserts => ['TBCore'];
+    # or
+    use Fennec::Standalone asserts => ['TBCore'];
+
+You can also do this globaly in t/Fennec.t:
+
+    #!/usr/bin/perl
+    ...
+    'Fennec::Runner'->init(
+        default_asserts => ['TBCore'],
+        ...
+    );
+    ...
+
+This will load L<Fennec::Assert::TBCore> instead of L<Fennec::Assert::Core>.
+Which in turn loads the following:
+
+=over 4
+
+=item L<Fennec::Assert::TBCore::Simple>
+
+=item L<Fennec::Assert::TBCore::More>
+
+=item L<Fennec::Assert::TBCore::Exception>
+
+=item L<Fennec::Assert::TBCore::Warn>
+
+=back
+
+These are minimal wrappers around the actual Test::Builder based tools.
+
+=head1 CHAPTER 8 - ADVANCED TOPICS
+
+=head2 CHAPTER 8.1 - OUTPUT HANDLERS
+
+=head2 CHAPTER 8.2 - COLLECTORS
 
 =head1 AUTHORS
 
