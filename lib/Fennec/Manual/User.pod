@@ -6,105 +6,561 @@ Fennec::Manual::User - The user manual for Fennec
 
 Covers usage of Fennec when writing tests and managing test suites.
 
-=head1 CHAPTER 1 - OVERVIEW
+=head1 CHAPTER 1 - INTRODUCTION
 
 Fennec works just like traiditional L<Test::Builder> tools in that it allows
 you to write script style tests. Fennec takes this a step further by
-introducing the concepts of test groups and workflows. Fennec also requires
-that each test file define a class which Fennec will instantiate.
+introducing behavior driven development with the concepts of test groups and
+workflows. Fennec also requires that each test file define a class which Fennec
+will instantiate.
 
-=over 4
+=head2 CHAPTER 1.1 - ASSERTIONS
 
-=item Test Groups
+Fennec refers to test functions such as ok(), is(), and is_deeply() by the term
+'assertion'. Using Fennec automatically gives you all the assertions normally
+provided by L<Test::More>, L<Test::Warn>, and L<Test::Exception>. Please see
+L<Test::Simple> if you are not already familiar with testing in perl.
 
-Test groups are tests placed inside a grouping method. Grouping methods are
-typically defined using the 'tests' keyword. The 'tests' keyword uses
-L<Devel::Declare> to work similar to the 'sub' keyword, that is no semicolon is
-required after the defenition. The keyword is further enhanced allowing for
-quoted method names.
+It is worth noting that these asserts are re-implemented the Fennec way. They
+do not use Test::Builder. This was done in order to provide bette diagnostics
+and output. Test::Builder tools will work underr Fennec, in most cases
+withought any modification. See CHAPTER 7.3 - MORE ON TEST::BUILDER for more
+info.
 
-    tests 'name of group' {
-        ok( 1, "name" );
-        ...
+sample assertions:
+
+    ok( $true, "name of check" );
+    is( $var_a, $var_b, "name of other check" );
+
+Fennec also allows for traditional assertions which die on failure, but only
+when tests are grouped. See Chapter 3.2 for more on groups.
+
+    tests my_tests {
+        die "check failed" unless $a == $b;
     }
 
-=item Test Workflows
+Using a Test::Builder library usually just works:
 
-Workflows are how Fennec implements Behavior Driven Development or BDD. BDD is
-a way to structure tests in a more readable or managable way than script style
-tests. The most well known example of BDD is Ruby's RSPEC, of which Fennec has
-an implementation.
+    use Test::Thing qw( my_assert );
+
+    my_assert( ... );
+
+=head2 CHAPTER 1.2 - WRITING A BASIC TEST CLASS
+
+The most simple Fennec test class is a script that declares a package, uses
+L<Fennec::Standalone> and makes assertions.
+
+t/my_test.t:
+
+    #!/usr/bin/perl
+    package My::Test
+    use strict;
+    use warnings;
+    use Fennec::Standalone;
+
+    ok( 1, "1 is true, perl is not broken" );
+
+    done_testing();
+
+*done_testing() is required at the end of all standalone tests.
+
+=head2 CHAPTER 1.3 - DEFAULT ASSERTIONS
+
+By default, Fennec will provide the following assert functions. See each
+referenced package fore more details.
+
+=head4 L<Fennec::Assert::Core::Simple>
+
+=over 2
+
+=item ok( $check, $name )
 
 =back
 
-When a Fennec test is run, it will first run all your package level assertions
-(ok, is, is_deeply, etc). While doing so it will also build and prepare your
-test groups and workflows. Once the building phase is complete, Fennec will
-instantiate your test class, and run all groups and workflows on it.
+=head4 L<Fennec::Assert::Core::More>
 
-In most cases workflows and groups will be run in random order, and in
-parrallel. See the configuration section for details on modifying this
-behavior.
+=over 2
+
+=item is( $val_a, $val_b, $name )
+
+=item isnt($got, $want; $name)
+
+=item like($got, $want; $name)
+
+=item unlike($got, $want; $name)
+
+=item can_ok(*thing; @list )
+
+=item isa_ok(*thing; @list )
+
+=item is_deeply($got, $want; $name)
+
+=item advanced_is(got => $got, want => $want, name => $name, %options)
+
+=back
+
+=head4 L<Fennec::Assert::Core::Exception>
+
+=over 2
+
+=item lives_ok { ... } $name
+
+=item dies_ok { ... } $name
+
+=item throws_ok { ... } qr/.../, $name
+
+=item lives_and { ... } $name
+
+=back
+
+=head4 L<Fennec::Assert::Core::Warn>
+
+=over 2
+
+=item @list = capture_warnings { ... }
+
+=item warning_is { ... } $want, $name
+
+=item warnings_are { ... } \@want, $name
+
+=item warning_like { ... } qr/.../, $name
+
+=item warnings_like { ... } [ qr/.../, ... ], $name
+
+=item warnings_exist { ... } [ $string, $regex, ... ], $name
+
+=back
+
+=head4 L<Fennec::Assert::Core::Package>
+
+=over 2
+
+=item require_ok Package::Bareword
+
+=item require_ok( $package )
+
+=item use_ok Package::Bareword
+
+=item use_ok( $package, @args )
+
+=item use_into_ok( $package, $dest_package, @args )
+
+=back
+
+=head4 L<Fennec::Assert::Core::Anonclass>
+
+=over 2
+
+=item $anonclass = anonclass( ... )
+
+=back
+
+=head2 CHAPTER 1.4 - CUSTOM INLINE ASSERTIONS
+
+TODO - L<http://github.com/exodist/Fennec/issues/#issue/60>
+
+=head2 CHAPTER 1.5 - TODO AND SKIP
+
+Fennec has the concept of todo tests, tests which are expected to fail. You can
+also mark groups as skip if they are really bad.
+
+If an exception is thrown within a TODO block or set, a failing TODO result
+will be generated alerting you. This is a todo test and will not count as a
+failure in the grand scheme.
+
+=over 2
+
+=item Mark a test group as todo
+
+    # Failures will not count.
+    tests not_yet_implemented => (
+        todo => "This will fail",
+        method => sub {
+            my $self = shift;
+            ok( 0, "Hello world" );
+        },
+    );
+
+=item Skip a group completely
+
+    tests 'would die' => (
+        skip => "This will die",
+        method => sub {
+            my $self = shift;
+            die( "I eat you" );
+        },
+    );
+
+=item Skip specific asserts
+
+    tests 'some pass' => sub {
+        ok( 1, 'pass' );
+        TODO {
+            ok( 0, 'fail' );
+        } "This will fail, I will fix it later";
+    }
+
+=back
 
 =head1 CHAPTER 2 - SUITE MANAGEMENT
 
 There are two ways to manage a test suite with Fennec. The simple way is to
-simply write .t files that use L<Fennec::Standalone>. You can also turn control
-over to a Fennec 'runner'.
+simply write .t files that use L<Fennec::Standalone>. The other way is to turn
+control over to the Fennec 'runner' script.
 
-=over 4
-
-=item Fennec::Standalone
+=head2 CHAPTER 2.1 - STANDALONE FILES
 
 Each Fennec test file is independent. Prove iterates the files for you running
 them in order. Every test has the overheard of re-loading Fennec and its tools.
-Files will not share a common configuration unless you manually enter that
+Files will not share a common configuration you must manually enter your
 configuration into each file.
 
-=item 'Runner' managed suite
+Using L<Fennec::Standalone> has already been introduced in Chapter 1.2.
+
+=head2 CHAPTER 2.2 - SINGLE RUNNER
 
 Fennec will be configured in t/Fennec.t, which will also serve as a runner. The
 runner will find all your test files and run them for you. The benefits of this
 system are reduced overhead, shared configuration, and the ability to
 potentially pre-load items that are cpu intensive to load.
 
-The downside of a runner system is that it basically hijacks prove. Runners
+The downside of a runner system is that it hijacks prove. Runners
 have been used in other perl testing frameworks such as L<Test::Class>. Some
-people have strong opinions about runners, usually unfavorable ones. Usually
-runners have the problem that it is difficult to run a single test file, Fennec
-has solutions to most of the problems typically associated with runners.
+people have strong opinions about runners, usually unfavorable ones. Runners
+often have the problem that it is difficult to run a single test file.
 
-=back
+Fennec has many command-line and editor integration tools that solve the most
+common complaints about runners. See Chapter 2.2.1 and Chapter 5 for more
+details.
 
-=head2 CHAPTER 2.1 - STANDALONE
-
-=head2 CHAPTER 2.2 - SINGLE RUNNER
+To generate t/Fennec.t use the fennec_init command. This will create the file
+with the default Fennec configuration. This file doubles as a configuration
+file. See Chapter 2.3 - Configuration for more details.
 
 =head3 CHAPTER 2.2.1 - COMMAND LINE TOOLS
 
-=head2 CHAPTER 2.3 - CONFIGURATION
+Fennecs command-line tools are intended to simplify working with Fennec.
 
-=head1 CHAPTER 3 - WORKFLOWS
+=over 4
 
-=head2 CHAPTER 3.1 - OLD SCHOOL
+=item fennec_init
 
-=head2 CHAPTER 3.2 - RSPEC
+    $ cd projectroot
+    $ fennec_init
+    $ ls t
+        t/Fennec.t
 
-=head2 CHAPTER 3.3 - CASES
+This command-line tool will generate a default Fennec.t file under the t/
+directory. This is where you start when writing a test-suite using fennec.
 
-=head2 CHAPTER 3.4 - OBJECT METHODS
+=item fennec_prove
 
-=head1 CHAPTER 4 - ASSERTIONS
+This only applies to managed tests. This command will not work for standalone
+tests.
 
-=head1 CHAPTER 5 - ADVANCED TOPICS
+    $ fennec_prove - - [prove options]
+    $ fennec_prove t/My/Test.pm - [prove options]
+    $ fennec_prove t/My/Test.pm test_name [prove options]
+    $ fennec_prove t/My/Test.pm line_number [prove options]
 
-=head2 CHAPTER 5.1 - CUSTOM FILE TYPES
+This is a wrapper around prove that lets you run a specific fennec test file,
+and optionally a specific test name or line number within that file. Running a
+specific line number is not 100% accurate, but pretty close.
 
-=head2 CHAPTER 5.1 - OUTPUT HANDLERS
+=item fennec_scaffold.pl
 
-=head2 CHAPTER 5.2 - COLLECTORS
+This will create test modules for all modules that do not currently have a
+test. It will find all modules under lib/ and create a test under t/. The
+created test file will have a single require_ok( module_name ) test.
 
-=head1 CHAPTER 6 - VIM INTEGRATION
+Test names are assumed to follow the standard format. t/ will mirror lib/, and
+test module names will be the same as the module being tested. Package names
+will be the name of the tested package prefixed with TEST::. If you deviate
+from this style fennec_scaffold.pl will not find your test files and will
+assume they do not exist.
+
+=item t/Fennec.t
+
+This is the script that runs all your Fennec tests. It also doubles as a global
+configuration file. Most config options can be overiridden using environment
+variables. See Chapter 5 - Configuration for more info.
+
+=item fennec_run.pl
+
+This is identical to the default t/Fennec.t file. It can be used to run fennec
+tests in a project without a t/Fennec.t.
+
+=back
+
+=head1 CHAPTER 3 - TEST GROUPING
+
+Test groups are methods containing assertions, typically defined using the
+'tests' keyword. Tests will typically b. grouped based on the feature or
+functionality being tested.
+
+The 'tests' keyword uses L<Devel::Declare> to work similar to the 'sub'
+keyword, that is no semicolon is required after the defenition. The keyword is
+further enhanced allowing for single or double quoted method names.
+
+    tests 'name of group' {
+        ok( 1, "name" );
+        ...
+    }
+
+    tests bareword_name { ... }
+
+    tests "double quoted" { ... }
+
+=head1 CHAPTER 4 - BEHAVIOR DRIVEN DEVELOPMENT
+
+Behavior driven development or BDD is a way to structure tests in a more
+readable or managable way than script style tests. The most well known example
+of BDD is Ruby's RSPEC, of which Fennec has an implementation.
+
+Fennec implements BDD using the concept of workflows. Workflows are an
+abstraction of the common logic needed for BDD systems. Most Fennec BDD systems
+will be referred to generically as workflows.
+
+When a Fennec test is run, it will first run all your package level assertions
+(ok, is, is_deeply, etc). While doing so it will also build and prepare your
+test groups and workflows. Once the building phase is complete, Fennec will
+instantiate your test class, and run all groups and workflows on that instance.
+
+=head2 CHAPTER 4.1 - RSPEC
+
+RSPEC is a workflow origonally created for Ruby. this manual will not go over
+RSPEC in detail. Here is an example to get you started. It is worth noting that
+describe blocks are run as methods and get $self automatically.
+
+    describe 'test feature a' {
+        my $target;
+
+        before_each { $target = My::Class->new }
+        after_each { My::Class->reset_test_data }
+
+        # These will run in random order wrapped with the before and after:
+        it { ok( $target->feature_a( 'a' ), 'takes arg a' }
+        it { ok( $target->feature_a( 'b' ), 'takes arg b' }
+        it { ok( $target->feature_a( 'c' ), 'takes arg c' }
+
+        # You can nest describe methods
+        describe 'feature a other stuff' { ... }
+    }
+
+=head2 CHAPTER 4.2 - CASES
+
+Cases are a way to run the same assertions under multiple scenarios. In the
+following example each tests block will be run 4 times each with different
+values in var_a and var_b.
+
+    cases 'test all combinations' {
+        my ( $var_a, $var_b );
+
+        # Scenarios
+        case set_a {( $var_a, $var_b ) = ( 5, 5 )}
+        case set_b {( $var_a, $var_b ) = ( 4, 6 )}
+        case set_c {( $var_a, $var_b ) = ( 3, 7 )}
+        case set_d {( $var_a, $var_b ) = ( 2, 8 )}
+
+        # Checks
+        tests 'equals 10' { is( $var_a + $var_b, 10, "sum is ten" )}
+        tests 'both vars are true' {
+            ok( $var_a, "var_a is true" );
+            ok( $var_b, "var_b is true" );
+        }
+    }
+
+=head2 CHAPTER 4.3 - OBJECT METHODS
+
+You can also define test groups, setups, and teardowns as methods on your test
+object.
+
+    sub setup_my_setup {
+        my $self = shift;
+        print "methods prefixed by setup_ will be run before tests defined as methods.";
+    }
+
+    sub test_method_as_test_by_prefix {
+        my $self = shift;
+        ok( 1, "methods prefixed by test_ will be run as method." );
+    }
+
+    sub teardown_my_teardown {
+        my $self = shift;
+        print "method prefixed by teardown_ will be run after tests defined as methods."
+    }
+
+=head1 CHAPTER 5 - CONFIGURATION
+
+Fennec is highly configurable. By default Fennec provides a sane configuration.
+The two main items to configure are the individual test files themselves, and
+the runner. When using L<Fennec::Standalone> this distinction remains, however
+both are configured within each test file.
+
+=head2 CHAPTER 5.1 - IN-TEST CONFIGURATION
+
+These optionsh are consistant between managed and standalone tests. These
+options are specified in test files when importing Fennec or
+Fennec::Standalone.
+
+    use Fennec OPTION => VALUE, ...;
+    # or
+    use Fennec::Standalone OPTION => VALUE, ...;
+
+=over 4
+
+=item random => $bool
+
+Default is true. When true test groups and workflows will be run in random
+order. When false tests will run in hash key order, which is consistant though
+unpredictable.
+
+=item sort => $bool
+
+Default is false. When true test groups and workflows will be run in sorted
+order.
+
+=item asserts => \@list
+
+Used as a shortcut for loading additional assertion libraries. Each item should
+be a package name with the leading Fennec::Assert removed.
+
+=item workflows => \@list
+
+Used as a shortcut for loading additional workflow libraries. Each item should
+be a package name with the leading Fennec::workflow removed.
+
+=item meta => { ... }
+
+*YOU ALMOST CERTAINLY WILL NOT NEED TO SET THIS*
+
+TODO - Fill this in
+
+=back
+
+=head2 CHAPTER 5.2 - CONFIGURING THE RUNNER
+
+=over 2
+
+=item Managed Suite
+
+For managed tests these configuration items should go in t/Fennec.t:
+
+    #!/usr/bin/perl
+    ...
+    'Fennec::Runner'->init(
+        #### CONFIG OPTIONS GO HERE ####
+        OPTION => VALUE,
+        ...
+    );
+    ...
+
+=item Standalone
+
+For Standalone tests the runner is configured using an import option.
+
+    use Fennec::Standalone runner => { OPTION => VALUE, ... };
+
+=back
+
+=head3 CHAPTER 5.2.1 - Runner Configuration Options
+
+These are the runner configuration options, many of these do not make sence in
+a standalone test.
+
+=over 4
+
+=item parallel_files => $INTEGER
+
+Default: 2
+
+How many test files to run in parallel.
+
+=item parallel_tests => $INTEGER
+
+Default: 2
+
+How many test groups to run in parallel.
+
+=item default_asserts => \@LIST
+
+Default: [ 'Core' ]
+
+Assertion libraries to load by default. The leading Fennec::Assert may be
+omitted.
+
+=item default_workflows => \@LIST
+
+Default: [qw/Spec Case Methods/],
+
+Workflow libraries to load by default. The leading Fennec::Workflow may be
+omitted.
+
+=item handlers => \@LIST
+
+Default: [ 'TAP' ]
+
+Output handlers to load by default. The leading Fennec::Handler may be omitted.
+
+=item collector => 'CLASS::NAME'
+
+Default: 'Files'
+
+Collector to use by default. The leading Fennec::Collector may be omitted.
+
+=item cull_delay => $SECONDS_FLOAT
+
+Default: 0.01
+
+How frequently the collector should check for new results. Lower is more
+frequently.
+
+=item filetypes => \@LIST
+
+Default: [ 'Module' ]
+
+File types to load by default. The leading Fennec::FileType may be omitted.
+
+=item ignore => \@LIST
+
+Default: undef
+
+List of filenames and regexes that specify files that should be ignored.
+
+=item root_workflow_class
+
+Default: Fennec::Workflow
+
+The root workflow class to which all workflows will be children.
+
+=item random => $BOOL
+
+Default: TRUE
+
+When true test groups and workflows will be run in random order. When false
+tests will run in hash key order, which is consistant though unpredictable.
+
+=back
+
+=head3 CHAPTER 5.2.2 - Overriding Runner Options on The Command-Line
+
+
+
+=head1 CHAPTER 6 - EDITOR INTEGRATION
+
+=head2 CHAPTER 6.1 - GENERIC EDITOR HOWTO
+
+=head2 CHAPTER 6.2 - VIM INTEGRATION
+
+=head2 CHAPTER 6.3 - EMACS INTEGRATION
+
+=head1 CHAPTER 7 - ADVANCED TOPICS
+
+=head2 CHAPTER 7.1 - OUTPUT HANDLERS
+
+=head2 CHAPTER 7.2 - COLLECTORS
+
+=head2 CHAPTER 7.3 - MORE ON TEST::BUILDER
 
 =head1 AUTHORS
 
