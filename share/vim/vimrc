@@ -3,10 +3,8 @@ augroup type
 augroup END
 
 :map <F8> :w<cr>:call RunFennecLine()<cr>
-:map <F9> :w<cr>:! prove -v -I. -Ilib -It %<CR>
 :map <F10> :w<cr>:! FENNEC_FILE='%' prove -v -I lib t/Fennec.t<cr>
 
 :imap <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
-:imap <F9> <ESC>:w<cr>:! prove -v -I. -Ilib -It %<CR>
 :imap <F10> <ESC>:w<cr>:! FENNEC_FILE='%' prove -v -I lib t/Fennec.t<cr>
 

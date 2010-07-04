@@ -348,6 +348,8 @@ describe blocks are run as methods and get $self automatically.
         describe 'feature a other stuff' { ... }
     }
 
+TODO - Need an RSPEC guru to add more here.
+
 =head2 CHAPTER 4.2 - CASES
 
 Cases are a way to run the same assertions under multiple scenarios. In the
@@ -555,11 +557,100 @@ Example:
 
 =head1 CHAPTER 6 - EDITOR INTEGRATION
 
+When editing a test file, it is useful to be able to run the test regularly on
+its own. With regular t/*.t files this is easy enough, however when test files
+are processed by a runner this can seem difficult. Fennec solves this problem
+through environment variables the editor can set. In act Fennec provides a
+mechanism to run specific test groups within a given file.
+
+The Fennec runner script (t/Fennec.t) is designed to work well with editor
+integration. Almost every configuration option can be overridden via an
+environment variables (See Chapters 5.2.1-2). In addition to configuration
+variables, the script recognises the following variables:
+
+=over 4
+
+=item FENNEC_SEED
+
+When Fennec runs it prints the random seed that is used. This seed can be used
+with this variable to reproduce a previous run.
+
+=item FENNEC_FILE
+
+Used to tell the runner to only run the specified file. Useful when working on
+a specific test and in editor integration.
+
+=item FENNEC_ITEM
+
+Used to tell the runner to only run the specified item. Useful when working on
+a specific test and in editor integration.
+
+The item can be either a group name, workflow name, or line number that defines
+either of those.
+
+=back
+
 =head2 CHAPTER 6.1 - GENERIC EDITOR HOWTO
+
+Editor integration generally means binding a key combination to run the current
+test file. With Fennec it means the same, with the addition of binding a second
+combination for running the current part of the current test file.
+
+=over 4
+
+=item Running the current file
+
+Most editors that provide binding support can run a command and provide the
+name of the current file. You should bind your key to run the t/Fennec.t script
+while setting the FENNEC_FILE environment variable to the current test file.
+
+Example Command:
+
+    FENNEC_FILE='%CURFILE' %PDIR/t/Fennec.t
+
+=item Running the current part of the current file
+
+The traditional approach to this would be to train your editor to find the name
+of the section your editing and pass that to a command. The problem with that
+system is the existing and growing veriety of ways to define groups and
+workflows. Fennec does support this system, but also provides a simpler way.
+
+Internally Fennec attempts to track line numbers as groups and workflows are
+define. Since workflows are all defined before any are run, you can simply pass
+in a line number and fennec will figure out the rest for you. Line number
+deduction is not 100% perfect, but is good enough.
+
+The environment variable FENNEC_ITEM is used to provide either the line number
+or group name.
+
+Example Command:
+
+    FENNEC_FILE='%CURFILE' FENNEC_ITEM='14' %PDIR/t/Fennec.t
+
+=back
 
 =head2 CHAPTER 6.2 - VIM INTEGRATION
 
+Fennec provides 2 files in the dist used for vim integration.
+
+=over 4
+
+=item share/vim/functions.vim
+
+This file defines the RunFennecLine() function. This function runs the current
+test group in the current file.
+
+=item share/vim/vimrc
+
+This file binds F10 to run the current file, and F8 to run the current part of
+the current file.
+
+=back
+
 =head2 CHAPTER 6.3 - EMACS INTEGRATION
+
+Currently there are no emacs users developing Fennec. We welcome anyone who
+would fill in this section.
 
 =head1 CHAPTER 7 - ADVANCED TOPICS
 
