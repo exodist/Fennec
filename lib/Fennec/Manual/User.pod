@@ -267,6 +267,12 @@ will be the name of the tested package prefixed with TEST::. If you deviate
 from this style fennec_scaffold.pl will not find your test files and will
 assume they do not exist.
 
+=item t/Fennec.t
+
+This is the script that runs all your Fennec tests. It also doubles as a global
+configuration file. Most config options can be overiridden using environment
+variables. See Chapter 5 - Configuration for more info.
+
 =item fennec_run.pl
 
 This is identical to the default t/Fennec.t file. It can be used to run fennec
@@ -420,9 +426,7 @@ TODO - Fill this in
 
 =back
 
-=head2 CHAPTER 5.1 - CONFIGURING THE RUNNER
-
-Where the runner is configured depends on your test style.
+=head2 CHAPTER 5.2 - CONFIGURING THE RUNNER
 
 =over 2
 
@@ -446,6 +450,8 @@ For Standalone tests the runner is configured using an import option.
     use Fennec::Standalone runner => { OPTION => VALUE, ... };
 
 =back
+
+=head3 CHAPTER 5.2.1 - Runner Configuration Options
 
 These are the runner configuration options, many of these do not make sence in
 a standalone test.
@@ -523,6 +529,10 @@ When true test groups and workflows will be run in random order. When false
 tests will run in hash key order, which is consistant though unpredictable.
 
 =back
+
+=head3 CHAPTER 5.2.2 - Overriding Runner Options on The Command-Line
+
+
 
 =head1 CHAPTER 6 - EDITOR INTEGRATION
 
