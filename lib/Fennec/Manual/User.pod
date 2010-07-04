@@ -57,9 +57,7 @@ t/my_test.t:
 By default, Fennec will provide the following assert functions. See each
 referenced package fore more details.
 
-=over 2
-
-=item L<Fennec::Assert::Core::Simple>
+=head4 L<Fennec::Assert::Core::Simple>
 
 =over 2
 
@@ -67,7 +65,7 @@ referenced package fore more details.
 
 =back
 
-=item L<Fennec::Assert::Core::More>
+=head4 L<Fennec::Assert::Core::More>
 
 =over 2
 
@@ -89,7 +87,7 @@ referenced package fore more details.
 
 =back
 
-=item L<Fennec::Assert::Core::Exception>
+=head4 L<Fennec::Assert::Core::Exception>
 
 =over 2
 
@@ -103,7 +101,7 @@ referenced package fore more details.
 
 =back
 
-=item L<Fennec::Assert::Core::Warn>
+=head4 L<Fennec::Assert::Core::Warn>
 
 =over 2
 
@@ -121,7 +119,7 @@ referenced package fore more details.
 
 =back
 
-=item L<Fennec::Assert::Core::Package>
+=head4 L<Fennec::Assert::Core::Package>
 
 =over 2
 
@@ -137,7 +135,7 @@ referenced package fore more details.
 
 =back
 
-=item L<Fennec::Assert::Core::Anonclass>
+=head4 L<Fennec::Assert::Core::Anonclass>
 
 =over 2
 
@@ -145,11 +143,9 @@ referenced package fore more details.
 
 =back
 
-=back
-
 =head2 CHAPTER 1.4 - CUSTOM INLINE ASSERTIONS
 
-TODO - http://github.com/exodist/Fennec/issues/#issue/60
+TODO - L<http://github.com/exodist/Fennec/issues/#issue/60>
 
 =head1 CHAPTER 2 - SUITE MANAGEMENT
 
