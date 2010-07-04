@@ -157,7 +157,7 @@ There are two ways to manage a test suite with Fennec. The simple way is to
 simply write .t files that use L<Fennec::Standalone>. The other way is to turn
 control over to the Fennec 'runner' script.
 
-=head2 CHAPTER 2.1 - STANDALONE
+=head2 CHAPTER 2.1 - STANDALONE FILES
 
 Each Fennec test file is independent. Prove iterates the files for you running
 them in order. Every test has the overheard of re-loading Fennec and its tools.
@@ -179,7 +179,7 @@ people have strong opinions about runners, usually unfavorable ones. Runners
 often have the problem that it is difficult to run a single test file.
 
 Fennec has many command-line and editor integration tools that solve the most
-commn complaints about runners. See Chapter 2.2.1 and Chapter 5 for more
+common complaints about runners. See Chapter 2.2.1 and Chapter 5 for more
 details.
 
 To generate t/Fennec.t use the fennec_init command. This will create the file
@@ -188,65 +188,258 @@ file. See Chapter 2.3 - Configuration for more details.
 
 =head3 CHAPTER 2.2.1 - COMMAND LINE TOOLS
 
-
-
-=head2 CHAPTER 2.3 - CONFIGURATION
-
-=head1 CHAPTER 3 - WORKFLOWS AND GROUPS
-
-=head2 CHAPTER 3.1 - OLD SCHOOL
-
-=head2 CHAPTER 3.2 - SIMPLE TEST GROUPS
+Fennecs command-line tools are intended to simplify working with Fennec.
 
 =over 4
 
-=item Test Groups
+=item fennec_init
 
-Test groups are tests placed inside a grouping method. Grouping methods are
-typically defined using the 'tests' keyword. The 'tests' keyword uses
-L<Devel::Declare> to work similar to the 'sub' keyword, that is no semicolon is
-required after the defenition. The keyword is further enhanced allowing for
-quoted method names.
+    $ cd projectroot
+    $ fennec_init
+    $ ls t
+        t/Fennec.t
+
+This command-line tool will generate a default Fennec.t file under the t/
+directory. This is where you start when writing a test-suite using fennec.
+
+=item fennec_prove
+
+This only applies to managed tests. This command will not work for standalone
+tests.
+
+    $ fennec_prove - - [prove options]
+    $ fennec_prove t/My/Test.pm - [prove options]
+    $ fennec_prove t/My/Test.pm test_name [prove options]
+    $ fennec_prove t/My/Test.pm line_number [prove options]
+
+This is a wrapper around prove that lets you run a specific fennec test file,
+and optionally a specific test name or line number within that file. Running a
+specific line number is not 100% accurate, but pretty close.
+
+=item fennec_scaffold.pl
+
+This will create test modules for all modules that do not currently have a
+test. It will find all modules under lib/ and create a test under t/. The
+created test file will have a single require_ok( module_name ) test.
+
+Test names are assumed to follow the standard format. t/ will mirror lib/, and
+test module names will be the same as the module being tested. Package names
+will be the name of the tested package prefixed with TEST::. If you deviate
+from this style fennec_scaffold.pl will not find your test files and will
+assume they do not exist.
+
+=item fennec_run.pl
+
+This is identical to the default t/Fennec.t file. It can be used to run fennec
+tests in a project without a t/Fennec.t.
+
+=back
+
+=head1 CHAPTER 3 - TEST GROUPING
+
+Test groups are methods containing assertions, typically defined using the
+'tests' keyword. Tests will typically b. grouped based on the feature or
+functionality being tested.
+
+The 'tests' keyword uses L<Devel::Declare> to work similar to the 'sub'
+keyword, that is no semicolon is required after the defenition. The keyword is
+further enhanced allowing for single or double quoted method names.
 
     tests 'name of group' {
         ok( 1, "name" );
         ...
     }
 
-=item Test Workflows
+    tests bareword_name { ... }
 
-Workflows are how Fennec implements Behavior Driven Development or BDD. BDD is
-a way to structure tests in a more readable or managable way than script style
-tests. The most well known example of BDD is Ruby's RSPEC, of which Fennec has
-an implementation.
+    tests "double quoted" { ... }
 
-=back
+=head1 CHAPTER 4 - BEHAVIOR DRIVEN DEVELOPMENT
+
+Behavior driven development or BDD is a way to structure tests in a more
+readable or managable way than script style tests. The most well known example
+of BDD is Ruby's RSPEC, of which Fennec has an implementation.
+
+Fennec implements BDD using the concept of workflows. Workflows are an
+abstraction of the common logic needed for BDD systems. Most Fennec BDD systems
+will be referred to generically as workflows.
 
 When a Fennec test is run, it will first run all your package level assertions
 (ok, is, is_deeply, etc). While doing so it will also build and prepare your
 test groups and workflows. Once the building phase is complete, Fennec will
-instantiate your test class, and run all groups and workflows on it.
+instantiate your test class, and run all groups and workflows on that instance.
 
-In most cases workflows and groups will be run in random order, and in
-parrallel. See the configuration section for details on modifying this
-behavior.
+=head2 CHAPTER 4.1 - RSPEC
 
+=head2 CHAPTER 4.2 - CASES
 
-=head2 CHAPTER 3.3 - RSPEC
+=head2 CHAPTER 4.3 - OBJECT METHODS
 
-=head2 CHAPTER 3.4 - CASES
+=head1 CHAPTER 5 - CONFIGURATION
 
-=head2 CHAPTER 3.5 - OBJECT METHODS
+Fennec is highly configurable. By default Fennec provides a sane cnfiguration.
+Te two main items to configure are the individual test files themselves, and
+the runner. When using L<Fennec::Standalone> the distinction remains, however
+both are configured within each test file.
 
-=head1 CHAPTER 4 - ADVANCED TOPICS
+=head2 CHAPTER 5.1 - IN-TEST CONFIGURATION
 
-=head2 CHAPTER 4.1 - CUSTOM FILE TYPES
+These optionsh are consistant between managed and standalone tests. These
+options are specified in test files when importing Fennec or
+Fennec::Standalone.
 
-=head2 CHAPTER 4.1 - OUTPUT HANDLERS
+    use Fennec OPTION => VALUE, ...;
+    # or
+    use Fennec::Standalone OPTION => VALUE, ...;
 
-=head2 CHAPTER 4.2 - COLLECTORS
+=over 4
 
-=head1 CHAPTER 5 - EDITOR INTEGRATION
+=item random => $bool
+
+Default is true. When true test groups and workflows will be run in random
+order. When false tests will run in hash key order, which is consistant though
+unpredictable.
+
+=item sort => $bool
+
+Default is false. When true test groups and workflows will be run in sorted
+order.
+
+=item asserts => \@list
+
+Used as a shortcut for loading additional assertion libraries. Each item should
+be a package name with the leading Fennec::Assert removed.
+
+=item workflows => \@list
+
+Used as a shortcut for loading additional workflow libraries. Each item should
+be a package name with the leading Fennec::workflow removed.
+
+=item meta => { ... }
+
+*YOU ALMOST CERTAINLY WILL NOT NEED TO SET THIS*
+
+TODO - Fill this in
+
+=back
+
+=head2 CHAPTER 5.1 - CONFIGURING THE RUNNER
+
+Where the runner is configured depends on your test style.
+
+=over 2
+
+=item Managed Suite
+
+For managed tests these configuration items should go in t/Fennec.t:
+
+    #!/usr/bin/perl
+    ...
+    'Fennec::Runner'->init(
+        #### CONFIG OPTIONS GO HERE ####
+        OPTION => VALUE,
+        ...
+    );
+    ...
+
+=item Standalone
+
+For Standalone tests the runner is configured using an import option.
+
+    use Fennec::Standalone runner => { OPTION => VALUE, ... };
+
+=back
+
+These are the runner configuration options, many of these do not make sence in
+a standalone test.
+
+=over 4
+
+=item parallel_files => $INTEGER
+
+Default: 2
+
+How many test files to run in parallel.
+
+=item parallel_tests => $INTEGER
+
+Default: 2
+
+How many test groups to run in parallel.
+
+=item default_asserts => \@LIST
+
+Default: [ 'Core' ]
+
+Assertion libraries to load by default. The leading Fennec::Assert may be
+omitted.
+
+=item default_workflows => \@LIST
+
+Default: [qw/Spec Case Methods/],
+
+Workflow libraries to load by default. The leading Fennec::Workflow may be
+omitted.
+
+=item handlers => \@LIST
+
+Default: [ 'TAP' ]
+
+Output handlers to load by default. The leading Fennec::Handler may be omitted.
+
+=item collector => 'CLASS::NAME'
+
+Default: 'Files'
+
+Collector to use by default. The leading Fennec::Collector may be omitted.
+
+=item cull_delay => $SECONDS_FLOAT
+
+Default: 0.01
+
+How frequently the collector should check for new results. Lower is more
+frequently.
+
+=item filetypes => \@LIST
+
+Default: [ 'Module' ]
+
+File types to load by default. The leading Fennec::FileType may be omitted.
+
+=item ignore => \@LIST
+
+Default: undef
+
+List of filenames and regexes that specify files that should be ignored.
+
+=item root_workflow_class
+
+Default: Fennec::Workflow
+
+The root workflow class to which all workflows will be children.
+
+=item random => $BOOL
+
+Default: TRUE
+
+When true test groups and workflows will be run in random order. When false
+tests will run in hash key order, which is consistant though unpredictable.
+
+=back
+
+=head1 CHAPTER 6 - EDITOR INTEGRATION
+
+=head2 CHAPTER 6.1 - GENERIC EDITOR HOWTO
+
+=head2 CHAPTER 6.2 - VIM INTEGRATION
+
+=head2 CHAPTER 6.3 - EMACS INTEGRATION
+
+=head1 CHAPTER 7 - ADVANCED TOPICS
+
+=head2 CHAPTER 7.1 - OUTPUT HANDLERS
+
+=head2 CHAPTER 7.2 - COLLECTORS
 
 =head1 AUTHORS
 
