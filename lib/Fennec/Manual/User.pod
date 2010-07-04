@@ -339,10 +339,10 @@ values in var_a and var_b.
         my ( $var_a, $var_b );
 
         # Scenarios
-        case set_a { ( $var_a, $var_b ) = ( 5, 5 )}
-        case set_b { ( $var_a, $var_b ) = ( 4, 6 )}
-        case set_c { ( $var_a, $var_b ) = ( 3, 7 )}
-        case set_d { ( $var_a, $var_b ) = ( 2, 8 )}
+        case set_a {( $var_a, $var_b ) = ( 5, 5 )}
+        case set_b {( $var_a, $var_b ) = ( 4, 6 )}
+        case set_c {( $var_a, $var_b ) = ( 3, 7 )}
+        case set_d {( $var_a, $var_b ) = ( 2, 8 )}
 
         # Checks
         tests 'equals 10' { is( $var_a + $var_b, 10, "sum is ten" )}
@@ -354,11 +354,29 @@ values in var_a and var_b.
 
 =head2 CHAPTER 4.3 - OBJECT METHODS
 
+You can also define test groups, setups, and teardowns as methods on your test
+object.
+
+    sub setup_my_setup {
+        my $self = shift;
+        print "methods prefixed by setup_ will be run before tests defined as methods.";
+    }
+
+    sub test_method_as_test_by_prefix {
+        my $self = shift;
+        ok( 1, "methods prefixed by test_ will be run as method." );
+    }
+
+    sub teardown_my_teardown {
+        my $self = shift;
+        print "method prefixed by teardown_ will be run after tests defined as methods."
+    }
+
 =head1 CHAPTER 5 - CONFIGURATION
 
-Fennec is highly configurable. By default Fennec provides a sane cnfiguration.
-Te two main items to configure are the individual test files themselves, and
-the runner. When using L<Fennec::Standalone> the distinction remains, however
+Fennec is highly configurable. By default Fennec provides a sane configuration.
+The two main items to configure are the individual test files themselves, and
+the runner. When using L<Fennec::Standalone> this distinction remains, however
 both are configured within each test file.
 
 =head2 CHAPTER 5.1 - IN-TEST CONFIGURATION
