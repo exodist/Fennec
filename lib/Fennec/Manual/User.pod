@@ -147,6 +147,49 @@ referenced package fore more details.
 
 TODO - L<http://github.com/exodist/Fennec/issues/#issue/60>
 
+=head2 CHAPTER 1.5 - TODO AND SKIP
+
+Fennec has the concept of todo tests, tests which are expected to fail. You can
+also mark groups as skip if they are really bad.
+
+If an exception is thrown within a TODO block or set, a failing TODO result
+will be generated alerting you. This is a todo test and will not count as a
+failure in the grand scheme.
+
+=over 2
+
+=item Mark a test group as todo
+
+    # Failures will not count.
+    tests not_yet_implemented => (
+        todo => "This will fail",
+        method => sub {
+            my $self = shift;
+            ok( 0, "Hello world" );
+        },
+    );
+
+=item Skip a group completely
+
+    tests 'would die' => (
+        skip => "This will die",
+        method => sub {
+            my $self = shift;
+            die( "I eat you" );
+        },
+    );
+
+=item Skip specific asserts
+
+    tests 'some pass' => sub {
+        ok( 1, 'pass' );
+        TODO {
+            ok( 0, 'fail' );
+        } "This will fail, I will fix it later";
+    }
+
+=back
+
 =head1 CHAPTER 2 - SUITE MANAGEMENT
 
 There are two ways to manage a test suite with Fennec. The simple way is to
@@ -266,6 +309,8 @@ test groups and workflows. Once the building phase is complete, Fennec will
 instantiate your test class, and run all groups and workflows on that instance.
 
 =head2 CHAPTER 4.1 - RSPEC
+
+
 
 =head2 CHAPTER 4.2 - CASES
 
