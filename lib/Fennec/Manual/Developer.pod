@@ -129,11 +129,11 @@ This is the namespace for libraries of assert functions.
 
 Fennec provides a module that makes it easy to test itself. Anyone who has
 written libraries for Test::Builder has probably used the nightmare that is
-L<Test::Builder::Tester>. Let me assure you Fennec learne from this nightmare
+L<Test::Builder::Tester>. Let me assure you Fennec learned from this nightmare
 and does not repeat it.
 
 Fennec provides L<Fennec::Assert::Interceptor> which can override the collector
-and intercept result objects withought sending them to the main process. This
+and intercept result objects without sending them to the main process. This
 library provides the capture() function for this task. Here is a snippet from
 t/Fennec/Assert/Core/Simple.pm showing its use:
 

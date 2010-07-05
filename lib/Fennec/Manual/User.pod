@@ -24,7 +24,7 @@ L<Test::Simple> if you are not already familiar with testing in perl.
 It is worth noting that these asserts are re-implemented the Fennec way. They
 do not use Test::Builder. This was done in order to provide better diagnostics
 and output. Test::Builder tools will work under Fennec, in most cases
-withought any modification. It is also possible to tell Fennec to use the
+without any modification. It is also possible to tell Fennec to use the
 Test::Builder based tools instead of its own implementations, See Chapter 7.2.
 
 sample assertions:
