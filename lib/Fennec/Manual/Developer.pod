@@ -127,6 +127,47 @@ This is the namespace for libraries of assert functions.
 
 =head1 CHAPTER 3 - TESTING FENNEC ITSELF
 
+Fennec provides a module that makes it easy to test itself. Anyone who has
+written libraries for Test::Builder has probably used the nightmare that is
+L<Test::Builder::Tester>. Let me assure you Fennec learne from this nightmare
+and does not repeat it.
+
+Fennec provides L<Fennec::Assert::Interceptor> which can override the collector
+and intercept result objects withought sending them to the main process. This
+library provides the capture() function for this task. Here is a snippet from
+t/Fennec/Assert/Core/Simple.pm showing its use:
+
+    package TEST::Fennec::Assert::Simple;
+    use strict;
+    use warnings;
+    use Fennec asserts => [qw/ Core Interceptor /];
+
+    tests 'ok' => sub {
+        my $output = capture {
+            ok( 1, 'pass' );
+            ok( 0, 'fail' );
+            ok( 1 );
+            ok( 0 );
+        };
+
+        is( @$output, 4, "4 results" );
+
+        is( $output->[0]->pass, 1, "passed" );
+        is( $output->[0]->name, 'pass', 'name' );
+
+        is( $output->[1]->pass, 0, "failed" );
+        is( $output->[1]->name, 'fail', 'name' );
+
+        is( $output->[2]->pass, 1, "passed" );
+        is( $output->[2]->name, 'nameless test', 'name' );
+
+        is( $output->[3]->pass, 0, "failed" );
+        is( $output->[3]->name, 'nameless test', 'name' );
+    };
+
+Each item will be one of the subclasses of L<Fennec::Output>, such as
+L<Fennec::Output::Result> and L<Fennec::Output::Diag>.
+
 =head1 CHAPTER 4 - WRITING ASSERTION LIBRARIES
 
 =head2 CHAPTER 4.1 - WRITING NEW LIBRARIES
