@@ -228,6 +228,41 @@ sub _result_diag {
 }
 
 1;
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=head2 init
+
+=head2 handle
+
+=head2 starting_file
+
+=head2 result
+
+=head2 stdout
+
+=head2 stderr
+
+=head2 finish
+
+=head2 fennec_error
+
+=head2 _test_count
+
+=head2 _file_count
+
+=head2 _output
+
+=head2 _benchmark
+
+=head2 _status
+
+=head2 _postfix
+
+=head2 _result_line
+
+=head2 _result_diag
 
 =head1 MANUAL
 
