@@ -1,0 +1,320 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Fennec - Workflow based testing framework for Perl.</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:exodist@dev-virgin.open-exodus.net" />
+</head>
+
+<body style="background-color: white">
+<table border="0" width="100%" cellspacing="0" cellpadding="3">
+<tr><td class="block" style="background-color: #cccccc" valign="middle">
+<big><strong><span class="block">&nbsp;Fennec - Workflow based testing framework for Perl.</span></strong></big>
+</td></tr>
+</table>
+
+
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#manual">MANUAL</a></li>
+	<li><a href="#features">FEATURES</a></li>
+	<li><a href="#mission">MISSION</a></li>
+	<li><a href="#api_documentation">API DOCUMENTATION</a></li>
+	<li><a href="#fennec_module_api">FENNEC MODULE API</a></li>
+	<ul>
+
+		<li><a href="#class_methods">Class methods</a></li>
+		<li><a href="#object_methods">Object methods</a></li>
+	</ul>
+
+	<li><a href="#authors">AUTHORS</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+
+<hr name="index" />
+</div>
+<!-- INDEX END -->
+
+<p>
+</p>
+<hr />
+<h1><a name="name">NAME</a></h1>
+<p>Fennec - Workflow based testing framework for Perl.</p>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p>Fennec is a workflow based testing framework for Perl. It is designed to be
+easy to use, easy to extend, and to provide an incredible array of tools while
+staying out of your way. Fennec provides everything your used to in Perl
+testing framework along with enhancements inspired from other frameworks.</p>
+<p>Fennec works just like traiditional <a href="/Test/Builder.html">the Test::Builder manpage</a> tools in that it allows
+you to write script style tests. Fennec takes this a step further by
+introducing behavior driven development with the concepts of test groups and
+workflows. Fennec also requires that each test file define a class which Fennec
+will instantiate.</p>
+<p>Please see these docs for additional details:</p>
+<dl>
+<dt><strong><a name="fennec_manual_quickstart" class="item"><a href="/Fennec/Manual/Quickstart.html">the Fennec::Manual::Quickstart manpage</a></a></strong></dt>
+
+<dt><strong><a name="fennec_manual_user" class="item"><a href="/Fennec/Manual/User.html">the Fennec::Manual::User manpage</a></a></strong></dt>
+
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<p>t/MyModule.t:</p>
+<pre>
+    package TEST::MyModule;
+    use strict;
+    use warnings;
+    use Fennec::Standalone;</pre>
+<pre>
+    use_or_skip 'Dependancy::Module';</pre>
+<pre>
+    use_ok 'MyModule';</pre>
+<pre>
+    tests simple {
+        can_ok( 'MyModule', 'new' );
+        isa_ok( MyModule-&gt;new(), 'MyModule' );
+        dies_ok { MyModule-&gt;Thing_that_dies } &quot;thing dies&quot;;
+        warning_like { MyModule-&gt;Thing_that_warns } qr/.../, &quot;thing warns&quot;;</pre>
+<pre>
+        is_deeply( ... );
+        ...
+    }</pre>
+<pre>
+    describe 'RSPEC Tests' {
+        # Automatically get $self
+        before_each { $self-&gt;do_something }
+        after_each { $self-&gt;do_something_else }</pre>
+<pre>
+        it test_one {
+            ok( 1, &quot;1 is true!&quot; )
+        }</pre>
+<pre>
+        describe nested { ... };
+    }</pre>
+<pre>
+    cases some_primes {
+        my $var;
+        case two { $var = 2 }
+        case three { $var = 3 }</pre>
+<pre>
+        tests is_prime {
+            ok( is_prime($var), &quot;var is prime&quot; )
+        }
+    }</pre>
+<pre>
+    done_testing;</pre>
+<p>
+</p>
+<hr />
+<h1><a name="manual">MANUAL</a></h1>
+<dl>
+<dt><strong><a name="fennec_manual_quickstart2" class="item"><a href="/Fennec/Manual/Quickstart.html">the Fennec::Manual::Quickstart manpage</a></a></strong></dt>
+
+<dd>
+<p>The quick guide to using Fennec.</p>
+</dd>
+<dt><strong><a name="fennec_manual_user2" class="item"><a href="/Fennec/Manual/User.html">the Fennec::Manual::User manpage</a></a></strong></dt>
+
+<dd>
+<p>The extended guide to using Fennec.</p>
+</dd>
+<dt><strong><a name="fennec_manual_developer" class="item"><a href="/Fennec/Manual/Developer.html">the Fennec::Manual::Developer manpage</a></a></strong></dt>
+
+<dd>
+<p>The guide to developing and extending Fennec.</p>
+</dd>
+<dt><strong><a name="fennec_manual" class="item"><a href="/Fennec/Manual.html">the Fennec::Manual manpage</a></a></strong></dt>
+
+<dd>
+<p>Documentation guide.</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="features">FEATURES</a></h1>
+<p>Fennec offers the following features, among others.</p>
+<dl>
+<dt><strong><a name="declarative_syntax" class="item">Declarative syntax</a></strong></dt>
+
+<dt><strong><a name="large_library_of_core_assert_functions" class="item">Large library of core assert functions</a></strong></dt>
+
+<dt><strong><a name="plays_nicely_with_test_builder_tools" class="item">Plays nicely with <a href="/Test/Builder.html">the Test::Builder manpage</a> tools</a></strong></dt>
+
+<dt><strong><a name="better_diagnostics" class="item">Better diagnostics</a></strong></dt>
+
+<dt><strong><a name="highly_extendable" class="item">Highly Extendable</a></strong></dt>
+
+<dt><strong><a name="works_with_prove" class="item">Works with prove</a></strong></dt>
+
+<dt><strong><a name="full_suite_management" class="item">Full-Suite management</a></strong></dt>
+
+<dt><strong><a name="standalone_test_support" class="item">Standalone test support</a></strong></dt>
+
+<dt><strong><a name="support_for_spec_and_other_test_workflows" class="item">Support for SPEC and other test workflows</a></strong></dt>
+
+<dt><strong><a name="forking_just_works" class="item">Forking just works</a></strong></dt>
+
+<dt><strong><a name="files" class="item">Run only specific test sets within test files (for development)</a></strong></dt>
+
+<dt><strong><a name="intercept_or_hook_into_most_steps_or_components_by_design" class="item">Intercept or hook into most steps or components by design</a></strong></dt>
+
+<dt><strong><a name="no_large_dependancy_chains" class="item">No large dependancy chains</a></strong></dt>
+
+<dt><strong><a name="attributes" class="item">No attributes (none of these: <a href="http://perldoc.perl.org/attributes.html">http://perldoc.perl.org/attributes.html</a>)</a></strong></dt>
+
+<dt><strong><a name="no_use_of_end_blocks" class="item">No use of END blocks</a></strong></dt>
+
+<dt><strong><a name="no_use_of_sub_uplevel" class="item">No use of Sub::Uplevel</a></strong></dt>
+
+<dt><strong><a name="no_source_filters" class="item">No source filters</a></strong></dt>
+
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="mission">MISSION</a></h1>
+<p><a href="/Fennec/Mission.html">the Fennec::Mission manpage</a> - Why does Fennec exist?</p>
+<p>
+</p>
+<hr />
+<h1><a name="api_documentation">API DOCUMENTATION</a></h1>
+<p>API Documentation covers object internals. See the POD within each individual
+module.</p>
+<p>
+</p>
+<hr />
+<h1><a name="fennec_module_api">FENNEC MODULE API</a></h1>
+<p><strong>This section only covers the API for Fennec.pm. See <a href="/Fennec/Manual.html">the Fennec::Manual manpage</a> and other
+documentation for other module API's.</strong></p>
+<p><strong>This section is not for those who simply wish to write tests, this is for
+people who want to extend Fennec.</strong></p>
+<p>
+</p>
+<h2><a name="class_methods">Class methods</a></h2>
+<dl>
+<dt><strong><a name="import" class="item">import( %proto )</a></strong></dt>
+
+<dd>
+<pre>
+    use Fennec %proto;</pre>
+<p>Called when you use the Fennec module. %proto is key/value pairs for
+configuration. Meta data keys should be placed in a hashref under the 'meta'
+key.</p>
+</dd>
+<dt><strong><a name="new" class="item">my $obj = $class-&gt;new( %proto )</a></strong></dt>
+
+<dd>
+<p>Create a new instance. %proto can be all the same key/value pairs as <a href="#import"><code>import()</code></a>,
+except that the meta data must be in a hashref under the 'meta' key. You must
+also specify a 'caller' key with an arrayref containing a package name,
+filename, and line number for the test file.</p>
+</dd>
+</dl>
+<p>
+</p>
+<h2><a name="object_methods">Object methods</a></h2>
+<p>When you use Fennec, it will create an object internally to do some
+initialization and exporting. These are it's methods.</p>
+<dl>
+<dt><strong><a name="test_class" class="item"><code>test_class()</code></a></strong></dt>
+
+<dd>
+<p>Returns the test class. This will either be determined by <a href="#import"><code>import()</code></a> or provided
+to import/new via the first element of the arrayref provided under the 'caller'
+key.</p>
+</dd>
+<dt><strong><a name="test_file" class="item"><code>test_file()</code></a></strong></dt>
+
+<dd>
+<p>Returns the test filename. This will either be determined by <a href="#import"><code>import()</code></a> or provided
+to import/new via the second element of the arrayref provided under the
+'caller' key.</p>
+</dd>
+<dt><strong><a name="imported_line" class="item"><code>imported_line()</code></a></strong></dt>
+
+<dd>
+<p>Returns the line number where fennec was used. This will either be determined
+by <a href="#import"><code>import()</code></a> or provided to import/new via the third element of the arrayref
+provided under the 'caller' key.</p>
+</dd>
+<dt><strong><a name="workflows" class="item"><code>workflows()</code></a></strong></dt>
+
+<dd>
+<p>Returns an arrayref containing the workflow names provided at import, or if
+none were provided, then the defaults will be provided.</p>
+</dd>
+<dt><strong><a name="asserts" class="item"><code>asserts()</code></a></strong></dt>
+
+<dd>
+<p>Returns an arrayref containing the assert names provided at import, or if
+none were provided, then the defaults will be provided.</p>
+</dd>
+<dt><strong><a name="root_workflow" class="item"><code>root_workflow()</code></a></strong></dt>
+
+<dd>
+<p>Returns the classname of the root workflow that will be used.</p>
+</dd>
+<dt><strong><a name="subclass" class="item"><code>subclass()</code></a></strong></dt>
+
+<dd>
+<p>Modifies the test classes @ISA array to make it a subclass of
+<a href="/Fennec/TestFile.html">the Fennec::TestFile manpage</a></p>
+</dd>
+<dt><strong><a name="init_meta" class="item"><code>init_meta()</code></a></strong></dt>
+
+<dd>
+<p>Initializes the meta object for the test class.</p>
+</dd>
+<dt><strong><a name="export_tools" class="item"><code>export_tools()</code></a></strong></dt>
+
+<dd>
+<p>Export the basic tools to the test class</p>
+</dd>
+<dt><strong><a name="export_workflows" class="item"><code>export_workflows()</code></a></strong></dt>
+
+<dd>
+<p>Export the desired workflows to the test class</p>
+</dd>
+<dt><strong><a name="export_asserts" class="item"><code>export_asserts()</code></a></strong></dt>
+
+<dd>
+<p>Export the desired asserts to the test class</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="authors">AUTHORS</a></h1>
+<p>Chad Granum <em><a href="mailto:exodist7@gmail.com">exodist7@gmail.com</a></em></p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (C) 2010 Chad Granum</p>
+<p>Fennec is free software; Standard perl licence.</p>
+<p>Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the license for more details.</p>
+<table border="0" width="100%" cellspacing="0" cellpadding="3">
+<tr><td class="block" style="background-color: #cccccc" valign="middle">
+<big><strong><span class="block">&nbsp;Fennec - Workflow based testing framework for Perl.</span></strong></big>
+</td></tr>
+</table>
+
+</body>
+
+</html>
