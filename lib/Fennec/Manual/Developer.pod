@@ -8,9 +8,63 @@ Guide to developing plugins or enhancements for Fennec.
 
 =head1 CHAPTER 1 - INNER WORKINGS
 
-=head2 CHAPTER 1.1 - STANDALONE WORKFLOW
+Fennec starts by loading a runner, even in standalone. This runner does the
+following:
 
-=head2 CHAPTER 1.2 - SUITE WORKFLOW
+=head3 STARTUP PHASE
+
+=over 4
+
+=item Gather process information
+
+=item Take over Test::Builder if needed
+
+=item Start a collector to gather results
+
+=item Initialize output handlers
+
+=item Create a fork controller aka threader (NOT USING THREADS)
+
+Threader should not be confused with perls horrible threading.
+
+=back
+
+=head3 TESTING PHASE
+
+The following is one for each test file the runner finds. For standalone tests
+it occurs only once; for only the one file. The runner may do this in multiple
+processes, one per file.
+
+=over 4
+
+=item Run test file
+
+Creates test groups and workflow objects, as well as running any package level
+asserts.
+
+=item Process Workflows
+
+Workflow codeblocks are run as methods and produce additional test groups.
+
+=item Run all test groups from all workflows
+
+All the test groups defined in the file and the workflows are randomized and
+run as methods. The file process may run multiple groups at once in several
+processes.
+
+=back
+
+=head3 CLEANUP PHASE
+
+The cleanup phase tears everything down after tests have been run.
+
+=over 4
+
+=item Wait on child prcesses
+
+=item Shutdown output handles
+
+=back
 
 =head2 CHAPTER 1.3 - NAMESPACES
 
