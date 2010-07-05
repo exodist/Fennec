@@ -12,19 +12,96 @@ Guide to developing plugins or enhancements for Fennec.
 
 =head2 CHAPTER 1.2 - SUITE WORKFLOW
 
+=head2 CHAPTER 1.3 - NAMESPACES
+
+=over 4
+
+=item Fennec
+
+This is the primary Fennec namespace.
+
+=item Fennec::Workflow
+
+This is the namespace for workflow implementations. Things like RSPEC an Case
+live here.
+
+=item Fennec::Util
+
+Used for misc utility items.
+
+=item Fennec::TestSet
+
+TestSet is the class used to implement test group methods, and any workflow
+test grouping.
+
+=item Fennec::TestFile
+
+The base class for all Fennec test classes. Custom file types may subclass this
+for their own base classes.
+
+=item Fennec::Parser
+
+Namespace for Devel::Declare Magic.
+
+=item Fennec::Output
+
+This is where output objects such as results, diag, etc. live. These are the
+objects that get serialized and sent to the handlers in the runner.
+
+=item Fennec::Handler
+
+Thi is where output handlers go. These objects take the output objects and
+present them to the user in a useful way such as TAP.
+
+=item Fennec::FileType
+
+The namespace for filetype classes which are used to load test files.
+
+=item Fennec::Collector
+
+Namespace for collectors which funnel results to the parent thread.
+
+=item Fennec::Base
+
+This is where various base classes go.
+
+=item Fennec::Assert
+
+This is the namespace for libraries of assert functions.
+
+=back
+
 =head1 CHAPTER 2 - TESTING FENNEC ITSELF
 
 =head1 CHAPTER 3 - WRITING ASSERTION LIBRARIES
 
 =head2 CHAPTER 3.1 - WRAPPING TEST::BUILDER BASED TOOLS
 
-=head1 CHAPTER 4 - WRITING CUSTOM FILE TYPES
+=head1 CHAPTER 4 - WRITING CUSTOM ASSERTION LIBRARIES
 
-=head1 CHAPTER 5 - WRITING OUTPUT HANDLERS
+Fennec::Assert
 
-=head1 CHAPTER 6 - WRITING OUTPUT COLLECTORS
+=head1 CHAPTER 5 - WRITING CUSTOM OUTPUT HANDLERS
 
-=head1 CHAPTER 7 - WRITING WORKFLOWS
+Fennec::Handler
+
+=head1 CHAPTER 6 - WRITING CUSTOM COLLECTORS
+
+Fennec::Collector
+
+=head1 CHAPTER 7 - WRITING CUSTOM FILE TYPES
+
+Fennec::FileType
+Fennec::TestFile
+
+=head1 CHAPTER 8 - WRITING CUSTOM WORKFLOWS
+
+Fennec::Workflow
+Fennec::TestSet
+
+=head1 CHAPTER 9 - WRITING CUSTOM OUTPUT OBJECTS
+
+Fennec::Output
 
 =head1 AUTHORS
 
