@@ -75,6 +75,10 @@ referenced package fore more details.
 
 =item ok( $check, $name )
 
+=item diag( $message )
+
+=item TODO { ... } $reason
+
 =back
 
 =head4 L<Fennec::Assert::Core::More>
@@ -721,7 +725,20 @@ These are minimal wrappers around the actual Test::Builder based tools.
 
 =head2 CHAPTER 8.1 - OUTPUT HANDLERS
 
+By default Fennec produces TAP output, however it provides the tools to output
+any format you can think of. You can even output to multiple formats at once.
+Output plugins are called Handlers, they can be found in the Fennec::Handler::
+namespace. See Chapter 5 - Configuration for the proper options to use.
+
 =head2 CHAPTER 8.2 - COLLECTORS
+
+Fennec allows for forking and parrallelization, it needs a way to send results
+from the child processes to the parent. This is the role of the collector.
+Collector plugins can be found in the Fennec::Collector:: namespace. See
+Chapter 5 - Configuration for the proper options to use.
+
+The default collector is based on temporary files. This collector is the most
+cross platform IPC available. A Socket based collector is in the works.
 
 =head1 AUTHORS
 
