@@ -10,6 +10,11 @@ sub new {
 }
 
 1;
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=head2 new
 
 =head1 MANUAL
 
