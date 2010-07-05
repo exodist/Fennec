@@ -1,6 +1,6 @@
 =head1 NAME
 
-Fennec::Manual::Quickstart - Dive right in to using Fennec.
+Fennec::Manual::Quickstart - Dive right into using Fennec.
 
 =head1 DESCRIPTION
 

@@ -8,23 +8,197 @@ Guide to developing plugins or enhancements for Fennec.
 
 =head1 CHAPTER 1 - INNER WORKINGS
 
-=head2 CHAPTER 1.1 - STANDALONE WORKFLOW
+Fennec starts by loading a runner, even in standalone. This runner does the
+following:
 
-=head2 CHAPTER 1.2 - SUITE WORKFLOW
+=head3 STARTUP PHASE
 
-=head1 CHAPTER 2 - TESTING FENNEC ITSELF
+=over 4
 
-=head1 CHAPTER 3 - WRITING ASSERTION LIBRARIES
+=item Gather process information
 
-=head2 CHAPTER 3.1 - WRAPPING TEST::BUILDER BASED TOOLS
+=item Take over Test::Builder if needed
 
-=head1 CHAPTER 4 - WRITING CUSTOM FILE TYPES
+=item Start a collector to gather results
 
-=head1 CHAPTER 5 - WRITING OUTPUT HANDLERS
+=item Initialize output handlers
 
-=head1 CHAPTER 6 - WRITING OUTPUT COLLECTORS
+=item Create a fork controller aka threader (NOT USING THREADS)
 
-=head1 CHAPTER 7 - WRITING WORKFLOWS
+Threader should not be confused with perls horrible threading.
+
+=back
+
+=head3 TESTING PHASE
+
+The following is one for each test file the runner finds. For standalone tests
+it occurs only once; for only the one file. The runner may do this in multiple
+processes, one per file.
+
+=over 4
+
+=item Run test file
+
+Creates test groups and workflow objects, as well as running any package level
+asserts.
+
+=item Process Workflows
+
+Workflow codeblocks are run as methods and produce additional test groups.
+
+=item Run all test groups from all workflows
+
+All the test groups defined in the file and the workflows are randomized and
+run as methods. The file process may run multiple groups at once in several
+processes.
+
+=back
+
+=head3 CLEANUP PHASE
+
+The cleanup phase tears everything down after tests have been run.
+
+=over 4
+
+=item Wait on child processes
+
+=item Shutdown output handles
+
+=back
+
+=head1 CHAPTER 2 - NAMESPACES
+
+=over 4
+
+=item Fennec
+
+This is the primary Fennec namespace.
+
+=item Fennec::Workflow
+
+This is the namespace for workflow implementations. Things like RSPEC an Case
+live here.
+
+=item Fennec::Util
+
+Used for misc utility items.
+
+=item Fennec::TestSet
+
+TestSet is the class used to implement test group methods, and any workflow
+test grouping.
+
+=item Fennec::TestFile
+
+The base class for all Fennec test classes. Custom file types may subclass this
+for their own base classes.
+
+=item Fennec::Parser
+
+Namespace for Devel::Declare Magic.
+
+=item Fennec::Output
+
+This is where output objects such as results, diag, etc. live. These are the
+objects that get serialized and sent to the handlers in the runner.
+
+=item Fennec::Handler
+
+Thi is where output handlers go. These objects take the output objects and
+present them to the user in a useful way such as TAP.
+
+=item Fennec::FileType
+
+The namespace for filetype classes which are used to load test files.
+
+=item Fennec::Collector
+
+Namespace for collectors which funnel results to the parent thread.
+
+=item Fennec::Base
+
+This is where various base classes go.
+
+=item Fennec::Assert
+
+This is the namespace for libraries of assert functions.
+
+=back
+
+=head1 CHAPTER 3 - TESTING FENNEC ITSELF
+
+Fennec provides a module that makes it easy to test itself. Anyone who has
+written libraries for Test::Builder has probably used the nightmare that is
+L<Test::Builder::Tester>. Let me assure you Fennec learned from this nightmare
+and does not repeat it.
+
+Fennec provides L<Fennec::Assert::Interceptor> which can override the collector
+and intercept result objects without sending them to the main process. This
+library provides the capture() function for this task. Here is a snippet from
+t/Fennec/Assert/Core/Simple.pm showing its use:
+
+    package TEST::Fennec::Assert::Simple;
+    use strict;
+    use warnings;
+    use Fennec asserts => [qw/ Core Interceptor /];
+
+    tests 'ok' => sub {
+        my $output = capture {
+            ok( 1, 'pass' );
+            ok( 0, 'fail' );
+            ok( 1 );
+            ok( 0 );
+        };
+
+        is( @$output, 4, "4 results" );
+
+        is( $output->[0]->pass, 1, "passed" );
+        is( $output->[0]->name, 'pass', 'name' );
+
+        is( $output->[1]->pass, 0, "failed" );
+        is( $output->[1]->name, 'fail', 'name' );
+
+        is( $output->[2]->pass, 1, "passed" );
+        is( $output->[2]->name, 'nameless test', 'name' );
+
+        is( $output->[3]->pass, 0, "failed" );
+        is( $output->[3]->name, 'nameless test', 'name' );
+    };
+
+Each item will be one of the subclasses of L<Fennec::Output>, such as
+L<Fennec::Output::Result> and L<Fennec::Output::Diag>.
+
+=head1 CHAPTER 4 - WRITING ASSERTION LIBRARIES
+
+=head2 CHAPTER 4.1 - WRITING NEW LIBRARIES
+
+=head2 CHAPTER 4.2 - WRAPPING TEST::BUILDER BASED TOOLS
+
+=head1 CHAPTER 5 - WRITING CUSTOM ASSERTION LIBRARIES
+
+Fennec::Assert
+
+=head1 CHAPTER 6 - WRITING CUSTOM OUTPUT HANDLERS
+
+Fennec::Handler
+
+=head1 CHAPTER 7 - WRITING CUSTOM COLLECTORS
+
+Fennec::Collector
+
+=head1 CHAPTER 8 - WRITING CUSTOM FILE TYPES
+
+Fennec::FileType
+Fennec::TestFile
+
+=head1 CHAPTER 9 - WRITING CUSTOM WORKFLOWS
+
+Fennec::Workflow
+Fennec::TestSet
+
+=head1 CHAPTER 10 - WRITING CUSTOM OUTPUT OBJECTS
+
+Fennec::Output
 
 =head1 AUTHORS
 

@@ -195,7 +195,7 @@ L<Fennec::Manual::Assertions>
 
 =over 4
 
-=item $newsub = tb_wrapper( sub { ... } )
+=item $newsub = tb_wrapper( sub { ... })
 
 =item $newsub = tb_wrapper( \&function_name )
 
@@ -286,32 +286,27 @@ package. Assert subclasses do not modify the @ISA whent hey are used.
 
 =back
 
-=head1 USER DOCUMENTATION
+=head1 MANUAL
 
-User documentation is for those who wish to use Fennec to write simple tests,
-or manage a test suite for a project.
+=over 2
 
-=over 4
+=item L<Fennec::Manual::Quickstart>
 
-=item L<Fennec::UserManual>
+The quick guide to using Fennec.
+
+=item L<Fennec::Manual::User>
+
+The extended guide to using Fennec.
+
+=item L<Fennec::Manual::Developer>
+
+The guide to developing and extending Fennec.
+
+=item L<Fennec::Manual>
+
+Documentation guide.
 
 =back
-
-=head1 DEVELOPER DOCUMENTATION
-
-Developer documentation is for those who wish to extend Fennec, or contribute
-to overall Fennec development.
-
-=over 4
-
-=item L<Fennec::DeveloperManual>
-
-=back
-
-=head1 API DOCUMENTATION
-
-API Documentation covers object internals. See the POD within each individual
-module.
 
 =head1 AUTHORS
 
