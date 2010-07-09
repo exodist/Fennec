@@ -134,20 +134,25 @@ tests lives_and => sub {
     );
 };
 
-tests 'masked $@' => sub {
-    warning_like {
-        my ($ret, $error) = Fennec::Assert::Core::Exception::live_or_die( sub {
-            my $obj = anonclass( subs => { DESTROY => sub { eval { 1 }}})->new;
-            die( 'apple' );
-            $obj->can( 'a' );
-        });
-    } qr/
-        code \s died \s as \s expected, \s however \s the \s error \s is \s
-        masked\. \s This \s can \s occur \s when \s an \s object's \s
-        DESTROY\(\) \s method \s calls \s eval
-    /x,
-    "got warning when masked \$@";
-};
+tests 'masked $@' => (
+    skip   => ( $^V and $^V ge '5.13.0' )
+              ? "Perl version $^V does not suffer from die in eval edge case"
+              : undef,
+    method => sub {
+        warning_like {
+            my ($ret, $error) = Fennec::Assert::Core::Exception::live_or_die( sub {
+                my $obj = anonclass( subs => { DESTROY => sub { eval { 1 }}})->new;
+                die( 'apple' );
+                $obj->can( 'a' );
+            });
+        } qr/
+            code \s died \s as \s expected, \s however \s the \s error \s is \s
+            masked\. \s This \s can \s occur \s when \s an \s object's \s
+            DESTROY\(\) \s method \s calls \s eval
+        /x,
+        "got warning when masked \$@";
+    }
+);
 
 
 1;
