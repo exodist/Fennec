@@ -228,6 +228,19 @@ sub _result_diag {
 }
 
 1;
+
+=head1 NAME
+
+Fennec::Handler::TAP - The TAP output handler
+
+=head1 DESCRIPTION
+
+This class generates the TAP output.
+
+=head1 SEE ALSO
+
+L<http://testanything.org> - TAP Specification.
+
 =head1 SYNOPSIS
 
 =head1 METHODS
