@@ -23,21 +23,28 @@ sub starting_file {1}
 sub fennec_error {1}
 
 1;
-=head1 SYNOPSIS
 
-=head1 METHODS
+=head1 NAME
 
-=head2 new
+Fennec::Handler - Base class for output handler classes.
 
-=head2 handle
+=head1 SEE ALSO
 
-=head2 finish
+L<Fennec::Manual::Developer> - CHAPTER_5_-_WRITING_CUSTOM_OUTPUT_HANDLERS.
 
-=head2 start
+=head1 ABSTRACT METHODS
 
-=head2 starting_file
+=over 4
 
-=head2 fennec_error
+=item handle( $output )
+
+=item finish()
+
+=item start()
+
+=item starting_file( $filename )
+
+=item fennec_error( @errors )
 
 =head1 MANUAL
 
