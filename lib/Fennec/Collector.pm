@@ -4,6 +4,7 @@ use warnings;
 
 use Fennec::Util::Accessors;
 use Fennec::Util::Abstract;
+use Fennec::Util::PackageFinder;
 
 Accessors qw/handlers/;
 Abstract  qw/cull write/;
@@ -12,8 +13,7 @@ sub new {
     my $class = shift;
     my @handlers;
     for my $hclass ( @_ ) {
-        my $fhclass = 'Fennec::Handler::' . $hclass;
-        eval "require $fhclass; 1" || die ( $@ );
+        my $fhclass = load_package( $hclass, 'Fennec::Handler' );
         push @handlers => $fhclass->new();
     }
     my $self = bless( { handlers => \@handlers }, $class );

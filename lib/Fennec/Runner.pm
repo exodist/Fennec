@@ -18,8 +18,7 @@ use List::Util  qw/shuffle/;
 use Time::HiRes qw/time/;
 use base 'Exporter';
 
-# Configuration items moved here to reduce file complexity.
-require Fennec::Runner::Config;
+# Configuration items moved to require at bottom.
 
 Accessors qw/ _benchmark_time _finished _started bail_out finish_hooks seed /;
 
@@ -44,7 +43,7 @@ sub add_config {
         unless defined $options{ env_override }
             && $options{ env_override } ne '1';
 
-    $options{ depends } = { map { $_ => 1 } @{ $options{ depends }} };
+    $options{ depends } = { map { $_ => 1 } @{ $options{ depends }} }
         if $options{ depends };
 
     $options{ name } = $name;
@@ -63,40 +62,57 @@ sub init {
     srand( $seed );
     my $data = { seed => $seed };
 
-    my @options = sort {
-        return 0 unless $a->{ depends }
-                     || $b->{ depends };
-
-        return  1 if $a->{ depends }->{ $b->{ name }};
-        return -1 if $b->{ depends }->{ $a->{ name }};
-    } values %CONFIG_OPTIONS;
-
-    for my $option ( @options ) {
-        my $name = $option->{ name };
-        my $value;
-        $value = $ENV{ $option->{ env_override }}
-            if $option->{ env_override };
-        $value ||= $in{ $name };
-
-        if ( !defined( $value ) && my $default = $option->{ default }) {
-            my $ref = ref( $default ) || 'NONE';
-            $value = $ref eq 'CODE'
-                ? $option->{ default }->( $data )
-                : $default;
-        }
-
-        croak "Option $name is required"
-            if $option->{ required }
-            && !defined $value;
-
-        $value = $option->{ modify }->( $value, $data )
-            if $option->{ modify };
-
-        $data->{ $name } = $value;
+    for my $option ( values %CONFIG_OPTIONS ) {
+        $class->_process_option( $option, \%in, $data, {} );
     }
 
     $SINGLETON = bless( $data, $class );
     return $SINGLETON;
+}
+
+# XXX TODO: Clean this up
+sub _process_option {
+    my $class = shift;
+    my ( $option, $in, $data, $state ) = @_;
+    my $name = $option->{ name };
+    $state->{ $name } ||= 0;
+    return if $state->{ $name } == 2;
+
+    croak join( "\n",
+        "Circular Dependencies detected:",
+        map { $state->{ $_ } == 1 ? $_ : () } keys %$state
+    ) if $state->{ $name } == 1;
+
+    $state->{ $name } = 1;
+    $class->_process_option(
+        $CONFIG_OPTIONS{ $_ },
+        $in,
+        $data,
+        $state
+    ) for keys %{ $option->{ depends } || {} };
+    $state->{ $name } = 2;
+
+    my $value;
+    $value = $ENV{ $option->{ env_override }}
+        if $option->{ env_override };
+    $value ||= $in->{ $name };
+
+    if ( $option->{ default } && !defined $value ) {
+        my $default = $option->{ default };
+        my $ref = ref( $default ) || 'NONE';
+        $value = $ref eq 'CODE'
+            ? $option->{ default }->( $data )
+            : $default;
+    }
+
+    croak "Option $name is required"
+        if $option->{ required }
+        && !defined $value;
+
+    $value = $option->{ modify }->( $value, $data )
+        if $option->{ modify };
+
+    $data->{ $name } = $value;
 }
 
 sub run_tests {
@@ -281,6 +297,9 @@ Did you forget to run done_testing() in a standalone test file?
 EOT
     }
 }
+
+# Load after class
+require Fennec::Runner::Config;
 
 1;
 

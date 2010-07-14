@@ -23,7 +23,7 @@ add_config ignore         => undef;
 
 add_config files => (
     env_override => 'FENNEC_FILE',
-    depends => [ qw/ filetypes ignore /],
+    depends => [ qw/ filetypes ignore random /],
     modify => sub {
         my ($value, $data) = @_;
 
@@ -45,7 +45,7 @@ add_config files => (
         die ( "No Fennec files found\n" )
             unless @files;
 
-        @files = shuffle @files if $self->random(1);
+        @files = shuffle @files if $data->{ random };
         return \@files;
     },
 );

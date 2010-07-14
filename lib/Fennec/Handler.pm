@@ -46,6 +46,8 @@ L<Fennec::Manual::Developer> - CHAPTER_5_-_WRITING_CUSTOM_OUTPUT_HANDLERS.
 
 =item fennec_error( @errors )
 
+=back
+
 =head1 MANUAL
 
 =over 2

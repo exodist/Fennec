@@ -4,6 +4,7 @@ use warnings;
 
 require Fennec;
 use Cwd qw/cwd/;
+use Fennec::Util::PackageFinder;
 
 our $ROOT;
 
@@ -39,9 +40,7 @@ sub find_types {
 
     my @plugins;
     for my $type ( @$types ) {
-        my $plugin = "Fennec\::FileType\::$type";
-        eval "require $plugin" || die( $@ );
-        push @plugins => $plugin;
+        push @plugins => load_package( $type, 'Fennec::FileType' );
     }
 
     return $class->find_all( @plugins )
