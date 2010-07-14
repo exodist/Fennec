@@ -11,34 +11,91 @@ use Carp;
 use Fennec::Util::Alias qw/
     Fennec::Output::Diag
     Fennec::Output::Result
-    Fennec::Runner::Proto
 /;
 
 use Digest::MD5 qw/md5_hex/;
 use List::Util  qw/shuffle/;
 use Time::HiRes qw/time/;
+use base 'Exporter';
 
-Accessors qw/
-    files parallel_files parallel_tests threader ignore random pid parent_pid
-    collector search default_asserts default_workflows _benchmark_time seed
-    _started _finished finish_hooks bail_out root_workflow_class
-/;
+# Configuration items moved here to reduce file complexity.
+require Fennec::Runner::Config;
 
+Accessors qw/ _benchmark_time _finished _started bail_out finish_hooks seed /;
+
+our @EXPORT_OK = qw/add_config/;
 our $SINGLETON;
+our %CONFIG_OPTIONS;
 
 sub alias { $SINGLETON }
+sub config_options { \%CONFIG_OPTIONS }
+
+sub add_config {
+    my ( $name, @args ) = @_;
+
+    croak "Runner already defines $name"
+        if __PACKAGE__->can( $name );
+
+    my %options = @args > 1
+        ? @args
+        : ( default => @args );
+
+    $options{ env_override } = uc("FENNEC_$name")
+        unless defined $options{ env_override }
+            && $options{ env_override } ne '1';
+
+    $options{ depends } = { map { $_ => 1 } @{ $options{ depends }} };
+        if $options{ depends };
+
+    $options{ name } = $name;
+
+    no strict 'refs';
+    Accessors $name;
+    $CONFIG_OPTIONS{ $name } = \%options;
+}
 
 sub init {
     my $class = shift;
+    my %in = @_;
     croak( 'Fennec::Runner has already been initialized' )
         if $SINGLETON;
-
     my $seed = $ENV{ FENNEC_SEED } || (( unpack "%L*", md5_hex( time * $$ )) ^ $$ );
     srand( $seed );
+    my $data = { seed => $seed };
 
-    $SINGLETON = Proto->new( @_, seed => $seed )
-                      ->rebless($class);
+    my @options = sort {
+        return 0 unless $a->{ depends }
+                     || $b->{ depends };
 
+        return  1 if $a->{ depends }->{ $b->{ name }};
+        return -1 if $b->{ depends }->{ $a->{ name }};
+    } values %CONFIG_OPTIONS;
+
+    for my $option ( @options ) {
+        my $name = $option->{ name };
+        my $value;
+        $value = $ENV{ $option->{ env_override }}
+            if $option->{ env_override };
+        $value ||= $in{ $name };
+
+        if ( !defined( $value ) && my $default = $option->{ default }) {
+            my $ref = ref( $default ) || 'NONE';
+            $value = $ref eq 'CODE'
+                ? $option->{ default }->( $data )
+                : $default;
+        }
+
+        croak "Option $name is required"
+            if $option->{ required }
+            && !defined $value;
+
+        $value = $option->{ modify }->( $value, $data )
+            if $option->{ modify };
+
+        $data->{ $name } = $value;
+    }
+
+    $SINGLETON = bless( $data, $class );
     return $SINGLETON;
 }
 
