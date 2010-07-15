@@ -171,11 +171,18 @@ sub _stash {
 
     $stash ||= $meta->stash( {} );
 
-    return $meta->stash( $_[0] ) if @_ == 1
-                                 && ref $_[0]
-                                 && ref $_[0] eq 'HASH';
+    if (@_ == 1) {
+        if ( my $ref = $_[0] ) {
+            croak(
+                "S() takes a hashref, a key name, or key value pairs.",
+                "S() does not take a $ref."
+            ) unless $ref eq 'HASH';
+            return $meta->stash( $_[0] )
+        }
+        return $stash->{ $_[0] };
+    }
 
-    %$stash = ( %$stash, @_ ) if ( @_ > 1 );
+    %$stash = ( %$stash, @_ );
 
     return wantarray ? %$stash : $stash;
 }

@@ -22,12 +22,17 @@ use base 'Exporter';
 
 Accessors qw/ _benchmark_time _finished _started bail_out finish_hooks seed /;
 
-our @EXPORT_OK = qw/add_config/;
+our @EXPORT_OK = qw/add_config add_test_hook/;
 our $SINGLETON;
 our %CONFIG_OPTIONS;
+our @TEST_HOOKS;
 
 sub alias { $SINGLETON }
 sub config_options { \%CONFIG_OPTIONS }
+
+sub add_test_hook {
+    push @TEST_HOOKS => @_;
+}
 
 sub add_config {
     my ( $name, @args ) = @_;
@@ -136,11 +141,10 @@ sub _test_thread {
     my ( $file ) = @_;
 
     try {
-        $self->process_workflow(
-            $self->_init_workflow(
-                $self->_init_file( $file )
-            )
-        );
+        my $test = $self->_init_file( $file )->fennec_new();
+        my $root_workflow = $self->_init_workflow( $test )
+        $_->( $self, $test ) for @TEST_HOOKS;
+        $self->process_workflow( $root_workflow );
     }
     catch {
         if ( $_ =~ m/SKIP:\s*(.*)/ ) {
@@ -172,8 +176,7 @@ sub _init_file {
 
 sub _init_workflow {
     my $self = shift;
-    my ( $tclass ) = @_;
-    my $test = $tclass->fennec_new;
+    my ( $test ) = @_;
     $test->fennec_meta->root_workflow->parent( $test );
     return $test->fennec_meta->root_workflow;
 }
