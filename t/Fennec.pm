@@ -41,7 +41,7 @@ tests error_tests => sub {
         "Cannot export from invalid package";
 };
 
-tests exports => sub {
+tests exports {
     warning_like { done_testing }
      qr/calling done_testing\(\) is only required for Fennec::Standalone tests/,
      "done_testing in standalone only";
@@ -61,6 +61,17 @@ tests exports => sub {
     throws_ok { require_or_skip XXX::Fake::Package }
         qr/SKIP: XXX::Fake::Package is not installed/,
         "require_or_skip";
+
+    $self->can_ok( qw/ M S / );
+
+    isa_ok( M(), 'Fennec::TestFile::Meta' );
+    is( M(), $self->fennec_meta, "Shortcut to meta" );
+
+    is( ref( scalar( S() )), 'HASH', "Got stash ref" );
+    S( a => 1 );
+    is_deeply({ S() }, { a => 1 }, "List context" );
+    S({ a => 2 });
+    is_deeply({ S() }, { a => 2 }, "Replace" );
 };
 
 tests import => sub {

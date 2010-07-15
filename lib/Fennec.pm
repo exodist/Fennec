@@ -96,6 +96,7 @@ sub init_meta {
     my $self = shift;
 
     my $meta = Meta->new(
+        stash         => {},
         %{ $self->{ meta }},
         file          => $self->test_file,
         root_workflow => $self->root_workflow,
@@ -111,6 +112,8 @@ sub export_tools {
     *{ $self->test_class . '::done_testing' } = \&_done_testing;
     *{ $self->test_class . '::use_or_skip' } = \&_use_or_skip;
     *{ $self->test_class . '::require_or_skip' } = \&_require_or_skip;
+    *{ $self->test_class . '::M' } = \&_meta;
+    *{ $self->test_class . '::S' } = \&_stash;
     Interface->enhance( $self->test_class, $_, 'begin' ) for qw/use_or_skip require_or_skip/;
 }
 
@@ -158,6 +161,24 @@ sub _require_or_skip(*) {
     my $have = eval "require $package; 1";
     die "SKIP: $package is not installed\n" unless $have;
 };
+
+sub _meta { caller()->fennec_meta() }
+
+sub _stash {
+    my $class = caller();
+    my $meta = $class->fennec_meta();
+    my $stash = $meta->stash;
+
+    $stash ||= $meta->stash( {} );
+
+    return $meta->stash( $_[0] ) if @_ == 1
+                                 && ref $_[0]
+                                 && ref $_[0] eq 'HASH';
+
+    %$stash = ( %$stash, @_ ) if ( @_ > 1 );
+
+    return wantarray ? %$stash : $stash;
+}
 
 1;
 

@@ -14,7 +14,7 @@ use Scalar::Util qw/blessed/;
 
 our %MAP;
 
-Accessors qw/ root_workflow workflow_stack threader todo skip file sort /;
+Accessors qw/ root_workflow workflow_stack threader todo skip file sort stash /;
 
 sub set {
     my $class = shift;

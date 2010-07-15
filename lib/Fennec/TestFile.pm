@@ -21,6 +21,11 @@ sub fennec_meta {
     Fennec::TestFile::Meta->get( $self );
 }
 
+sub stash {
+    my $self = shift;
+    $self->fennec_meta->stash( @_ );
+}
+
 1;
 
 =head1 MANUAL
