@@ -141,8 +141,9 @@ sub _test_thread {
     my ( $file ) = @_;
 
     try {
-        my $test = $self->_init_file( $file )->fennec_new();
-        my $root_workflow = $self->_init_workflow( $test )
+        my $test_class = $self->_init_file( $file );
+        my $root_workflow = $self->_init_workflow( $test_class );
+        my $test = $root_workflow->testfile();
         $_->( $self, $test ) for @TEST_HOOKS;
         $self->process_workflow( $root_workflow );
     }
@@ -174,9 +175,12 @@ sub _init_file {
     return $file->load;
 }
 
+# XXX Do not modify this without knowing that Fennec::Standalone uses it as
+# XXX well!!!
 sub _init_workflow {
     my $self = shift;
-    my ( $test ) = @_;
+    my ( $test_class ) = @_;
+    my $test = $test_class->fennec_new;
     $test->fennec_meta->root_workflow->parent( $test );
     return $test->fennec_meta->root_workflow;
 }

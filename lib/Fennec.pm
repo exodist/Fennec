@@ -172,7 +172,7 @@ sub _stash {
     $stash ||= $meta->stash( {} );
 
     if (@_ == 1) {
-        if ( my $ref = $_[0] ) {
+        if ( my $ref = ref $_[0] ) {
             croak(
                 "S() takes a hashref, a key name, or key value pairs.",
                 "S() does not take a $ref."
