@@ -335,6 +335,21 @@ sub run_as_current {
     return $want ? @out : $out;
 }
 
+sub clone {
+    my $self = shift;
+    my $class = blessed( $self );
+    my $data = { map {
+        my $item = $self->{ $_ };
+        $_ => ( blessed( $item ) && $item->can( 'clone' ))
+            ? $item->clone
+            : $item;
+    } keys %$self };
+    my $new = bless( $data, $class );
+    $_->parent( $new )   for @{ $new->_workflows || [] };
+    $_->workflow( $new ) for @{ $new->_testsets  || [] };
+    return $new;
+}
+
 1;
 
 =head1 MANUAL

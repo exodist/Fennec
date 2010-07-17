@@ -24,6 +24,16 @@ util TODO => sub(&;$) {
     Result->TODO( undef );
 };
 
+util SKIP => sub(&;$) {
+    my ( $code, $reason ) = @_;
+    $reason ||= "no reason given";
+    result(
+        pass => 1,
+        skip => $reason,
+        name => "Anonymous Skip block",
+    );
+};
+
 util diag => \&diag;
 
 tester ok => sub {

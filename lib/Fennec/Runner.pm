@@ -29,6 +29,7 @@ our @TEST_HOOKS;
 
 sub alias { $SINGLETON }
 sub config_options { \%CONFIG_OPTIONS }
+sub singleton { $SINGLETON }
 
 sub add_test_hook {
     push @TEST_HOOKS => @_;
@@ -40,9 +41,12 @@ sub add_config {
     croak "Runner already defines $name"
         if __PACKAGE__->can( $name );
 
-    my %options = @args > 1
-        ? @args
-        : ( default => @args );
+    my %options;
+    if ( @args ) {
+        %options = @args > 1
+            ? @args
+            : ( default => @args );
+    }
 
     $options{ env_override } = uc("FENNEC_$name")
         unless defined $options{ env_override }
