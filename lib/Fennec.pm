@@ -231,11 +231,15 @@ t/MyModule.t:
 
     use_ok 'MyModule';
 
+    # Put the name of the module we are testing in the stash (not required, but
+    # good practice for plugin use.)
+    S( testing => 'MyModule' );
+
     tests simple {
-        can_ok( 'MyModule', 'new' );
-        isa_ok( MyModule->new(), 'MyModule' );
-        dies_ok { MyModule->Thing_that_dies } "thing dies";
-        warning_like { MyModule->Thing_that_warns } qr/.../, "thing warns";
+        can_ok( S('testing'), 'new' );
+        isa_ok( S('testing')->new(), s('testing' ));
+        dies_ok { S('testing')->Thing_that_dies } "thing dies";
+        warning_like { S('testing')->Thing_that_warns } qr/.../, "thing warns";
 
         is_deeply( ... );
         ...

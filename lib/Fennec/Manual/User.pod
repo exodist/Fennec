@@ -227,6 +227,66 @@ failure in the grand scheme.
 
 =back
 
+=head1 CHAPTER 2.6 - META DATA
+
+All Fennec test classes have an associated L<Fennec::TestFile::Meta> object
+associated with them. A classes meta object can always be accessed with the
+$TEST_CLASS->fennec_meta() method. In addition the M() function can be used
+within the test class to access that classes meta object.
+
+The meta object stores information you will almost never need to mess with.
+This includes data used by workflows, plugins, and other tools. B<NOTE> The
+meta is associated with a class, not an object.
+
+=head1 CHAPTER 2.7 - STASH
+
+The stash is a hashref contained in the meta object. Because of this every test
+class has a single stash hash. You can always access the stash using the
+$TEST_CLASS->fennec_meta()->stash() method. In addition you can use the S()
+function from within a test class to quickly access and manipulate the stash.
+
+=over 4
+
+=item my $stash_ref = S();
+
+=item my %stash_copy = S();
+
+The S() function returns a ref or hash pairs depending on the return context.
+
+=item my $value = S( $key )
+
+When given a single key is provided as an argument, the value for that key will
+be returned.
+
+=item S( %MERGE_DATA )
+
+When given one or more key/value pairs, the new data will be merged in with the
+old data.
+
+=item S( \%OVERRIDE )
+
+When given a single hashref, that hashref will replace the entire stash.
+
+=back
+
+=head1 CHAPTER 2.8 - PLAYING NICELY WITH PLUGINS AND EXTENTIONS
+
+Many plugins and extentions rely on meta information being added to the stash.
+The most prevelant is the 'testing' key. This key should contain the name of
+the package being tested by the test class you are writing.
+
+Example:
+
+    Package TEST::My::Module;
+    use strict;
+    use warnings;
+    use Fennec;
+    ...
+    S( testing => 'My::Module' );
+    ...
+
+You should check with specific plugins for other stash keys that should be set.
+
 =head1 CHAPTER 3 - SUITE MANAGEMENT
 
 There are two ways to manage a test suite with Fennec. The simple way is to
@@ -598,7 +658,45 @@ Example:
 
     $ FENNEC_PARRALLEL_FILES=5 FENNEC_PARRALLEL_TESTS=3 prove -I lib t/Fennec.t
 
-=head1 CHAPTER 7 - EDITOR INTEGRATION
+=head1 CHAPTER 7 - PLUGINS
+
+=head2 CHAPTER 7.1 - USEFUL PLUGINS
+
+=over 4
+
+=item L<Fennec::Template>
+
+Essentially Roles for Fennec. Lets you create template test groups and
+workflows that can be imported into any Fennec test class.
+
+=item L<Fennec::Server>
+
+B<UNDER DEVELOPMENT> - Not stable or usable at the time of this writing.
+
+A webserver will act as collector. You can monitor test status by visiting the
+server. There are also tools included for continuous integration testing of
+multiple projects.
+
+=back
+
+=head2 CHAPTER 7.2 - GENERIC PLUGIN INSTRUCTIONS
+
+Most plugins should be used in t/Fennec.t just after use Fennec::Runner. They
+may then require additional meta information be added to the stash.
+
+    #!/usr/bin/perl
+    use strict;
+    use warnings;
+    use Fennec::Runner;
+    use My::Plugin;
+
+    ...
+
+In standalone tests you want to use the plugin at the start of the file. Some
+may require you to use them before using Fennec::Standalone, others will
+require you do it afterwords, for most it probably does not matter.
+
+=head1 CHAPTER 8 - EDITOR INTEGRATION
 
 When editing a test file, it is useful to be able to run the test regularly on
 its own. With regular t/*.t files this is easy enough, however when test files
@@ -633,7 +731,7 @@ either of those.
 
 =back
 
-=head2 CHAPTER 7.1 - GENERIC EDITOR HOWTO
+=head2 CHAPTER 8.1 - GENERIC EDITOR HOWTO
 
 Editor integration generally means binding a key combination to run the current
 test file. With Fennec it means the same, with the addition of binding a second
@@ -672,7 +770,7 @@ Example Command:
 
 =back
 
-=head2 CHAPTER 7.2 - VIM INTEGRATION
+=head2 CHAPTER 8.2 - VIM INTEGRATION
 
 Fennec provides 2 files in the dist used for vim integration.
 
@@ -690,12 +788,12 @@ the current file.
 
 =back
 
-=head2 CHAPTER 7.3 - EMACS INTEGRATION
+=head2 CHAPTER 8.3 - EMACS INTEGRATION
 
 Currently there are no emacs users developing Fennec. We welcome anyone who
 would fill in this section.
 
-=head1 CHAPTER 8 - TEST::BUILDER INFORMATION
+=head1 CHAPTER 9 - TEST::BUILDER INFORMATION
 
 Fennec does not use or depend on L<Test::Builder>. However it has a module that
 allows Test::Builder based tools to work with Fennec.
@@ -703,14 +801,14 @@ L<Fennec::Util::TBOverride> overrides several parts of Test::Builder in order
 to send results to Fennec. It also provides a mechanism by which Test::Builder
 tools can be wrapped by Fennec to improve diagnostic output.
 
-=head2 CHAPTER 8.1 - USING TEST::BUILDER TOOLS
+=head2 CHAPTER 9.1 - USING TEST::BUILDER TOOLS
 
 L<Fennec::Util::TBOverride> is loaded by default when Fennec loads. That means
 that in most cases you can simply import the Test::Builder tool and expect it
 to work fine. Fennec also provides wrappers around the most common
 Test::Builder tools for people that prefer them to the Fennec implementations.
 
-=head2 CHAPTER 8.2 - USING TEST::BUILDER INSTEAD OF FENNEC ASSERTS
+=head2 CHAPTER 9.2 - USING TEST::BUILDER INSTEAD OF FENNEC ASSERTS
 
 By default Fennec Loads the Core assertion library (L<Fennec::Assert::Core>)
 which in turn loads the following (among others):
@@ -761,16 +859,16 @@ Which in turn loads the following:
 
 These are minimal wrappers around the actual Test::Builder based tools.
 
-=head1 CHAPTER 9 - ADVANCED TOPICS
+=head1 CHAPTER 10 - ADVANCED TOPICS
 
-=head2 CHAPTER 9.1 - OUTPUT HANDLERS
+=head2 CHAPTER 10.1 - OUTPUT HANDLERS
 
 By default Fennec produces TAP output, however it provides the tools to output
 any format you can think of. You can even output to multiple formats at once.
 Output plugins are called Handlers, they can be found in the Fennec::Handler::
 namespace. See L<Chapter 5 - Configuration> for the proper options to use.
 
-=head2 CHAPTER 9.2 - COLLECTORS
+=head2 CHAPTER 10.2 - COLLECTORS
 
 Fennec allows for forking and parallelization, it needs a way to send results
 from the child processes to the parent. This is the role of the collector.

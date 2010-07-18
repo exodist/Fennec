@@ -23,7 +23,7 @@ following:
 
 =item Initialize output handlers
 
-=item Create a fork controller aka threader (NOT USING THREADS)
+=item Create a fork controller aka threader (NOT USING I-THREADS)
 
 Threader should not be confused with perls horrible threading.
 
@@ -735,6 +735,71 @@ Overriding this in your subclass will have NO EFFECT.
 Calls $wf->add_item() for each item in @items.
 
 =back
+
+=head1 CHAPTER 9 - RUNNER PLUGINS
+
+It is also possible to create plugins that extend or modify the runner itself.
+There are a few ways in which you can hook into the runner.
+
+=head2 CHAPTER 9.1 - CONFIGURATION OPTIONS
+
+L<Fennec::Runner> can export the add_config() function. This function allows
+you to add configuration items to the runner. These items can be listed in
+t/Fennec.t along with the usual ones. This will create the config option
+itself, as well as an accessor on the runner singleton by which it can be
+accessed.
+
+=over 2
+
+=item add_config $CONFIG_NAME
+
+=item add_config $CONFIG_NAME => $default
+
+=item add_config $CONFIG_NAME => ( %OPTIONS )
+
+Options:
+
+=over 4
+
+=item default => $VALUE
+
+=item default => sub { my ($data) = @_; ... }
+
+Specify the default value when none is specified. Can either be scalar value
+(including refs) or a coderef. The only argument provided to the coderef is the
+$data hash. The $data hash contains all the options that have been calculated
+so far for the runner.
+
+You absolutely should not modify the $data hash in coderefs passed to this
+parameter. The only fields guaranteed to be set are those listed in the depends
+option.
+
+=item env_override => $VALUE
+
+Set to false in order to disable environment overrides to this parameter. When
+not specified it defaults to true. When true (numeric) this parameter can be
+overriden using the FENNEC_[NAME] envireonment variable.
+
+You can also specify a string name that will be used instead of FENNEC_[NAME].
+
+=item modify => sub { my ($value, $data) = @_; ... }
+
+This hook can be used to modify the value the user provides. It can also modify
+the default value that you provide. The first argument is the unaltered value.
+The second argument is the $data hash. See the section for the 'default' option
+for more info about $data.
+
+=item depends => \@LIST
+
+Arrayref of config options that must be calculated before this one.
+
+=back
+
+=back
+
+=head2 CHAPTER 9.2 - TEST HOOKS
+
+=head2 CHAPTER 9.3 - FINISH HOOKS
 
 =head1 AUTHORS
 
