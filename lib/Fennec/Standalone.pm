@@ -3,7 +3,7 @@ use strict;
 use warnings;
 require Fennec;
 use Fennec::Util::TBOverride;
-use Fennec::Runner;
+use Fennec::Runner qw/add_finish_hook/;
 use Fennec::Workflow;
 use Fennec::Output::Result;
 
@@ -41,7 +41,7 @@ sub import {
         };
     }
 
-    $runner->add_finish_hook( sub {
+    add_finish_hook( sub {
         my $self = shift;
         $self->process_workflow(
             $runner->_init_workflow( $caller )

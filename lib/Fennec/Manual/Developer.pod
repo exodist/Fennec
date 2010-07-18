@@ -799,7 +799,31 @@ Arrayref of config options that must be calculated before this one.
 
 =head2 CHAPTER 9.2 - TEST HOOKS
 
+Test hooks are run after the root workflow has been instantiated, but before it
+has been processed. Test hooks are coderefs that receive the runner and test
+object as arguments.
+
+L<Fennec::Runner> can export the add_test_hook() function. This function allows
+you to add test hooks to the runner.
+
+=over 2
+
+=item add_test_hook( sub { my( $runner, $test ) = @_; ... })
+
+=back
+
 =head2 CHAPTER 9.3 - FINISH HOOKS
+
+These are run just before the threader and collector are stopped. These are
+coderefs that recieve no arguments. L<Fennec::Runner> can export the
+add_finish_hook() function. This function allows you to add finnish hooks to
+the runner.
+
+=over 2
+
+=item add_finish_hook(sub {...})
+
+=back
 
 =head1 AUTHORS
 
