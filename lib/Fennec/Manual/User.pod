@@ -602,6 +602,24 @@ Default: [qw/Spec Case Methods/],
 Workflow libraries to load by default. The leading L<Fennec::Workflow> may be
 omitted.
 
+=item load => [ [ $package1, @args1 ], [ $package2, @args2 ], ... ]
+
+Should be an array of arrays. The inner arrays should contain a package name,
+followed by import arguments. Every package listed will be loaded into every
+test class.
+
+Example:
+
+    load => [
+        [ qw/Package::A a b c /],
+        [ qw/Package::B d e f /],
+    ],
+
+Is equvilent to adding the following to every single test file.
+
+    use Package::A qw/a b c/;
+    use Package::B qw/d e f/;
+
 =item handlers => \@LIST
 
 Default: [ 'TAP' ]

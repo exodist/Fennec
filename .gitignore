@@ -3,8 +3,8 @@ Build
 MYMETA.yml
 _build/
 blib/
-Makefile
 old
 /Fennec*
 .build
 /_\d+
+subprojects
