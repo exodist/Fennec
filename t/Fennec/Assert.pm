@@ -11,8 +11,7 @@ our $HAVE_TB = eval 'require Test::Builder; 1';
 tests use_package => sub {
     require_ok $CLASS;
     my $ac = anonclass( use => $CLASS );
-    $ac->can_ok( qw/tb_wrapper tester util result diag test_caller note/ );
-    $ac->isa_ok( 'Exporter::Declare::Base' );
+    $ac->can_ok( qw/tb_wrapper tester util result diag test_caller note export_to/ );
 };
 
 tests tb_overrides => (
@@ -40,7 +39,7 @@ tests tb_overrides => (
 );
 
 tests declare_exports => sub {
-    my $ac = anonclass( use => [$CLASS] );
+    my $ac = anonclass( use => [[$CLASS, ':all']] );
     my $acinst = $ac->new();
     my $result = 0;
     $acinst->util( do_stuff => sub { $result++ });

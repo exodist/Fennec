@@ -32,7 +32,7 @@ util anonclass => sub {
     my $self = bless( \$pkg, __PACKAGE__ );
 
     for my $load ( ___as_list( $proto{ use })) {
-        $self->use( $load );
+        $self->use( ref($load) ? @$load : $load );
     }
 
     return $self;
