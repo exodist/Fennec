@@ -2,7 +2,7 @@ package Fennec::Util::PackageFinder;
 use strict;
 use warnings;
 
-use Exporter::Declare;
+use Fennec::Exporter::Declare;
 use Carp;
 
 export 'load_package';

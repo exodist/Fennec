@@ -13,7 +13,7 @@ use Try::Tiny;
 use Fennec::Util::TBOverride;
 use Carp qw/confess croak carp cluck/;
 use Scalar::Util 'blessed';
-use Exporter::Declare ':extend';
+use Fennec::Exporter::Declare ':extend';
 use Fennec::Util qw/test_caller/;
 
 our @EXPORT = qw/tb_wrapper result diag test_caller note/;
