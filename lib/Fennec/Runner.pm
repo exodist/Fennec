@@ -1,30 +1,7 @@
 package Fennec::Runner;
 use strict;
 use warnings;
-our $TBOUT;
-
-BEGIN {
-    if ( eval { require Test::Builder; 1 }) {
-        open( my $Testout, '>', \$TBOUT ) || die $!;
-        my $old_fh = select $Testout; $| = 1; select $old_fh;
-
-        no warnings 'redefine';
-        *Test::Builder::reset_outputs = sub {
-            my $self = shift;
-            $self->output        ($Testout);
-            $self->failure_output($Testout);
-            $self->todo_output   ($Testout);
-            return;
-        };
-
-        Test::Builder->new->reset_outputs;
-    }
-
-    if ( $0 eq '-e' ) {
-        my %seen;
-        @INC = grep { !$seen{$_}++ } @INC;
-    }
-}
+use Carp qw/croak/;
 
 our @TEST_CLASSES;
 
@@ -42,10 +19,13 @@ sub run_module {
 
 sub run {
     while( my $class = shift( @TEST_CLASSES )) {
-        $class->new->run;
+        print "Running: $class\n";
     }
-    $TBOUT =~ s/^([^#])/# $1/gm;
-    print STDERR $TBOUT;
+}
+
+sub push_test_class {
+    shift;
+    push @TEST_CLASSES => @_;
 }
 
 1;
