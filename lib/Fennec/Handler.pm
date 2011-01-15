@@ -6,4 +6,6 @@ sub handle { die( shift . " Does not implement 'handle'") }
 
 sub exit { die( shift . " Does not implement 'exit'" ) }
 
+sub reap {}
+
 1;

@@ -6,6 +6,7 @@ use Scalar::Util qw/blessed/;
 use Fennec::IO;
 
 my $PID;
+our @TEST_CLASSES;
 
 # Hijak output, including TB so that we can intercept the results.
 BEGIN {
@@ -28,7 +29,7 @@ BEGIN {
     *Test::Builder::reset_outputs = sub {
         my $self = shift;
         $self->output        (\*STDOUT);
-        $self->failure_output(\*STDOUT);
+        $self->failure_output(\*STDERR);
         $self->todo_output   (\*STDOUT);
         return;
     };
@@ -36,29 +37,33 @@ BEGIN {
     Test::Builder->new->reset_outputs;
 }
 
-our @TEST_CLASSES;
-
 sub run_file {
     my $file = shift;
     print "Loading: $file\n";
     eval { require $file } || die $@;
+    check_pid();
     run();
+}
+
+sub check_pid {
+    die "PID has changed! Did you forget to exit a child process?"
+        if $PID != $$;
 }
 
 sub run_module {
     my $module = shift;
     print "Loading: $module\n";
     eval "require $module" || die $@;
+    check_pid();
     run();
 }
 
 sub run {
     while( my $class = shift( @TEST_CLASSES )) {
         print "Running: $class\n";
+        check_pid();
     }
 
-    die "PID has changed! Did you forget to exit a child process?"
-        if $PID != $$;
 
     while ( wait() != -1 ) { sleep 1 }
 }

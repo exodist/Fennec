@@ -2,9 +2,17 @@ package Fennec::Meta;
 use strict;
 use warnings;
 
-use Fennec::Util qw/array_accessors accessors/;
+use Fennec::Util qw/accessors/;
 
-accessors qw/utils fennec class file start_line end_line name/;
-array_accessors qw/ workflows tests wraps /;
+accessors qw/utils parallel class fennec base/;
+
+sub new {
+    my $class = shift;
+    my %proto = @_;
+    bless({
+        $proto{fennec}->defaults(),
+        %proto,
+    }, $class);
+}
 
 1;

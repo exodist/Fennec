@@ -7,11 +7,11 @@ use Fennec;
 
 my $parent = $$;
 my $num;
-for ( 1 .. 3 ) {
-    $num++;
-    fork();
-    last unless $$ == $parent;
-}
+#for ( 1 .. 3 ) {
+#    $num++;
+#    fork();
+#    last unless $$ == $parent;
+#}
 $num = 0 if $parent == $$;
 
 can_ok( __PACKAGE__, 'tests' );

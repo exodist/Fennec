@@ -3,7 +3,6 @@ use strict;
 use warnings;
 
 use Fcntl;
-#use POSIX ":sys_wait_h";
 
 my $PPID = $$;
 my $FOS = "\0FOS\0\n";
@@ -59,30 +58,61 @@ sub autoflush {
 
 sub watch {
     local $SIG{ALRM} = sub { die "alarm" };
+    select( $STDOUT );
+
+    require Time::HiRes;
+    Time::HiRes->import(qw/sleep/);
 
     my $handler_class = $ENV{FENNEC_HANDLER_CLASS} || 'Fennec::Handler::TAP';
     eval "require $handler_class; 1" || die $@;
     my $handler = $handler_class->new();
 
+    my $exit;
     while ( 1 ) {
         {
             local $/ = $FOS;
             while ( my $line = <$READ> ) {
                 chomp( $line );
-                my ( $handle, $pid, $data ) = ( $line =~ m/^(\w+)\s+(\d+)\s+:(.*)$/gs );
-                local $/ = "\n";
-                next unless $data;
-                $handler->handle( $handle, $pid, $data );
+                handle_line( $handler, $line );
             }
         }
+
+        my $out;
         eval {
+            local $?;
             alarm 1;
-            my $out = wait();
+            $out = wait();
             alarm 0;
-            $handler->exit if $out < 0;
-            die "Handler '$handler' failed to exit!";
+            unless ( $exit ) {
+                $exit = $? >> 8;
+            }
         };
+        $exit = 0 if $exit < 0;
+        $handler->reap;
+
+        if ($out && $out < 0) {
+            $handler->exit( $exit );
+            die "Handler failed to exit";
+        }
+        sleep 0.10;
     }
+}
+
+sub handle_line {
+    my ( $handler, $line ) = @_;
+    my ( $handle, $pid, $package, $ln, $data )
+        = ( $line =~ m/^(\w+)\s+(\d+)\s+([\d\w:]+)\s+(\d+)\s*:(.*)$/gs );
+    local $/ = "\n";
+    next unless $data;
+
+    $handler->handle(
+        line => $line,
+        handle => $handle,
+        pid => $pid,
+        data => $data,
+        ln => $ln,
+        package => $package,
+    );
 }
 
 1;
