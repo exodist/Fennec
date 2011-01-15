@@ -7,7 +7,7 @@ use warnings;
 BEGIN {
     if ( $0 eq (caller(2))[1] ) {
         $ENV{PERL5LIB} = join( ':', @INC );
-        exec "$^X -MFennec::Runner -e 'Fennec::Runner::run_file(\"$0\")'";
+        exec "$^X -MFennec::Runner -e 'BEGIN { Fennec::Runner::load_file(\"$0\")}; Fennec::Runner::run()'";
     }
 }
 
@@ -28,6 +28,12 @@ sub import {
     my %params = @_;
     my @caller = caller;
     my $importer = $caller[0];
+    Fennec::Runner->push_test_class( $importer );
+
+    for my $require ( @{$params{skip_without} || []}) {
+        die bless( "$require is not installed", 'Fennec::SKIP' )
+            unless eval "require $require; 1";
+    }
 
     require Fennec::Meta;
     my $meta = Fennec::Meta->new(
@@ -41,6 +47,7 @@ sub import {
     my $base = $meta->base;
     if ( $base ) {
         no strict 'refs';
+        eval "require $base" || die $@;
         push @{ "$importer\::ISA" } => $base
             unless grep { $_ eq $base } @{ "$importer\::ISA" };
     }

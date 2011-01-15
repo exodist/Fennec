@@ -97,6 +97,7 @@ sub print_ready {
     my $self = shift;
     for my $set ( @{$self->ready}) {
         for my $result ( @{$set->{results}}) {
+            next if $result->is_plan;
             if ( $set->{usehandle} eq 'STDOUT' ) {
                 print STDOUT $result->raw . "\n";
             }

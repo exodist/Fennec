@@ -5,6 +5,7 @@ use Carp qw/croak/;
 use Scalar::Util qw/blessed/;
 use Fennec::IO;
 
+my $EXIT = 0;
 my $PID;
 our @TEST_CLASSES;
 
@@ -37,12 +38,11 @@ BEGIN {
     Test::Builder->new->reset_outputs;
 }
 
-sub run_file {
+sub load_file {
     my $file = shift;
     print "Loading: $file\n";
-    eval { require $file } || die $@;
+    eval { require $file } || exception( $@ );
     check_pid();
-    run();
 }
 
 sub check_pid {
@@ -50,27 +50,32 @@ sub check_pid {
         if $PID != $$;
 }
 
-sub run_module {
+sub load_module {
     my $module = shift;
     print "Loading: $module\n";
-    eval "require $module" || die $@;
+    eval "require $module" || exception( $@ );
     check_pid();
-    run();
 }
 
 sub run {
-    while( my $class = shift( @TEST_CLASSES )) {
+    Test::Class->runtests if $INC{'Test/Class.pm'};
+    for my $class ( @TEST_CLASSES ) {
+        next unless $class && $class->can('TEST_WORKFLOW');
         print "Running: $class\n";
         check_pid();
     }
 
-
     while ( wait() != -1 ) { sleep 1 }
+    exit( $EXIT );
 }
 
 sub push_test_class {
     shift;
     push @TEST_CLASSES => @_;
+}
+
+sub exception {
+
 }
 
 1;

@@ -83,11 +83,9 @@ sub watch {
             alarm 1;
             $out = wait();
             alarm 0;
-            unless ( $exit ) {
-                $exit = $? >> 8;
-            }
+            $exit ||= $? > 0 ? $? >> 8 : 0;
         };
-        $exit = 0 if $exit < 0;
+        $exit = 0 if $exit && $exit < 0;
         $handler->reap;
 
         if ($out && $out < 0) {
