@@ -5,7 +5,12 @@ use warnings;
 use Exporter::Declare;
 use Fennec::Util qw/inject_sub/;
 
-sub defaults {}
+sub defaults {(
+    utils => [qw/Test::More Test::Warn Test::Exception/],
+    handler => 'Fennec::Handler::TAP',
+    parallel => 0,
+)}
+
 sub init {}
 
 sub after_import {
@@ -21,7 +26,11 @@ sub after_import {
     my $meta = Fennec::Meta::TestClass->new( fennec => $class, class => $importer );
     inject_sub( $importer, 'FENNEC', sub { $meta });
 
-    $self->init();
+    for my $util ( @{ $meta->utils }) {
+        eval "package $importer; require $util; $util\->import(); 1" || die $@;
+    }
+
+    $class->init( $importer, $specs );
 }
 
 default_export parallel => sub {
@@ -30,9 +39,6 @@ default_export parallel => sub {
 
 sub tests {
     my $caller = caller;
-    $caller->FENNEC->top->tests_push(
-        Fennec::TestSet->new( $caller, @_ )
-    );
 }
 
 default_export tests => \&tests;
@@ -40,30 +46,18 @@ default_export it => \&tests;
 
 default_export cases => sub {
     my $caller = caller;
-    $caller->FENNEC->top->workflows_push(
-        Fennec::Workflow::Cases->new( $caller, @_ )
-    );
 };
 
 default_export case => sub {
     my $caller = caller;
-    $caller->FENNEC->top->workflows_push(
-        Fennec::Workflow::Case->new( $caller, @_ )
-    );
 };
 
 default_export describe => sub {
     my $caller = caller;
-    $caller->FENNEC->top->workflows_push(
-        Fennec::Workflow::Describe->new( $caller, @_ )
-    );
 };
 
 default_export before_all => sub {
     my $caller = caller;
-    $caller->FENNEC->top->workflows_push(
-        Fennec::Workflow::Describe->new( $caller, @_ )
-    );
 };
 
 default_export after_all => sub {
