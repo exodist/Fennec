@@ -63,7 +63,7 @@ sub watch {
     require Time::HiRes;
     Time::HiRes->import(qw/sleep/);
 
-    my $handler_class = $ENV{FENNEC_HANDLER_CLASS} || 'Fennec::Handler::TAP';
+    my $handler_class = Fennec::Runner->new->handler;
     eval "require $handler_class; 1" || die $@;
     my $handler = $handler_class->new();
 
@@ -101,7 +101,7 @@ sub handle_line {
     my ( $handle, $pid, $package, $ln, $data )
         = ( $line =~ m/^(\w+)\s+(\d+)\s+([\d\w:]+)\s+(\d+)\s*:(.*)$/gs );
     local $/ = "\n";
-    next unless $data;
+    return unless $data;
 
     $handler->handle(
         line => $line,

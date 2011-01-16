@@ -2,15 +2,6 @@ package Fennec;
 use strict;
 use warnings;
 
-# If the Fennec test file was run directly we need to re-run perl and run the
-# test file through Fennec::Runner. The alternative is an END block.
-BEGIN {
-    if ( $0 eq (caller(2))[1] ) {
-        $ENV{PERL5LIB} = join( ':', @INC );
-        exec "$^X -MFennec::Runner -e 'BEGIN { Fennec::Runner::load_file(\"$0\")}; Fennec::Runner::run()'";
-    }
-}
-
 use Fennec::Util qw/inject_sub/;
 
 sub defaults {(
@@ -19,16 +10,27 @@ sub defaults {(
     /],
         #Test::Workflow Test::Workflow::Spec Test::Workflow::Case
     parallel => 0,
+    runner => 'Fennec::Runner',
 )}
 
 sub init {}
 
 sub import {
     my $class = shift;
-    my %params = @_;
     my @caller = caller;
+    my %defaults = $class->defaults;
+    $defaults{runner} ||= 'Fennec::Runner';
+
+    # If the Fennec test file was run directly we need to re-run perl and run the
+    # test file through Fennec::Runner. The alternative is an END block.
+    if ( $0 eq $caller[1] ) {
+        $ENV{PERL5LIB} = join( ':', @INC );
+        exec "$^X -M$defaults{runner} -e 'BEGIN { Fennec::Runner->new->load_file(\"$0\")}; Fennec::Runner->new->run()'";
+    }
+
+    my %params = @_;
     my $importer = $caller[0];
-    Fennec::Runner->push_test_class( $importer );
+    Fennec::Runner->new->test_classes_push( $importer );
 
     for my $require ( @{$params{skip_without} || []}) {
         die bless( "$require is not installed", 'Fennec::SKIP' )
