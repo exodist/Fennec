@@ -29,4 +29,9 @@ sub new {
     }, $class);
 }
 
+sub run {
+    my $self = shift;
+    $self->code->( @_ );
+}
+
 1;

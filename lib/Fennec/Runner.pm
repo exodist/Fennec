@@ -22,6 +22,8 @@ sub import {
     }, $class );
     $SINGLETON->hijack_io;
     $SINGLETON->init( @_ );
+
+    print "XXX\n";
 }
 
 sub new { $SINGLETON };
