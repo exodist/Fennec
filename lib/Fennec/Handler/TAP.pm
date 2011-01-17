@@ -5,7 +5,6 @@ use warnings;
 use Fennec::Util qw/accessors/;
 use TAP::Parser;
 use POSIX ":sys_wait_h";
-use Data::Dumper;
 
 accessors qw/buffer ready/;
 

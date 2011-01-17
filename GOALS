@@ -11,7 +11,7 @@
 
 == Secondary Goals ==
 
- * Test groups (test-workflow)
+ * Test groups (Test-Workflow)
  * Case workflow
  * SPEC workflow
- * Easy mocking
+ * Easy mocking (Object-Quick)

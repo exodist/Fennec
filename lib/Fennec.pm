@@ -6,9 +6,8 @@ use Fennec::Util qw/inject_sub/;
 
 sub defaults {(
     utils => [qw/
-        Test::More Test::Warn Test::Exception
+        Test::More Test::Warn Test::Exception Test::Workflow
     /],
-        #Test::Workflow Test::Workflow::Spec Test::Workflow::Case
     parallel => 0,
     runner => 'Fennec::Runner',
 )}

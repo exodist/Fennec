@@ -2,7 +2,6 @@ package Fennec::IO::Handle;
 use strict;
 use warnings;
 
-use Data::Dumper;
 use Fennec::Util qw/accessors/;
 accessors qw/prefix/;
 
