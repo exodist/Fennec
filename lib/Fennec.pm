@@ -4,6 +4,8 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
+our $VERSION = '0.100';
+
 sub defaults {(
     utils => [qw/
         Test::More Test::Warn Test::Exception Test::Workflow
