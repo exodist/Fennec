@@ -1,7 +1,7 @@
 package Fennec::Runner;
 use strict;
 use warnings;
-use Carp qw/croak/;
+use Carp qw/carp/;
 use Scalar::Util qw/blessed/;
 use Fennec::Util qw/accessors array_accessors/;
 use Fennec::IO;
@@ -22,11 +22,23 @@ sub import {
     }, $class );
     $SINGLETON->hijack_io;
     $SINGLETON->init( @_ );
-
-    print "XXX\n";
 }
 
 sub new { $SINGLETON };
+
+sub ok {
+    my $self = shift;
+
+    return $SINGLETON->ok( @_ )
+        unless( blessed $self && $self == $SINGLETON );
+
+    require Test::More;
+    my ( $status, $name, @diag ) = @_;
+    Test::More::ok( $status, $name );
+    return $status if $status;
+    Test::More::diag( $_ ) for @diag;
+    return $status;
+}
 
 # Hijak output, including TB so that we can intercept the results.
 sub hijack_io {
@@ -67,21 +79,22 @@ sub load_file {
     my $self = shift;
     my ( $file ) = @_;
     print "Loading: $file\n";
-    eval { require $file; 1 } || $self->exception( $@ );
+    eval { require $file; 1 } || $self->exception( $file, $@ );
     $self->check_pid();
 }
 
 sub check_pid {
     my $self = shift;
-    die "PID has changed! Did you forget to exit a child process?"
-        if $self->pid != $$;
+    return unless $self->pid != $$;
+    carp "PID has changed! Did you forget to exit a child process?";
+    exit 1;
 }
 
 sub load_module {
     my $self = shift;
     my $module = shift;
     print "Loading: $module\n";
-    eval "require $module" || $self->exception( $@ );
+    eval "require $module" || $self->exception( $module, $@ );
     $self->check_pid();
 }
 
@@ -93,6 +106,8 @@ sub run {
         next unless $class && $class->can('TEST_WORKFLOW');
         print "Running: $class\n";
         $self->check_pid();
+        my $instance = $class->can('new') ? $class->new : bless( {}, $class );
+        Test::Workflow::run_tests( $instance );
     }
 
     while ( wait() != -1 ) { sleep 1 }
@@ -101,8 +116,8 @@ sub run {
 
 sub exception {
     my $self = shift;
-    my ( $exception ) = @_;
-    print STDERR $exception if $exception;
+    my ( $name, $exception ) = @_;
+    $self->ok( 0, $name, $exception )
 }
 
 1;

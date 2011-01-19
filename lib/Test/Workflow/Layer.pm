@@ -18,7 +18,7 @@ our @ATTRIBUTES = qw/
     after_all
 /;
 
-accessors @ATTRIBUTES;
+accessors 'finalized', @ATTRIBUTES;
 
 sub new { bless({ map {( $_ => [] )} @ATTRIBUTES }, shift )}
 
@@ -35,10 +35,19 @@ sub merge_in {
     push @{ $self->$_ } => @{ $add->$_ } for @ATTRIBUTES;
 }
 
-for my $type ( qw/test case child before_each before_all after_each after_all/ ) {
+for my $type ( qw/test case child before_each before_all/ ) {
     my $add = sub {
         my $self = shift;
         push @{ $self->$type } => Test::Workflow::Block->new( @_ );
+    };
+    no strict 'refs';
+    *{"add_$type"} = $add;
+}
+
+for my $type ( qw/after_each after_all/ ) {
+    my $add = sub {
+        my $self = shift;
+        unshift @{ $self->$type } => Test::Workflow::Block->new( @_ );
     };
     no strict 'refs';
     *{"add_$type"} = $add;

@@ -10,6 +10,8 @@ sub defaults {(
     utils => [qw/
         Test::More Test::Warn Test::Exception Test::Workflow
     /],
+    utils_with_args => {
+    },
     parallel => 0,
     runner => 'Fennec::Runner',
 )}
@@ -29,7 +31,7 @@ sub import {
         exec "$^X -M$defaults{runner} -e 'BEGIN { Fennec::Runner->new->load_file(\"$0\")}; Fennec::Runner->new->run()'";
     }
 
-    my %params = @_;
+    my %params = ( %defaults, @_ );
     my $importer = $caller[0];
     Fennec::Runner->new->test_classes_push( $importer );
 

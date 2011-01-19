@@ -4,6 +4,8 @@ use warnings;
 
 use Exporter::Declare;
 use Test::Workflow::Meta;
+use Test::Workflow::Test;
+use Test::Workflow::Layer;
 
 default_exports qw/
     tests       run_tests
@@ -26,41 +28,87 @@ sub _get_layer {
     use Carp qw/croak/;
     use Scalar::Util qw/blessed/;
 
-    my ($caller) = @_;
+    my ($sub, $caller) = @_;
 
     my @parent = caller(2);
     my @pargs = @DB::args;
-    my $state = $pargs[-1];
+    my $layer = $pargs[-1];
 
-    return $state if blessed($state)
-                  && blessed($state)->isa( 'Test::Workflow::State' );
+    if ( blessed($layer) && blessed($layer)->isa( 'Test::Workflow::Layer' )) {
+        croak "Layer has already been finalized!"
+            if $layer->finalized;
+        return $layer;
+    }
 
     my $meta = $caller->[0]->TEST_WORKFLOW;
-    croak "Could not find state, did you modify \@_?"
+    croak "$sub() can only be used within a describe or case block, or at the package level. (Could not find layer, did you modify \@_?)"
         if $meta->build_complete;
 
-    return $meta->ROOT_LAYER;
+    return $meta->root_layer;
 }
 
-sub with_tests  { my @caller = caller; _get_layer( \@caller )->merge_in( \@caller, @_ )}
+sub with_tests  { my @caller = caller; _get_layer( 'with_tests', \@caller )->merge_in( \@caller, @_ )}
 
-sub tests { my @caller = caller; _get_layer( \@caller )->add_test( \@caller, @_ )}
-sub it    { my @caller = caller; _get_layer( \@caller )->add_test( \@caller, @_ )}
-sub case  { my @caller = caller; _get_layer( \@caller )->add_case( \@caller, @_ )}
+sub tests { my @caller = caller; _get_layer( 'tests', \@caller )->add_test( \@caller, @_, 'verbose' )}
+sub it    { my @caller = caller; _get_layer( 'it',    \@caller )->add_test( \@caller, @_, 'verbose' )}
+sub case  { my @caller = caller; _get_layer( 'case',  \@caller )->add_case( \@caller, @_ )}
 
-sub describe { my @caller = caller; _get_layer( \@caller )->add_child( \@caller, @_ )}
-sub cases    { my @caller = caller; _get_layer( \@caller )->add_child( \@caller, @_ )}
+sub describe { my @caller = caller; _get_layer( 'describe', \@caller )->add_child( \@caller, @_ )}
+sub cases    { my @caller = caller; _get_layer( 'cases',    \@caller )->add_child( \@caller, @_ )}
 
-sub before_each { my @caller = caller; _get_layer( \@caller )->add_before_each( \@caller, @_ )}
-sub before_all  { my @caller = caller; _get_layer( \@caller )->add_before_all(  \@caller, @_ )}
-sub after_each  { my @caller = caller; _get_layer( \@caller )->add_after_each(  \@caller, @_ )}
-sub after_all   { my @caller = caller; _get_layer( \@caller )->add_after_all(   \@caller, @_ )}
+sub before_each { my @caller = caller; _get_layer( 'before_each', \@caller )->add_before_each( \@caller, @_ )}
+sub before_all  { my @caller = caller; _get_layer( 'before_all',  \@caller )->add_before_all(  \@caller, @_ )}
+sub after_each  { my @caller = caller; _get_layer( 'after_each',  \@caller )->add_after_each(  \@caller, @_ )}
+sub after_all   { my @caller = caller; _get_layer( 'after_all',   \@caller )->add_after_all(   \@caller, @_ )}
 
 sub run_tests {
     my ( $instance ) = @_;
-    my $layer = $instance->TEST_WORKFLOW->ROOT_LAYER;
-    my @tests = get_tests( $instance, $layer );
+    my $layer = $instance->TEST_WORKFLOW->root_layer;
+    $instance->TEST_WORKFLOW->build_complete(1);
+    my @tests = get_tests( $instance, $layer, [], [] );
+    $_->run( $instance ) for @tests;
+}
 
+sub get_tests {
+    my ( $instance, $layer, $before_each, $after_each ) = @_;
+    # get before_each and after_each
+    push    @$before_each => @{ $layer->before_each };
+    unshift @$after_each  => @{ $layer->after_each  };
+
+    my @tests = map { Test::Workflow::Test->new(
+        setup    => [ @$before_each ],
+        tests    => [ $_            ],
+        teardown => [ @$after_each  ],
+    )} @{ $layer->test };
+
+    my @cases = @{ $layer->case };
+    if ( @cases ) {
+        @tests = map {
+            my $test = $_;
+            map { Test::Workflow::Test->new(
+                setup => [ $_    ],
+                tests => [ $test ],
+            )} @cases
+        } @tests;
+    }
+
+    push @tests => map {
+        my $layer = Test::Workflow::Layer->new;
+        $_->run( $instance, $layer );
+        warn "No tests in block '" . $_->name . "' approx lines " . $_->start_line . "->" . $_->end_line . "\n"
+            unless @{ $layer->test };
+        get_tests( $instance, $layer, $before_each, $after_each );
+    } @{ $layer->child };
+
+    my @before_all = @{ $layer->before_all };
+    my @after_all = @{ $layer->after_all };
+    return Test::Workflow::Test->new(
+        setup    => [ @before_all ],
+        tests    => [ @tests      ],
+        teardown => [ @after_all  ],
+    ) if @before_all || @after_all;
+
+    return @tests;
 }
 
 1;

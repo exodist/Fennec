@@ -1,5 +1,3 @@
  * Mocking   - Object::Quick
- * Workflows - Test::Workflow
-
- * Defaults + use Fennec params (They are not merged properly)
- * Allow params to defaults/import utils
+ * Parallel Test groups
+ * Run specific group

@@ -4,7 +4,7 @@ use warnings;
 
 use Test::Workflow::Layer;
 
-use Fennec::Util qw/accessors array_accessors/;
+use Fennec::Util qw/accessors/;
 
 accessors qw/test_class build_complete root_layer/;
 

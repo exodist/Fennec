@@ -1,8 +1,10 @@
 package Fennec::IO;
 use strict;
 use warnings;
+use Fennec::IO::Handle;
 
 use Fcntl;
+use POSIX ":sys_wait_h";
 
 my $PPID = $$;
 my $FOS = "\0FOS\0\n";
@@ -10,7 +12,8 @@ my ( $READ, $WRITE );
 
 sub init {
     init_pipe();
-    watch() if spawn_worker();
+    my $pid = spawn_worker();
+    watch( $pid ) if $pid;
 }
 
 sub FOS { $FOS }
@@ -33,6 +36,7 @@ sub spawn_worker {
     my $pid = fork() || 0;
 
     unless ( $pid ) {
+        # Temporary
         #Inside the worker
         require Fennec::IO::Handle;
         tie( *NEWOUT, 'Fennec::IO::Handle', 'STDOUT' );
@@ -57,6 +61,7 @@ sub autoflush {
 }
 
 sub watch {
+    my $pid = shift;
     local $SIG{ALRM} = sub { die "alarm" };
     select( $STDOUT );
 
@@ -77,14 +82,8 @@ sub watch {
             }
         }
 
-        my $out;
-        eval {
-            local $?;
-            alarm 1;
-            $out = wait();
-            alarm 0;
-            $exit ||= $? > 0 ? $? >> 8 : 0;
-        };
+        my $out = waitpid( $pid, WNOHANG );
+        $exit ||= $? > 0 ? $? >> 8 : 0;
         $exit = 0 if $exit && $exit < 0;
         $handler->reap;
 
