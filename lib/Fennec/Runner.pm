@@ -4,9 +4,9 @@ use warnings;
 use Carp qw/carp/;
 use Scalar::Util qw/blessed/;
 use Fennec::Util qw/accessors array_accessors/;
-use Fennec::IO;
+use Fennec::Listener;
 
-accessors qw/pid exit handler/;
+accessors qw/pid _write listener/;
 array_accessors qw/test_classes/;
 
 my $SINGLETON;
@@ -14,17 +14,30 @@ my $SINGLETON;
 sub init {}
 
 sub import {
-    my $class = shift;
-    my ( $handler ) = @_;
-    $SINGLETON = bless({
-        exit => 0,
-        handler => $handler || 'Fennec::Handler::TAP'
-    }, $class );
-    $SINGLETON->hijack_io;
-    $SINGLETON->init( @_ );
+    shift->new;
 }
 
-sub new { $SINGLETON };
+sub new {
+    return $SINGLETON if $SINGLETON;
+    my $class = shift;
+    my ( $read, $write );
+    pipe( $read, $write );
+
+    my $listener = Fennec::Listener->new( $read, $write );
+    close( $read );
+
+    my $old = select( $write );
+    $| = 0;
+    select( $old );
+    $SINGLETON = bless({
+        pid      => $$,
+        listener => $listener,
+        _write   => $write,
+    }, $class );
+    $SINGLETON->setup_tb;
+    $SINGLETON->init( @_ );
+    return $SINGLETON;
+};
 
 sub ok {
     my $self = shift;
@@ -40,39 +53,48 @@ sub ok {
     return $status;
 }
 
-# Hijak output, including TB so that we can intercept the results.
-sub hijack_io {
+sub setup_tb {
     my $self = shift;
     my $TB = 0;
     if ( $TB = eval { require Test::Builder; 1 }) {
         Test::Builder->new->use_numbers(0);
-        my ( $greator ) = ( $Test::Builder::VERSION =~ m/^(\d+)/ );
-        if ( $greator >= 2) {
-            my $formatter = Test::Builder2->new->formatter;
-
-            $formatter->use_numbers(0)
-                if blessed( $formatter ) =~ m/Test::Builder2::Formatter::TAP/;
+        my ( $greator_version ) = ( $Test::Builder::VERSION =~ m/^(\d+)/ );
+        if ( $greator_version >= 2) {
         }
+        else {
+            my $out = $self->_write;
+            no warnings 'redefine';
+            *Test::Builder::_ending = sub { 1 };
+            my $original_print = Test::Builder->can('_print_to_fh');
+            *Test::Builder::_print_to_fh = sub {
+                my( $tb, $fh, @msgs ) = @_;
 
-        no warnings 'redefine';
-        *Test::Builder::_ending = sub { 1 };
+                my ( $handle, $output );
+                open( $handle, '>', \$output );
+                $original_print->( $tb, $handle, @msgs );
+                close( $handle );
+
+                my $ohandle = ($fh == $tb->output) ? 'STDOUT' : 'STDERR';
+
+                my @call = $self->get_test_call();
+                print $out join( "\0", $$, $ohandle, $call[0], $call[1], $call[2], $_ ) . "\n"
+                    for split( /[\n\r]+/, $output );
+            };
+        }
+    }
+}
+
+sub get_test_call {
+    my $self = shift;
+    my $runner;
+    my $i = 1;
+
+    while ( my @call = caller( $i++ )) {
+        $runner = \@call if !$runner && $call[0]->isa('Fennec::Runner');
+        return @call if $call[0]->can('FENNEC');
     }
 
-    Fennec::IO->init;
-    $self->pid( $$ );
-
-    if ( $TB ) {
-        no warnings 'redefine';
-        *Test::Builder::reset_outputs = sub {
-            my $self = shift;
-            $self->output        (\*STDOUT);
-            $self->failure_output(\*STDERR);
-            $self->todo_output   (\*STDOUT);
-            return;
-        };
-
-        Test::Builder->new->reset_outputs;
-    }
+    return( @$runner );
 }
 
 sub load_file {
@@ -86,8 +108,7 @@ sub load_file {
 sub check_pid {
     my $self = shift;
     return unless $self->pid != $$;
-    carp "PID has changed! Did you forget to exit a child process?";
-    exit 1;
+    die "PID has changed! Did you forget to exit a child process?";
 }
 
 sub load_module {
@@ -105,19 +126,29 @@ sub run {
     for my $class ( $self->test_classes ) {
         next unless $class && $class->can('TEST_WORKFLOW');
         print "Running: $class\n";
-        $self->check_pid();
         my $instance = $class->can('new') ? $class->new : bless( {}, $class );
         Test::Workflow::run_tests( $instance );
+        $self->check_pid();
     }
-
-    while ( wait() != -1 ) { sleep 1 }
-    exit( $self->exit );
 }
 
 sub exception {
     my $self = shift;
     my ( $name, $exception ) = @_;
     $self->ok( 0, $name, $exception )
+}
+
+sub DESTROY {
+    my $self = shift;
+
+    my $out = $self->_write;
+    close( $out );
+
+    return unless $$ == $self->pid;
+
+    waitpid( $self->listener, 0 );
+    my $exit = $? >> 8;
+    exit( $exit );
 }
 
 1;

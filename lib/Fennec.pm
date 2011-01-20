@@ -28,7 +28,14 @@ sub import {
     # test file through Fennec::Runner. The alternative is an END block.
     if ( $0 eq $caller[1] ) {
         $ENV{PERL5LIB} = join( ':', @INC );
-        exec "$^X -M$defaults{runner} -e 'BEGIN { Fennec::Runner->new->load_file(\"$0\")}; Fennec::Runner->new->run()'";
+        exec "$^X -M$defaults{runner} -e '" . <<"        EOT";
+            our \$runner;
+            BEGIN {
+                \$runner = Fennec::Runner->new;
+                \$runner->load_file(\"$0\")
+            }
+            \$runner->run();'
+        EOT
     }
 
     my %params = ( %defaults, @_ );
