@@ -12,8 +12,9 @@ sub defaults {(
     /],
     utils_with_args => {
     },
-    parallel => 0,
+    parallel => 8,
     runner => 'Fennec::Runner',
+    random => 1,
 )}
 
 sub init {}
@@ -43,7 +44,7 @@ sub import {
     Fennec::Runner->new->test_classes_push( $importer );
 
     for my $require ( @{$params{skip_without} || []}) {
-        die bless( "$require is not installed", 'Fennec::SKIP' )
+        die "FENNEC_SKIP: '$require' is not installed\n"
             unless eval "require $require; 1";
     }
 

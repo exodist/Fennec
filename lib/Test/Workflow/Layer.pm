@@ -16,6 +16,8 @@ our @ATTRIBUTES = qw/
     before_all
     after_each
     after_all
+    around_each
+    around_all
 /;
 
 accessors 'finalized', @ATTRIBUTES;
@@ -35,7 +37,7 @@ sub merge_in {
     push @{ $self->$_ } => @{ $add->$_ } for @ATTRIBUTES;
 }
 
-for my $type ( qw/test case child before_each before_all/ ) {
+for my $type ( qw/test case child before_each before_all around_each around_all/ ) {
     my $add = sub {
         my $self = shift;
         push @{ $self->$type } => Test::Workflow::Block->new( @_ );

@@ -74,7 +74,21 @@ sub run {
         next unless $class && $class->can('TEST_WORKFLOW');
         print "Running: $class\n";
         my $instance = $class->can('new') ? $class->new : bless( {}, $class );
-        Test::Workflow::run_tests( $instance );
+
+        my $layer = $instance->TEST_WORKFLOW->root_layer;
+        $instance->TEST_WORKFLOW->build_complete(1);
+        my @tests = Test::Workflow::get_tests( $instance, $layer, [], [], [] );
+
+        if ( my $max = $class->FENNEC->parallel ) {
+            require Parallel::Runner;
+            my $runner = Parallel::Runner->new( $max );
+            $runner->run( sub { $_->run( $instance )}) for @tests;
+            $runner->finish;
+        }
+        else {
+            $_->run( $instance ) for @tests;
+        }
+
         $self->check_pid();
     }
 
@@ -84,7 +98,13 @@ sub run {
 sub exception {
     my $self = shift;
     my ( $name, $exception ) = @_;
-    $self->listener->ok( 0, $name, $exception )
+
+    if ( $exception =~ m/^FENNEC_SKIP: (.*)\n/ ) {
+        $self->listener->ok( 1, "SKIPPING $name: $1")
+    }
+    else {
+        $self->listener->ok( 0, $name, $exception )
+    }
 }
 
 1;

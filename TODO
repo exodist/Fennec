@@ -1,3 +1,4 @@
  * Mocking   - Object::Quick
- * Parallel Test groups
+ * Parallel + Random Test groups
  * Run specific group
+ * TB2 support

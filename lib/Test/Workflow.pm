@@ -11,8 +11,8 @@ default_exports qw/
     tests       run_tests
     describe    it
     cases       case
-    before_each after_each
-    before_all  after_all
+    before_each after_each around_each
+    before_all  after_all  around_all
     with_tests
 /;
 
@@ -60,25 +60,29 @@ sub before_each { my @caller = caller; _get_layer( 'before_each', \@caller )->ad
 sub before_all  { my @caller = caller; _get_layer( 'before_all',  \@caller )->add_before_all(  \@caller, @_ )}
 sub after_each  { my @caller = caller; _get_layer( 'after_each',  \@caller )->add_after_each(  \@caller, @_ )}
 sub after_all   { my @caller = caller; _get_layer( 'after_all',   \@caller )->add_after_all(   \@caller, @_ )}
+sub around_each { my @caller = caller; _get_layer( 'around_each', \@caller )->add_around_each( \@caller, @_ )}
+sub around_all  { my @caller = caller; _get_layer( 'around_all',  \@caller )->add_around_all(  \@caller, @_ )}
 
 sub run_tests {
     my ( $instance ) = @_;
     my $layer = $instance->TEST_WORKFLOW->root_layer;
     $instance->TEST_WORKFLOW->build_complete(1);
-    my @tests = get_tests( $instance, $layer, [], [] );
+    my @tests = get_tests( $instance, $layer, [], [], [] );
     $_->run( $instance ) for @tests;
 }
 
 sub get_tests {
-    my ( $instance, $layer, $before_each, $after_each ) = @_;
+    my ( $instance, $layer, $before_each, $after_each, $around_each ) = @_;
     # get before_each and after_each
     push    @$before_each => @{ $layer->before_each };
+    push    @$around_each => @{ $layer->around_each };
     unshift @$after_each  => @{ $layer->after_each  };
 
     my @tests = map { Test::Workflow::Test->new(
         setup    => [ @$before_each ],
         tests    => [ $_            ],
         teardown => [ @$after_each  ],
+        around   => [ @$around_each ],
     )} @{ $layer->test };
 
     my @cases = @{ $layer->case };
@@ -97,16 +101,18 @@ sub get_tests {
         $_->run( $instance, $layer );
         warn "No tests in block '" . $_->name . "' approx lines " . $_->start_line . "->" . $_->end_line . "\n"
             unless @{ $layer->test };
-        get_tests( $instance, $layer, $before_each, $after_each );
+        get_tests( $instance, $layer, $before_each, $after_each, $around_each );
     } @{ $layer->child };
 
     my @before_all = @{ $layer->before_all };
-    my @after_all = @{ $layer->after_all };
+    my @after_all  = @{ $layer->after_all  };
+    my @around_all = @{ $layer->around_all };
     return Test::Workflow::Test->new(
         setup    => [ @before_all ],
         tests    => [ @tests      ],
         teardown => [ @after_all  ],
-    ) if @before_all || @after_all;
+        around   => [ @around_all ],
+    ) if @before_all || @after_all || @around_all;
 
     return @tests;
 }

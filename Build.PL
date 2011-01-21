@@ -10,15 +10,16 @@ my $build = Module::Build->new(
     create_readme => 1,
     requires => {
         'Carp'              => 0,
+        'Exporter::Declare' => 0,
+        'Object::Quick'     => '0.013',
+        'Parallel::Runner'  => '0.010',
         'Scalar::Util'      => 0,
         'TAP::Parser'       => 0,
-        'Exporter::Declare' => 0,
+        'Test::Exception'   => '0.29',
+        'Test::Simple'      => '0.88',
+        'Test::Warn'        => 0,
     },
     build_requires => {
-        'Test::Simple'    => 0.88,
-        'Test::Exception' => 0.29,
-        'Test::Warn'      => 0,
-        'Object::Quick'   => 0,
     },
 );
 

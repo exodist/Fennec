@@ -6,7 +6,7 @@ use Test::Workflow::Layer;
 
 use Fennec::Util qw/accessors/;
 
-accessors qw/test_class build_complete root_layer/;
+accessors qw/test_class build_complete root_layer test_run test_sort/;
 
 sub new {
     my $class = shift;

@@ -84,6 +84,7 @@ sub spawn_reporter {
     close( $write );
     $self->write(undef);
 
+    require TAP::Parser;
     accessors qw/buffer count error_count/;
 
     $self->buffer({});
@@ -121,6 +122,7 @@ sub handle_line {
     if ( !$buffer || $buffer->{id} ne $id ) {
         $self->render_buffer( $buffer ) if $buffer;
         $buffer = {
+            pid   => $pid,
             id    => $id,
             lines => [],
         };
@@ -145,7 +147,6 @@ sub flush {
 sub render_buffer {
     my $self = shift;
     my ( $buffer ) = @_;
-    require TAP::Parser;
 
     for my $line ( @{ $buffer->{ lines }}) {
         my $parser = TAP::Parser->new({ source => $line->[1] });
@@ -160,7 +161,7 @@ sub render_buffer {
                 print STDERR $result->raw . "\n";
             }
             else {
-                print STDOUT $result->raw . "\n";
+                print STDOUT $result->raw . " (" . $buffer->{pid} . ")\n";
             }
         }
     }
