@@ -47,7 +47,7 @@ sub run {
     my $error = $@ || "Error masked!";
     chomp( $error );
 
-    Fennec::Runner->ok(
+    Fennec::Runner->new->listener->ok(
         $success || 0,
         $self->name,
         "  ================================"

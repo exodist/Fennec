@@ -8,13 +8,13 @@ use Fennec;
 my $parent = $$;
 
 tests hoo => sub {
-    my $num;
-    for ( 1 .. 3 ) {
-        $num++;
-        fork();
-        last unless $$ == $parent;
-    }
-    $num = 0 if $parent == $$;
+#    my $num;
+#    for ( 1 .. 3 ) {
+#        $num++;
+#        fork();
+#        last unless $$ == $parent;
+#    }
+#    $num = 0 if $parent == $$;
 
     can_ok( __PACKAGE__, 'tests' );
 
@@ -40,10 +40,10 @@ describe blah => sub {
     after_each uhg2 => sub { print "after 1\n" };
     tests insidey => sub { ok( 1, "yinside 1" )};
 
-    tests die => sub { die "XXX" };
-    tests die2 => sub {
-        die "XXX"
-    };
+#    tests die => sub { die "XXX" };
+#    tests die2 => sub {
+#        die "XXX"
+#    };
 
     describe blah2 => sub {
         before_each xuhg => sub { print "before 2\n" };

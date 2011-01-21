@@ -5,7 +5,7 @@ use Exporter::Declare;
 use Carp qw/croak/;
 use Scalar::Util qw/blessed/;
 
-exports qw/inject_sub accessors array_accessors/;
+exports qw/inject_sub accessors array_accessors get_test_call/;
 
 sub inject_sub {
     my ( $package, $name, $code ) = @_;
@@ -70,5 +70,18 @@ sub array_accessors {
         });
     }
 }
+
+sub get_test_call {
+    my $runner;
+    my $i = 1;
+
+    while ( my @call = caller( $i++ )) {
+        $runner = \@call if !$runner && $call[0]->isa('Fennec::Runner');
+        return @call if $call[0]->can('FENNEC');
+    }
+
+    return( @$runner );
+}
+
 
 1;
