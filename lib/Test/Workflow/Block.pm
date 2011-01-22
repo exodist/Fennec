@@ -5,6 +5,7 @@ use warnings;
 use Fennec::Util qw/accessors/;
 use Carp qw/croak/;
 use B ();
+use Scalar::Util qw/blessed/;
 
 our @CARP_NOT = qw/
     Test::Workflow
@@ -38,6 +39,13 @@ sub new {
                                                  : "lines $start_line -> $end_line",
     }, $class);
 }
+
+sub clone_with {
+    my $self = shift;
+    my %params = @_;
+    bless({ %$self, %params}, blessed($self));
+}
+
 
 sub run {
     my $self = shift;

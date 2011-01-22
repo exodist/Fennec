@@ -5,17 +5,26 @@ use warnings;
 use Fennec::Util qw/accessors/;
 use List::Util qw/shuffle/;
 
-accessors qw/setup tests teardown around/;
+accessors qw/setup tests teardown around block_name/;
 
 sub new {
     my $class = shift;
     my %params = @_;
     return bless({
-        setup    => $params{setup}    || [],
-        tests    => $params{tests}    || [],
-        teardown => $params{teardown} || [],
-        around   => $params{around}   || [],
+        setup      => $params{setup}      || [],
+        tests      => $params{tests}      || [],
+        teardown   => $params{teardown}   || [],
+        around     => $params{around}     || [],
+        block_name => $params{block_name} || ""
     }, $class );
+}
+
+sub name {
+    my $self = shift;
+    return $self->tests->[0]->name
+        if @{ $self->tests } == 1;
+
+    return $self->block_name;
 }
 
 sub run {
@@ -37,7 +46,7 @@ sub _wrap_tests {
 
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
     my @tests = @{ $self->tests };
-    @tests = sort @tests if "$sort" =~ /^sort/;
+    @tests = sort { $a->name cmp $b->name } @tests if "$sort" =~ /^sort/;
     @tests = shuffle @tests if "$sort" =~ /^rand/;
     @tests = $sort->( @tests ) if ref $sort eq 'CODE';
 

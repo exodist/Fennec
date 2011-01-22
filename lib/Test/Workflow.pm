@@ -71,16 +71,16 @@ sub run_tests {
     my ( $instance ) = @_;
     my $layer = $instance->TEST_WORKFLOW->root_layer;
     $instance->TEST_WORKFLOW->build_complete(1);
-    my @tests = get_tests( $instance, $layer, [], [], [] );
+    my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [] );
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
-    @tests = sort @tests if "$sort" =~ /^sort/;
+    @tests = sort { $a->name cmp $b->name } @tests if "$sort" =~ /^sort/;
     @tests = shuffle @tests if "$sort" =~ /^rand/;
     @tests = $sort->( @tests ) if ref $sort eq 'CODE';
     $_->run( $instance ) for @tests;
 }
 
 sub get_tests {
-    my ( $instance, $layer, $before_each, $after_each, $around_each ) = @_;
+    my ( $instance, $layer, $name, $before_each, $after_each, $around_each ) = @_;
     # get before_each and after_each
     push    @$before_each => @{ $layer->before_each };
     push    @$around_each => @{ $layer->around_each };
@@ -101,40 +101,44 @@ sub get_tests {
         } @tests;
     }
 
-    @tests = map { Test::Workflow::Test->new(
-        setup    => [ @$before_each ],
-        tests    => [ $_            ],
-        teardown => [ @$after_each  ],
-        around   => [ @$around_each ],
-    )} @tests;
-
     my @cases = @{ $layer->case };
     if ( @cases ) {
         @tests = map {
             my $test = $_;
             map { Test::Workflow::Test->new(
                 setup => [ $_    ],
-                tests => [ $test ],
+                tests => [ $test->clone_with(
+                    name => "'" . $_->name . "' x '" . $test->name . "'"
+                )],
             )} @cases
         } @tests;
     }
+
+    @tests = map { Test::Workflow::Test->new(
+        setup      => [ @$before_each ],
+        tests      => [ $_            ],
+        teardown   => [ @$after_each  ],
+        around     => [ @$around_each ],
+        block_name => $name,
+    )} @tests;
 
     push @tests => map {
         my $layer = Test::Workflow::Layer->new;
         $_->run( $instance, $layer );
         warn "No tests in block '" . $_->name . "' approx lines " . $_->start_line . "->" . $_->end_line . "\n"
             unless @{ $layer->test };
-        get_tests( $instance, $layer, $before_each, $after_each, $around_each );
+        get_tests( $instance, $layer, $_->name, [@$before_each], [@$after_each], [@$around_each] );
     } @{ $layer->child };
 
     my @before_all = @{ $layer->before_all };
     my @after_all  = @{ $layer->after_all  };
     my @around_all = @{ $layer->around_all };
     return Test::Workflow::Test->new(
-        setup    => [ @before_all ],
-        tests    => [ @tests      ],
-        teardown => [ @after_all  ],
-        around   => [ @around_all ],
+        setup      => [ @before_all ],
+        tests      => [ @tests      ],
+        teardown   => [ @after_all  ],
+        around     => [ @around_all ],
+        block_name => $name,
     ) if @before_all || @after_all || @around_all;
 
     return @tests;
