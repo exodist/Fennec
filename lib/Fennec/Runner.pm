@@ -82,7 +82,7 @@ sub load_module {
 
 sub run {
     my $self = shift;
-    Test::Class->runtests if $INC{'Test/Class.pm'};
+    Test::Class->runtests if $INC{'Test/Class.pm'} && !$ENV{'FENNEC_TEST'};
 
     for my $class ( $self->test_classes ) {
         next unless $class && $class->can('TEST_WORKFLOW');
