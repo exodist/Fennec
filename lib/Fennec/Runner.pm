@@ -1,6 +1,20 @@
 package Fennec::Runner;
 use strict;
 use warnings;
+
+BEGIN {
+    my $seed = $ENV{'FENNEC_SEED'};
+    unless( $seed ) {
+        my %date_time;
+        @date_time{qw/sec min hour mday mon year/} = localtime(time);
+        $date_time{year} += 1900;
+        $seed = join("", @date_time{qw/mday mon year/});
+    }
+    print STDERR "\n*** Seeding random with date ($seed) ***\n",
+                 "***use the 'FENNEC_SEED' environment variable to override***\n";
+    srand( $seed );
+}
+
 use Carp qw/carp croak/;
 use Scalar::Util qw/blessed/;
 use Fennec::Util qw/accessors array_accessors/;
@@ -74,21 +88,24 @@ sub run {
         next unless $class && $class->can('TEST_WORKFLOW');
         print "Running: $class\n";
         my $instance = $class->can('new') ? $class->new : bless( {}, $class );
+        my $meta = $instance->TEST_WORKFLOW;
 
-        my $layer = $instance->TEST_WORKFLOW->root_layer;
-        $instance->TEST_WORKFLOW->build_complete(1);
-        my @tests = Test::Workflow::get_tests( $instance, $layer, [], [], [] );
-
+        my $prunner;
         if ( my $max = $class->FENNEC->parallel ) {
             require Parallel::Runner;
-            my $runner = Parallel::Runner->new( $max );
-            $runner->run( sub { $_->run( $instance )}) for @tests;
-            $runner->finish;
-        }
-        else {
-            $_->run( $instance ) for @tests;
+            $prunner = Parallel::Runner->new( $max );
+            $meta->test_run( sub {
+                my $sub = shift;
+                $prunner->run( sub {
+                    $instance->TEST_WORKFLOW->test_run(undef);
+                    $sub->();
+                });
+            });
         }
 
+        Test::Workflow::run_tests( $instance );
+        $prunner->finish if $prunner;
+        $meta->test_run( undef );
         $self->check_pid();
     }
 

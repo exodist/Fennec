@@ -6,6 +6,7 @@ use Exporter::Declare;
 use Test::Workflow::Meta;
 use Test::Workflow::Test;
 use Test::Workflow::Layer;
+use List::Util qw/shuffle/;
 
 default_exports qw/
     tests       run_tests
@@ -14,6 +15,7 @@ default_exports qw/
     before_each after_each around_each
     before_all  after_all  around_all
     with_tests
+    test_sort
 /;
 
 gen_default_export TEST_WORKFLOW => sub {
@@ -63,11 +65,17 @@ sub after_all   { my @caller = caller; _get_layer( 'after_all',   \@caller )->ad
 sub around_each { my @caller = caller; _get_layer( 'around_each', \@caller )->add_around_each( \@caller, @_ )}
 sub around_all  { my @caller = caller; _get_layer( 'around_all',  \@caller )->add_around_all(  \@caller, @_ )}
 
+sub test_sort { caller->TEST_WORKFLOW->test_sort( @_ )}
+
 sub run_tests {
     my ( $instance ) = @_;
     my $layer = $instance->TEST_WORKFLOW->root_layer;
     $instance->TEST_WORKFLOW->build_complete(1);
     my @tests = get_tests( $instance, $layer, [], [], [] );
+    my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
+    @tests = sort @tests if "$sort" =~ /^sort/;
+    @tests = shuffle @tests if "$sort" =~ /^rand/;
+    @tests = $sort->( @tests ) if ref $sort eq 'CODE';
     $_->run( $instance ) for @tests;
 }
 

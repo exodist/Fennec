@@ -161,7 +161,7 @@ sub render_buffer {
                 print STDERR $result->raw . "\n";
             }
             else {
-                print STDOUT $result->raw . " (" . $buffer->{pid} . ")\n";
+                print STDOUT $result->raw . "\n";
             }
         }
     }

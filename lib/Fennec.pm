@@ -12,9 +12,9 @@ sub defaults {(
     /],
     utils_with_args => {
     },
-    parallel => 8,
+    parallel => 3,
     runner => 'Fennec::Runner',
-    random => 1,
+    test_sort => 'rand',
 )}
 
 sub init {}
