@@ -11,6 +11,9 @@ describe blah => sub {
     tests group_c => sub { ok( 1, 'c' )};
     tests group_d => sub { ok( 1, 'd' )};
     tests group_e => sub { ok( 1, 'e' )};
+    describe foo => sub {
+        tests group_x => sub { ok( 1, 'x' )};
+    };
 };
 
 1;

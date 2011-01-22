@@ -86,12 +86,27 @@ sub get_tests {
     push    @$around_each => @{ $layer->around_each };
     unshift @$after_each  => @{ $layer->after_each  };
 
-    my @tests = map { Test::Workflow::Test->new(
+    my @tests = @{ $layer->test };
+
+    if ( my $specific = $ENV{FENNEC_TEST}) {
+        @tests = grep {
+            my $out = 0;
+            if ( $specific =~ m/^\d+$/ ) {
+                $out = 1 if $_->start_line <= $specific && $_->end_line >= $specific;
+            }
+            else {
+                $out = 1 if $_->name eq $specific;
+            }
+            $out;
+        } @tests;
+    }
+
+    @tests = map { Test::Workflow::Test->new(
         setup    => [ @$before_each ],
         tests    => [ $_            ],
         teardown => [ @$after_each  ],
         around   => [ @$around_each ],
-    )} @{ $layer->test };
+    )} @tests;
 
     my @cases = @{ $layer->case };
     if ( @cases ) {

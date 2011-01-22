@@ -14,6 +14,7 @@ my $build = Module::Build->new(
         'Object::Quick'     => '0.013',
         'Parallel::Runner'  => '0.010',
         'Scalar::Util'      => 0,
+        'List::Util'        => 0,
         'TAP::Parser'       => 0,
         'Test::Exception'   => '0.29',
         'Test::Simple'      => '0.88',
