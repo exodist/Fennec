@@ -120,7 +120,8 @@ comes see L<Test::Workflow>)
 
 =item Test::Builder and Test::Builder2 compatibility
 
-Fennec is compatible with L<Test::Builder> based tools.
+Fennec is compatible with L<Test::Builder> based tools. The goal is to have
+support for L<Test::Builder2> as soon as it is released, maybe shortly before.
 
 =item Ability to decouple from Test::Builder
 
@@ -287,9 +288,14 @@ A Fennec class can also be a Test::Class class.
 
 =item Test::Builder
 
+If Fennec did not support this who would use it?
+
 =item Test::Builder2
 
-If Fennec did not support these who would use it?
+Test::Builder2 is not out yet, and some specific functionality necessary for
+Fennec has yet to be fully implemented. Fennec will develop support fot TB2 as
+it matures. The goal is to have a version of Fennec that works with TB2 as soon
+as TB2 is released, if not before.
 
 =back
 
