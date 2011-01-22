@@ -1,0 +1,402 @@
+NAME
+    Fennec - A test helper providing RSPEC, Workflows, Parallelization, and
+    Encapsulation.
+
+DESCRIPTION
+    Fennec started as a project to improve the state of testing in Perl.
+    Fennec looks to existing solutions for most problems, so long as the
+    existing solutions help meet the features listed below.
+
+FEATURES
+    Forking Works
+        Forking in tests just plain works. You can fork, and run assertions
+        (tests) in both processes.
+
+    Test groups can be run alone
+        Encapsulated test groups can be run individually, without running
+        the entire file. (See Test::Workflow)
+
+    Parallelization within test files
+        Encapsulated test groups can be run in parallel if desired. (On by
+        default with up to 3 processes)
+
+    Test reordering
+        Tests groups can be sorted, randomized, or sorted via a custom
+        method. (This comes see Test::Workflow)
+
+    Test::Builder and Test::Builder2 compatibility
+        Fennec is compatible with Test::Builder based tools.
+
+    Ability to decouple from Test::Builder
+        Fennec is configurable to work on alternatives to Test::Builder.
+
+    No need to formally end tests
+        You do not need to put anything such as done_testing() at the end of
+        your test file.
+
+    Test counting is handled for you
+        You do not need to worry about test counts.
+
+    Diagnostic messages are grouped with the failed test
+        Annoyed when your test failue and the diagnostics messages about
+        that test are decoupled?
+
+            ok 1 - foo
+            ok 2 - bar
+            not ok 3 - baz
+            ok 4 - bannana
+            ok 5 - pear
+            # Test failure on line 67
+            # expected: 'baz'
+            #      got: 'bazz'
+
+        This happens because normal output is sent to STDOUT, while errors
+        are sent to STDERR. This is important in a non-verbose harness so
+        that you can still see error messages. In a verbose harness however
+        it is just plain annoying. Fenenc checks the verbosity of the
+        harness, and sends diagnostic messages to STDOUT when the harness is
+        verbose.
+
+        Note: This is not IO redirection or handle manipulation, your
+        warnings and errors will still go to STDERR.
+
+SYNOPSIS
+        package MyTest;
+        use strict;
+        use warnings;
+        use Fennec;
+
+        tests foo => sub {
+            ok( 1, 'bar' );
+        };
+
+        tests another => sub {
+            ok( 1, 'something passed' );
+        };
+
+        1;
+
+    By default these test groups will be run in parallel. They will also be
+    run in random order by default. See the "CONFIGURATION" for more details
+    on controling behavior. Also see Test::Workflow for more useful and
+    poweful test groups and structures.
+
+  FRIENDLIER INTERFACE
+    If you use Fennec::Declare you can write tests like this:
+
+        package MyTest;
+        use strict;
+        use warnings;
+        use Fennec;
+
+        tests foo {
+            ok( 1, 'bar' );
+        }
+
+        1;
+
+    Thats right, "no => sub" and no trailing ';'.
+
+RUNNING ONLY A SPECIFIC GROUP
+         1: package MyTest;
+         2: use strict;
+         3: use warnings;
+         4: use Fennec;
+         5:
+         6: tests foo => sub {
+         7:     ok( 1, 'bar' );
+         8: };
+         9:
+        10: tests another => sub {
+        11:    ok( 1, 'something passed' );
+        12: };
+        13:
+        14: 1;
+
+    In the above code there are 2 test groups, 'foo', and 'another'. If you
+    wanted, you could run just one, without the others running. Fennec looks
+    at the 'FENNEC_TEST' environment variable. If the variable is set to a
+    string, then only the test groups with that string as a name will run.
+
+        $ FENNEC_TEST="foo" prove -Ilib -v t/FennecTest.t
+
+    In addition, you could provide a line number, and only the test group
+    defined across that line will be run. For example, to run 'foo' you
+    could give the line number 6, 7 or 8 to run that group alone.
+
+        $ FENNEC_TEST="7" prove -Ilib -v t/FennecTest.t
+
+    This will run only test 'foo'. The use of line numbers makes editor
+    integration very easy. Most editors will let you bind a key to running
+    the above command replacing t/FennecTest.t with the current file, and
+    automatically inserting the current line into FENNEC_TEST.
+
+EDITOR INTEGRATION
+  VI/VIM
+    Insert this into your .vimrc file to bind the F8 key to running the
+    current test in the current file:
+
+        function! RunFennecLine()
+            let cur_line = line(".")
+            exe "!FENNEC_TEST='" . cur_line . "' prove -v -I lib %"
+        endfunction
+
+        " Go to command mode, save the file, run the current test
+        :imap <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
+
+MODULES LOADED AUTOMATICALLY WITH FENNEC
+    Test::More
+        The standard perl test library. Test::More
+
+    Test::Exception
+        One of the more useful test libraries, used to test code that throws
+        exceptions (dies). Test::Exception
+
+    Test::Warn
+        Test code that issues warnings. Test::Warn
+
+    Test::Workflow
+        Provides RSPEC, and several other workflow related helpers. Also
+        provides the test group encapsulation. Test::Workflow
+
+    Mock::Quick
+        Quick and effective mocking with no action at a distance side
+        effects. Mock::Quick
+
+MODULES FENNEC MAKES AN EFFORT TO SUPPORT
+    Test::Class
+        A Fennec class can also be a Test::Class class.
+
+    Test::Builder
+    Test::Builder2
+        If Fennec did not support these who would use it?
+
+CONFIGURATION
+    There are 2 ways to configure Fennec. One is to specify configuration
+    options at import. The other is to subclass Fennec and override the
+    defaults() method.
+
+    Configuration options:
+
+    utils => [ qw/ModuleA ModuleB .../ ]
+        Provide a list of modules to load. They will be imported as if you
+        typed "use MODULE".
+
+    utils_with_args => { ModuleName => [ ...ARGS... ]}
+        This is the same as utils except you can specify arguments to pass
+        into ModuleName->import().
+
+    parallel => $MAX
+        Specify the maximum number of processes Fennec should use to run
+        your tests. Default: 3
+
+    runner_class => $CLASS
+        Specify the runner class. Default: Fennec::Runner
+
+  AT IMPORT
+        use Fennec parallel => 5,
+                      utils => [ 'My::Util' ],
+                      ... Other Options ...;
+
+  BY SUBCLASS
+        package My::Fennec;
+        use base 'Fennec';
+
+        sub defaults {(
+            utils => [qw/
+                Test::More Test::Warn Test::Exception Test::Workflow
+            /],
+            utils_with_args => {
+                My::Util => [qw/function_x function_y/],
+            },
+            parallel => 5,
+            runner_class => 'Fennec::Runner',
+        )}
+
+        # Hook, called after import
+        sub init {
+            my $class = shift;
+            # All parameters passed to import(), as well as caller => [...] and meta => $meta
+            my %params = @_;
+
+            ...
+        }
+
+        1;
+
+MORE COMPLETE EXAMPLE
+    This is a more complete example than that which is given in the
+    synopsis. Most of this actually comes from Method::Workflow, See those
+    docs for more details. Significant sections are in seperate headers, but
+    all examples should be considered part of the same long test file.
+
+    NOTE: All blocks, including setup/teardown are methods, you can shift @_
+    to get $self.
+
+  BASIC EXAMPLES
+        package MyTest;
+        use strict;
+        use warnings;
+        use Fennec;
+
+        # Tests can be at the package level
+        use_ok( 'MyClass' );
+
+        # Fennec works with Test::Class
+        use base 'Test::Class';
+
+        sub tc_test : Test(1) {
+            my $self = shift;
+            ok( 1, 'This is a Test::Class test' );
+        }
+
+        tests loner => sub {
+            my $self = shift;
+            ok( 1, "1 is the loneliest number... " );
+        };
+
+  RSPEC WORKFLOW
+    Here setup/teardown methods are declared in the order in which they are
+    run, but they can really be declared anywhere within the describe block
+    and the behavior will be identical.
+
+        describe example => sub {
+            my $self = shift;
+            my $number = 0;
+            my $letter = 'A';
+
+            before_all setup => sub { $number = 1 };
+
+            before_each letter_up => sub { $letter++ };
+
+            # it() is an alias for tests()
+            it check => sub {
+                my $self = shift;
+                is( $letter, 'B', "Letter was incremented" );
+                is( $number, 2,   "number was incremented" );
+            };
+
+            after_each reset => sub { $number = 1 };
+
+            after_all teardown => sub {
+                is( $number, 1, "number is back to 1" );
+            };
+
+            describe nested => sub {
+                # This nested describe block will inherit before_each and
+                # after_each from the parent block.
+                ...
+            };
+        };
+
+   FENNEC'S RSPEC IMPROVEMENT
+    Fennec add's to the RSPEC toolset with the around keyword.
+
+        describe addon => sub {
+            my $self = shift;
+
+            around_each localize_env => sub {
+                my $self = shift;
+                my ( $inner ) = @_;
+
+                local %ENV = ( %ENV, foo => 'bar' );
+
+                $inner->();
+            };
+
+            tests foo => sub {
+                is( $ENV{foo}, 'bar', "in the localized environment" );
+            };
+        };
+
+  CASE WORKFLOW
+    Cases are used when you have a test that you wish to run under several r
+    tests conditions. The following is a trivial example. Each test will be
+    run once under each case. Beware! this will run (cases x tests), with
+    many tests and cases this can be a huge set of actual tests. In this
+    example 8 in total will be run.
+
+    Note: The 'cases' keyword is an alias to describe. case blocks can go
+    into any workflow and will work as expected.
+
+        cases check_several_numbers => sub {
+            my $number;
+            case one => sub { $number = 2 };
+            case one => sub { $number = 4 };
+            case one => sub { $number = 6 };
+            case one => sub { $number = 8 };
+
+            tests is_even => sub {
+                ok( !$number % 2, "number is even" );
+            };
+
+            tests only_digits => sub {
+                like( $number, qr/^\d+$/i, "number is all digits" );
+            };
+        };
+
+        1;
+
+ADDITIONAL USER DOCUMENTATION
+    Fennec::Recipe::CustomFennec
+    Fennec::Recipe::CustomRunner
+
+SEE ALSO
+    Test::Workflow
+    Fennec::Runner
+    Mock::Quick
+    Test::More
+    Test::Exception
+    Test::Warn
+    Test::Class
+    Test::Builder
+
+NOTES
+    When you "use Fennec", it will check to see if you called the file
+    directly. If you directly called the file Fennec will restart Perl and
+    run your test through Fennec::Runner.
+
+CAVEATS
+    When running a test group by line, fennec takes it's best guess at which
+    group the line number represents. There are 2 ways to get the line
+    number of a codeblock:
+
+    The first is to use the B module. The B module will return the line of
+    the first statement within the codeblock.
+
+    The other is to define the codeblock in a function call, such as "tests
+    foo => sub {...}", tests() can then use caller() which will return the
+    last line of the statement.
+
+    Combining these methods, we can get the approximate starting and ending
+    lines for codeblocks defined through Fennec's keywords.
+
+    This will break if you do something like:
+
+        tests foo => \&my_test;
+        sub my_test { ... }
+
+    But might work just fine if you do:
+
+        tests foo => \&my_test;
+        sub my_test { ... }
+
+    But might run both tests in this case when asking to run 'baz' by line
+    number:
+
+        tests foo => \&my_test;
+        tests baz => sub {... }
+        sub my_test { ... }
+
+AUTHORS
+    Chad Granum exodist7@gmail.com
+
+COPYRIGHT
+    Copyright (C) 2011 Chad Granum
+
+    Fennec is free software; Standard perl licence.
+
+    Fennec is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+
