@@ -150,7 +150,7 @@ decoupled?
 
 This happens because normal output is sent to STDOUT, while errors are sent to
 STDERR. This is important in a non-verbose harness so that you can still see
-error messages. In a verbose harness however it is just plain annoying. Fenenc
+error messages. In a verbose harness however it is just plain annoying. Fennec
 checks the verbosity of the harness, and sends diagnostic messages to STDOUT
 when the harness is verbose.
 
@@ -196,7 +196,7 @@ B<If you use L<Fennec::Declare> you can write tests like this:>
 
     1;
 
-Thats right, C<no =E<gt> sub> and no trailing ';'.
+Thats right, no C<=E<gt> sub> and no trailing ';'.
 
 =head1 RUNNING ONLY A SPECIFIC GROUP
 
@@ -514,7 +514,7 @@ through L<Fennec::Runner>.
 
 =head1 CAVEATS
 
-When running a test group by line, fennec takes it's best guess at which group
+When running a test group by line, Fennec takes it's best guess at which group
 the line number represents. There are 2 ways to get the line number of a
 codeblock:
 
