@@ -484,6 +484,8 @@ any workflow and will work as expected.
 
 =over 4
 
+=item L<Fennec::Recipe::SingleRunner>
+
 =item L<Fennec::Recipe::CustomFennec>
 
 =item L<Fennec::Recipe::CustomRunner>
