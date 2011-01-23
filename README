@@ -7,6 +7,12 @@ DESCRIPTION
     Fennec looks to existing solutions for most problems, so long as the
     existing solutions help meet the features listed below.
 
+API STABILITY
+    Fennec versions below 1.000 were considered experimental, and the API
+    was subject to change. As of version 1.0 the API is considered
+    stabalized. New versions may add functionality, but not remove or
+    significantly alter existing functionality.
+
 FEATURES
     Forking Works
         Forking in tests just plain works. You can fork, and run assertions
@@ -25,7 +31,9 @@ FEATURES
         method. (This comes see Test::Workflow)
 
     Test::Builder and Test::Builder2 compatibility
-        Fennec is compatible with Test::Builder based tools.
+        Fennec is compatible with Test::Builder based tools. The goal is to
+        have support for Test::Builder2 as soon as it is released, maybe
+        shortly before.
 
     Ability to decouple from Test::Builder
         Fennec is configurable to work on alternatives to Test::Builder.
@@ -53,7 +61,7 @@ FEATURES
         This happens because normal output is sent to STDOUT, while errors
         are sent to STDERR. This is important in a non-verbose harness so
         that you can still see error messages. In a verbose harness however
-        it is just plain annoying. Fenenc checks the verbosity of the
+        it is just plain annoying. Fennec checks the verbosity of the
         harness, and sends diagnostic messages to STDOUT when the harness is
         verbose.
 
@@ -73,6 +81,16 @@ SYNOPSIS
         tests another => sub {
             ok( 1, 'something passed' );
         };
+
+        tests not_ready => (
+            todo => "Feature not implemented",
+            code => sub { ... },
+        );
+
+        tests very_not_ready => (
+            skip => "These tests will die if run"
+            code => sub { ... },
+        );
 
         1;
 
@@ -95,7 +113,7 @@ SYNOPSIS
 
         1;
 
-    Thats right, "no => sub" and no trailing ';'.
+    Thats right, no "=> sub" and no trailing ';'.
 
 RUNNING ONLY A SPECIFIC GROUP
          1: package MyTest;
@@ -168,8 +186,14 @@ MODULES FENNEC MAKES AN EFFORT TO SUPPORT
         A Fennec class can also be a Test::Class class.
 
     Test::Builder
+        If Fennec did not support this who would use it?
+
     Test::Builder2
-        If Fennec did not support these who would use it?
+        Test::Builder2 is not out yet, and some specific functionality
+        necessary for Fennec has yet to be fully implemented. Fennec will
+        develop support fot TB2 as it matures. The goal is to have a version
+        of Fennec that works with TB2 as soon as TB2 is released, if not
+        before.
 
 CONFIGURATION
     There are 2 ways to configure Fennec. One is to specify configuration
@@ -178,20 +202,53 @@ CONFIGURATION
 
     Configuration options:
 
-    utils => [ qw/ModuleA ModuleB .../ ]
-        Provide a list of modules to load. They will be imported as if you
-        typed "use MODULE".
+   utils => [ qw/ModuleA ModuleB .../ ]
+    Provide a list of modules to load. They will be imported as if you typed
+    "use MODULE".
 
-    utils_with_args => { ModuleName => [ ...ARGS... ]}
-        This is the same as utils except you can specify arguments to pass
-        into ModuleName->import().
+    You can specify arguments for each class like so:
 
-    parallel => $MAX
-        Specify the maximum number of processes Fennec should use to run
-        your tests. Default: 3
+        use Fennec utils => [ 'My::Util' ],
+              'My::Util' => [ 'Arg1', 'Arg2' ];
 
-    runner_class => $CLASS
-        Specify the runner class. Default: Fennec::Runner
+   parallel => $MAX
+    Specify the maximum number of processes Fennec should use to run your
+    tests. Set to 0 to never create a new process. Depedning on conditions 1
+    MAY fork for test groups while still only running 1 at a time, but this
+    behavior is not guarenteed.
+
+    Default: 3
+
+   runner_class => $CLASS
+    Specify the runner class. Default: Fennec::Runner
+
+   with_tests => \@CLASSES
+    Load test_groups and workflows from another class. This allows you to
+    put test groups common to many test files into a single place for
+    re-use.
+
+   test_sort => $SORT
+    This sets the test sorting method for Test::Workflow test groups.
+    Accepts 'random', 'sort', a codeblock, or 'ordered'. This uses a fuzzy
+    matching, you can use the shorter versions 'rand', and 'ord'.
+
+    Defaults to: 'rand'
+
+    'random'
+        Will shuffle the order. Keep in mind Fennec sets the random seed
+        using the date so that tests will be determinate on the day you
+        write them, but random over time.
+
+    'sort'
+        Sort the test groups by name. When multiple tests are wrapped in
+        before_all or after_all the describe/cases block name will be used.
+
+    'ordered'
+        Use the order in which the test groups were defined.
+
+    sub { my @tests = @_; ...; return @new_tests }
+        Specify a custom method of sorting. This is not the typical sort {}
+        block, $a and $b will not be set.
 
   AT IMPORT
         use Fennec parallel => 5,
@@ -237,7 +294,9 @@ MORE COMPLETE EXAMPLE
         package MyTest;
         use strict;
         use warnings;
-        use Fennec;
+        use Fennec parallel   => 2,
+                   with_tests => [qw/ Test::TemplateA Test::TemplateB /],
+                   test_sort  => 'rand';
 
         # Tests can be at the package level
         use_ok( 'MyClass' );
@@ -254,6 +313,16 @@ MORE COMPLETE EXAMPLE
             my $self = shift;
             ok( 1, "1 is the loneliest number... " );
         };
+
+        tests not_ready => (
+            todo => "Feature not implemented",
+            code => sub { ... },
+        );
+
+        tests very_not_ready => (
+            skip => "These tests will die if run"
+            code => sub { ... },
+        );
 
   RSPEC WORKFLOW
     Here setup/teardown methods are declared in the order in which they are
@@ -287,6 +356,11 @@ MORE COMPLETE EXAMPLE
                 # after_each from the parent block.
                 ...
             };
+
+            describe maybe_later => (
+                todo => "We might get to this",
+                code => { ... },
+            );
         };
 
    FENNEC'S RSPEC IMPROVEMENT
@@ -338,10 +412,12 @@ MORE COMPLETE EXAMPLE
         1;
 
 ADDITIONAL USER DOCUMENTATION
+    Fennec::Recipe::SingleRunner
     Fennec::Recipe::CustomFennec
     Fennec::Recipe::CustomRunner
 
 SEE ALSO
+    Fennec::Lite
     Test::Workflow
     Fennec::Runner
     Mock::Quick
@@ -357,7 +433,7 @@ NOTES
     run your test through Fennec::Runner.
 
 CAVEATS
-    When running a test group by line, fennec takes it's best guess at which
+    When running a test group by line, Fennec takes it's best guess at which
     group the line number represents. There are 2 ways to get the line
     number of a codeblock:
 
