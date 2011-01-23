@@ -70,12 +70,12 @@ sub import {
             unless grep { $_ eq $base } @{ "$importer\::ISA" };
     }
 
-    for my $util ( @{ $meta->utils }) {
+    for my $util ( @{ $params{utils} || [] }) {
         my $code = "package $importer; require $util; $util\->import(\@{\$params{'$util'}}); 1";
         eval $code || die $@;
     }
 
-    for my $template ( @{ $meta->with_tests }) {
+    for my $template ( @{ $params{with_tests} || [] }) {
         eval "package $importer; with_tests '$template'; 1" || die $@;
     }
 
