@@ -326,19 +326,17 @@ at import. The other is to subclass Fennec and override the defaults() method.
 
 Configuration options:
 
-=over 4
-
-=item utils => [ qw/ModuleA ModuleB .../ ]
+=head3 utils => [ qw/ModuleA ModuleB .../ ]
 
 Provide a list of modules to load. They will be imported as if you typed
 C<use MODULE>.
 
-=item utils_with_args => { ModuleName => [ ...ARGS... ]}
+=head3 utils_with_args => { ModuleName => [ ...ARGS... ]}
 
 This is the same as utils except you can specify arguments to pass into
 ModuleName->import().
 
-=item parallel => $MAX
+=head3 parallel => $MAX
 
 Specify the maximum number of processes Fennec should use to run your tests.
 Set to 0 to never create a new process. Depedning on conditions 1 MAY fork for
@@ -347,11 +345,16 @@ guarenteed.
 
 Default: 3
 
-=item runner_class => $CLASS
+=head3 runner_class => $CLASS
 
 Specify the runner class. Default: L<Fennec::Runner>
 
-=item test_sort => $SORT
+=head3 with_tests => \@CLASSES
+
+Load test_groups and workflows from another class. This allows you to put test
+groups common to many test files into a single place for re-use.
+
+=head3 test_sort => $SORT
 
 This sets the test sorting method for Test::Workflow test groups.  Accepts
 'random', 'sort', a codeblock, or 'ordered'. This uses a fuzzy matching, you
