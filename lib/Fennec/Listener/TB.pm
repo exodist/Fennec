@@ -2,6 +2,8 @@ package Fennec::Listener::TB;
 use strict;
 use warnings;
 
+use Fennec::Listener::TB::Handle;
+
 use base 'Fennec::Listener';
 
 use Fennec::Util qw/accessors get_test_call/;
@@ -57,24 +59,21 @@ sub setup_tb {
     Test::Builder->new->use_numbers(0);
     my $out = $self->write;
 
-    no warnings 'redefine';
-    *Test::Builder::_ending = sub { 1 };
+    my $TB = Test::Builder->new;
+    $TB->no_ending(1);
 
-    my $original_print = Test::Builder->can('_print_to_fh');
-    *Test::Builder::_print_to_fh = sub {
-        my( $tb, $fh, @msgs ) = @_;
+    tie( *TBOUT, 'Fennec::Listener::TB::Handle', 'STDOUT', $out );
+    tie( *TBERR, 'Fennec::Listener::TB::Handle', 'STDERR', $out );
 
-        my ( $handle, $output );
-        open( $handle, '>', \$output );
-        $original_print->( $tb, $handle, @msgs );
-        close( $handle );
+    my $old = select( TBOUT );
+    $| = 1;
+    select( TBERR );
+    $| = 1;
+    select( $old );
 
-        my $ohandle = ($fh == $tb->output) ? 'STDOUT' : 'STDERR';
-
-        my @call = get_test_call();
-        print $out join( "\0", $$, $ohandle, $call[0], $call[1], $call[2], $_ ) . "\n"
-            for split( /[\n\r]+/, $output );
-    };
+    $TB->output(\*TBOUT);
+    $TB->todo_output(\*TBOUT);
+    $TB->failure_output(\*TBERR);
 }
 
 sub spawn_reporter {
