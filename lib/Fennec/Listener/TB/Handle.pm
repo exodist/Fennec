@@ -25,21 +25,30 @@ sub PRINT {
 }
 
 1;
+
 __END__
 
-    my $original_print = Test::Builder->can('_print_to_fh');
-    *Test::Builder::_print_to_fh = sub {
-        my( $tb, $fh, @msgs ) = @_;
+=head1 NAME
 
-        my ( $handle, $output );
-        open( $handle, '>', \$output );
-        $original_print->( $tb, $handle, @msgs );
-        close( $handle );
+=head1 DESCRIPTION
 
-        my $ohandle = ($fh == $tb->output) ? 'STDOUT' : 'STDERR';
+=head1 API STABILITY
 
-        my @call = get_test_call();
-        print $out join( "\0", $$, $ohandle, $call[0], $call[1], $call[2], $_ ) . "\n"
-            for split( /[\n\r]+/, $output );
-    };
+Fennec versions below 1.000 were considered experimental, and the API was
+subject to change. As of version 1.0 the API is considered stabalized. New
+versions may add functionality, but not remove or significantly alter existing
+functionality.
 
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2011 Chad Granum
+
+Fennec is free software; Standard perl licence.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the license for more details.

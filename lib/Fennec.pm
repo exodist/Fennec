@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '0.100';
+our $VERSION = '1.000_1';
 
 sub defaults {(
     utils => [qw/
@@ -113,6 +113,13 @@ Fennec - A test helper providing RSPEC, Workflows, Parallelization, and Encapsul
 Fennec started as a project to improve the state of testing in Perl. Fennec
 looks to existing solutions for most problems, so long as the existing
 solutions help meet the features listed below.
+
+=head1 API STABILITY
+
+Fennec versions below 1.000 were considered experimental, and the API was
+subject to change. As of version 1.0 the API is considered stabalized. New
+versions may add functionality, but not remove or significantly alter existing
+functionality.
 
 =head1 FEATURES
 
