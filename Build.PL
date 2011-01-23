@@ -22,6 +22,13 @@ my $build = Module::Build->new(
     },
     build_requires => {
     },
+    meta_merge => {
+        resources => {
+            repository  => 'http://github.com/exodist/Fennec',
+            bugtracker  => 'http://github.com/exodist/Fennec/issues',
+            homepage    => 'http://open-exodus.net/projects/Fennec'
+        },
+    }
 );
 
 $build->create_build_script;

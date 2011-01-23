@@ -32,10 +32,6 @@ returns the single Fennec meta-object that tracks information about your class.
 
 =over 4
 
-=item utils
-
-A list of utility classes that were loaded by Fennec into your class.
-
 =item parallel
 
 Maximum number of parallel tests that can be run for your class.

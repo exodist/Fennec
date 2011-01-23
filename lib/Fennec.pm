@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.000_2';
+our $VERSION = '1.000_3';
 
 sub defaults {(
     utils => [qw/
@@ -144,8 +144,8 @@ up to 3 processes)
 
 =item Test reordering
 
-Tests groups can be sorted, randomized, or sorted via a custom method. (This
-comes see L<Test::Workflow>)
+Tests groups can be sorted, randomized, or sorted via a custom method. (see
+L<Test::Workflow>)
 
 =item Test::Builder and Test::Builder2 compatibility
 
@@ -166,7 +166,7 @@ You do not need to worry about test counts.
 
 =item Diagnostic messages are grouped with the failed test
 
-Annoyed when your test failue and the diagnostics messages about that test are
+Annoyed when your test failure and the diagnostics messages about that test are
 decoupled?
 
     ok 1 - foo
@@ -218,7 +218,7 @@ errors will still go to STDERR.
 
 By default these test groups will be run in parallel. They will also be run in
 random order by default. See the L</CONFIGURATION> for more details on
-controling behavior. Also see L<Test::Workflow> for more useful and poweful
+controlling behavior. Also see L<Test::Workflow> for more useful and poweful
 test groups and structures.
 
 =head2 FRIENDLIER INTERFACE
@@ -286,34 +286,34 @@ test in the current file:
     endfunction
 
     " Go to command mode, save the file, run the current test
+    :map <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
     :imap <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
 
 =head1 MODULES LOADED AUTOMATICALLY WITH FENNEC
 
 =over 4
 
-=item Test::More
+=item L<Test::More>
 
-The standard perl test library. L<Test::More>
+The standard perl test library.
 
-=item Test::Exception
+=item L<Test::Exception>
 
 One of the more useful test libraries, used to test code that throws exceptions
-(dies). L<Test::Exception>
+(dies).
 
-=item Test::Warn
+=item L<Test::Warn>
 
-Test code that issues warnings. L<Test::Warn>
+Test code that issues warnings.
 
-=item Test::Workflow
+=item L<Test::Workflow>
 
 Provides RSPEC, and several other workflow related helpers. Also provides the
-test group encapsulation. L<Test::Workflow>
+test group encapsulation.
 
-=item Mock::Quick
+=item L<Mock::Quick>
 
 Quick and effective mocking with no action at a distance side effects.
-L<Mock::Quick>
 
 =back
 
@@ -321,15 +321,15 @@ L<Mock::Quick>
 
 =over 4
 
-=item Test::Class
+=item L<Test::Class>
 
 A Fennec class can also be a Test::Class class.
 
-=item Test::Builder
+=item L<Test::Builder>
 
 If Fennec did not support this who would use it?
 
-=item Test::Builder2
+=item L<Test::Builder2>
 
 There is currently experimental support for Test::Builder2. Once Test::Builder2
 is officially released, support will be finalized.

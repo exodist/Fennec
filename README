@@ -28,7 +28,7 @@ FEATURES
 
     Test reordering
         Tests groups can be sorted, randomized, or sorted via a custom
-        method. (This comes see Test::Workflow)
+        method. (see Test::Workflow)
 
     Test::Builder and Test::Builder2 compatibility
         Fennec is compatible with Test::Builder based tools. Test::Builder2
@@ -46,7 +46,7 @@ FEATURES
         You do not need to worry about test counts.
 
     Diagnostic messages are grouped with the failed test
-        Annoyed when your test failue and the diagnostics messages about
+        Annoyed when your test failure and the diagnostics messages about
         that test are decoupled?
 
             ok 1 - foo
@@ -96,7 +96,7 @@ SYNOPSIS
 
     By default these test groups will be run in parallel. They will also be
     run in random order by default. See the "CONFIGURATION" for more details
-    on controling behavior. Also see Test::Workflow for more useful and
+    on controlling behavior. Also see Test::Workflow for more useful and
     poweful test groups and structures.
 
   FRIENDLIER INTERFACE
@@ -160,26 +160,27 @@ EDITOR INTEGRATION
         endfunction
 
         " Go to command mode, save the file, run the current test
+        :map <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
         :imap <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
 
 MODULES LOADED AUTOMATICALLY WITH FENNEC
     Test::More
-        The standard perl test library. Test::More
+        The standard perl test library.
 
     Test::Exception
         One of the more useful test libraries, used to test code that throws
-        exceptions (dies). Test::Exception
+        exceptions (dies).
 
     Test::Warn
-        Test code that issues warnings. Test::Warn
+        Test code that issues warnings.
 
     Test::Workflow
         Provides RSPEC, and several other workflow related helpers. Also
-        provides the test group encapsulation. Test::Workflow
+        provides the test group encapsulation.
 
     Mock::Quick
         Quick and effective mocking with no action at a distance side
-        effects. Mock::Quick
+        effects.
 
 MODULES FENNEC MAKES AN EFFORT TO SUPPORT
     Test::Class
