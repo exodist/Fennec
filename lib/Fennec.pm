@@ -24,8 +24,12 @@ sub init {
     my $meta = $params{meta};
 
     my $wfmeta = $importer->TEST_WORKFLOW;
-    $wfmeta->ok( sub { Fennec::Runner->new->listener->ok( @_ )});
-    $wfmeta->diag( sub { Fennec::Runner->new->listener->diag( @_ )});
+    $wfmeta->ok(         sub { Fennec::Runner->new->listener->ok( @_ )        });
+    $wfmeta->diag(       sub { Fennec::Runner->new->listener->diag( @_ )      });
+    $wfmeta->skip(       sub { Fennec::Runner->new->listener->skip( @_ )      });
+    $wfmeta->todo_start( sub { Fennec::Runner->new->listener->todo_start( @_ )});
+    $wfmeta->todo_end(   sub { Fennec::Runner->new->listener->todo_end( @_ )  });
+
     $wfmeta->test_sort( $meta->test_sort )
         if $meta->test_sort;
 

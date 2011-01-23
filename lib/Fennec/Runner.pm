@@ -3,7 +3,8 @@ use strict;
 use warnings;
 
 BEGIN {
-    my $seed => $ENV{FENNEC_SEED} || join( '', @ltime[5,4,3] ),
+    my @ltime = localtime;
+    my $seed = $ENV{FENNEC_SEED} || join( '', @ltime[5,4,3] );
     print STDERR "\n*** Seeding random with date ($seed) ***\n",
                  "*** use the 'FENNEC_SEED' environment variable to override ***\n";
     srand( $seed );

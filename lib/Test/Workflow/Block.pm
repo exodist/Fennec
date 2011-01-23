@@ -14,30 +14,53 @@ our @CARP_NOT = qw/
     Test::Workflow::Layer
 /;
 
-accessors qw/ name start_line end_line code verbose package diag/;
+accessors qw/
+    name start_line end_line code verbose package diag skip todo should_fail
+/;
 
 sub new {
     my $class = shift;
-    my ( $caller, $name, $code, $verbose ) = @_;
+    my ( $caller, $name, @args ) = @_;
+    my $code;
 
-    croak "You must provide a caller" unless $caller && @$caller;
-    croak "You must provide a name" unless $name and !ref $name;
-    croak "You must provide a codeblock" unless $code && ref $code eq 'CODE';
+    croak "You must provide a caller"
+        unless $caller && @$caller;
+    croak "You must provide a name"
+        unless $name and !ref $name;
+
+    $code = shift( @args )
+        if ref $args[0]
+        && ref $args[0] eq 'CODE';
+
+    $code = pop( @args )
+        if !$code
+        && ref $args[-1]
+        && ref $args[-1] eq 'CODE'
+        && ( @args == 1 || ( @args > 1 && "$args[-2]" ne 'code' ));
+
+    my %proto = @args;
+    $code ||= $proto{code};
+
+    croak "You must provide a codeblock"
+        unless $code
+        && ref $code eq 'CODE';
 
     my $start_line = B::svref_2object( $code )->START->line;
     my $end_line = $caller->[2];
     $start_line-- unless $start_line == $end_line;
 
-    return bless({
-        name       => $name,
+    %proto = (
+        %proto,
         code       => $code,
+        name       => $name,
         package    => $caller->[0],
         start_line => $start_line,
         end_line   => $end_line,
-        verbose    => $verbose ? 1 : 0,
         diag       => ($start_line == $end_line) ? "line $start_line"
                                                  : "lines $start_line -> $end_line",
-    }, $class);
+    );
+
+    return bless( \%proto, $class);
 }
 
 sub clone_with {
@@ -49,33 +72,26 @@ sub clone_with {
 sub run {
     my $self = shift;
     my ( $instance, $layer ) = @_;
-    my $success = eval { $self->code->( @_ ); 1 };
+    my $meta = $instance->TEST_WORKFLOW;
+    my $name = "Group: " . $self->name;
 
-    return if $success && !$self->verbose;
+    return $meta->skip->( $name, $self->skip )
+        if $self->skip;
 
+    $meta->todo_start->( $self->todo )
+        if $self->todo;
+
+    my $success = eval { $self->code->( @_ ); 1 } || $self->should_fail;
     my $error = $@ || "Error masked!";
     chomp( $error );
 
-    my $ok = $instance->TEST_WORKFLOW->ok
-          || Test::More->can( 'ok' )
-          || Test::Simple->can( 'ok' )
-          || sub {
-              warn( "Block failed: " . join( ', ', map { "'$_'" } @_ ));
-          };
+    $meta->todo_end->()
+        if $self->todo;
 
-    my $diag = $instance->TEST_WORKFLOW->diag
-          || Test::More->can( 'diag' )
-          || Test::Simple->can( 'diag' )
-          || sub {
-              die( "Additional info: " . join( ', ', map { "'$_'" } @_ ));
-          };
+    return if $success && !$self->verbose;
 
-    $ok->(
-        $success || 0,
-        $self->name,
-    );
-
-    $diag->(
+    $meta->ok->( $success || 0, $name );
+    $meta->diag->(
         "  ================================"
         . "\n  Error: " . $error
         . "\n  Package: " . $self->package

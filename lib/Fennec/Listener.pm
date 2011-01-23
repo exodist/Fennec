@@ -4,10 +4,13 @@ use warnings;
 
 use Carp qw/croak/;
 
-sub new  { croak "You must subclass new() in your listener(" . shift(@_) . ")"  }
-sub ok   { croak "You must subclass ok() in your listener(" . shift(@_) . ")"   }
-sub diag { croak "You must subclass diag() in your listener(" . shift(@_) . ")" }
-sub terminate {}
+sub new        { croak "You must subclass new()in your listener(" . shift(@_) . ")"         }
+sub ok         { croak "You must subclass ok() in your listener(" . shift(@_) . ")"         }
+sub diag       { croak "You must subclass diag() in your listener(" . shift(@_) . ")"       }
+sub skip       { croak "You must subclass skip() in your listener(" . shift(@_) . ")"       }
+sub todo_start { croak "You must subclass todo_start() in your listener(" . shift(@_) . ")" }
+sub todo_end   { croak "You must subclass todo_end() in your listener(" . shift(@_) . ")"   }
+sub terminate  { 1;                                                                         }
 
 1;
 
@@ -31,15 +34,16 @@ Create a new instance of the listener, takes no arguments.
 
 =item $obj->ok( $status, $name)
 
-Sometimes Fennec needs to produce test results, it will turn to the listener to
-do so. This should be just like Test::More's ok() method. Most listeners should
-simply pass this on to Test::Builder.
-
 =item $obj->diag( @messages )
 
+=item $obj->skip( $name )
+
+=item $obj->todo_start( $reason )
+
+=item $obj->todo_end()
+
 Sometimes Fennec needs to produce test results, it will turn to the listener to
-do so. This should be just like Test::More's diag() method. Most listeners
-should simply pass this on to Test::Builder.
+do so. All 5 of these must be provided.
 
 =item $obj->terminate()
 

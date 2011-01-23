@@ -3,12 +3,18 @@ use strict;
 use warnings;
 
 use base 'Fennec::Listener';
+use Fennec::Util;
 
 die "Fennec Does not yet support Test::Builder2 as TB2 is itself incomplete.";
 
 sub new {}
-sub ok  {}
 sub terminate {}
+
+sub ok         { shift; Fennec::Util::tb2_ok( @_ )        }
+sub diag       { shift; Fennec::Util::tb2_diag( @_ )      }
+sub skip       { shift; Fennec::Util::tb2_skip( @_ )      }
+sub todo_start { shift; Fennec::Util::tb2_todo_start( @_ )}
+sub todo_end   { shift; Fennec::Util::tb2_todo_end( @_ )  }
 
 1;
 

@@ -35,24 +35,11 @@ sub new {
     return $self;
 }
 
-sub ok {
-    my $self = shift;
-    my ( $status, $name ) = @_;
-
-    require Test::More;
-
-    Test::More::ok( $status, $name );
-    return $status if $status;
-}
-
-sub diag {
-    my $self = shift;
-    my ( @diag ) = @_;
-
-    require Test::More;
-
-    Test::More::diag( $_ ) for @diag;
-}
+sub ok         { shift; Fennec::Util::tb_ok( @_ )        }
+sub diag       { shift; Fennec::Util::tb_diag( @_ )      }
+sub skip       { shift; Fennec::Util::tb_skip( @_ )      }
+sub todo_start { shift; Fennec::Util::tb_todo_start( @_ )}
+sub todo_end   { shift; Fennec::Util::tb_todo_end        }
 
 sub setup_tb {
     my $self = shift;

@@ -54,8 +54,8 @@ sub _get_layer {
 
 sub with_tests  { my @caller = caller; _get_layer( 'with_tests', \@caller )->merge_in( \@caller, @_ )}
 
-sub tests { my @caller = caller; _get_layer( 'tests', \@caller )->add_test( \@caller, @_, 'verbose' )}
-sub it    { my @caller = caller; _get_layer( 'it',    \@caller )->add_test( \@caller, @_, 'verbose' )}
+sub tests { my @caller = caller; _get_layer( 'tests', \@caller )->add_test( \@caller, shift( @_ ), verbose => 1, @_ )}
+sub it    { my @caller = caller; _get_layer( 'it',    \@caller )->add_test( \@caller, shift( @_ ), verbose => 1, @_ )}
 sub case  { my @caller = caller; _get_layer( 'case',  \@caller )->add_case( \@caller, @_ )}
 
 sub describe { my @caller = caller; _get_layer( 'describe', \@caller )->add_child( \@caller, @_ )}

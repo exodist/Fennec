@@ -3,18 +3,33 @@ use strict;
 use warnings;
 
 use Test::Workflow::Layer;
+use Test::Builder;
 
 use Fennec::Util qw/accessors/;
 
-accessors qw/test_class build_complete root_layer test_run test_sort ok diag/;
+accessors qw/
+    test_class build_complete root_layer test_run test_sort
+    ok diag skip todo_start todo_end
+/;
 
 sub new {
     my $class = shift;
     my ( $test_class ) = @_;
-    return bless({
+
+    my $tb = "tb";
+    $tb = "tb2" if eval { require Test::Builder2; 1 };
+
+    my $self = bless({
         test_class => $test_class,
         root_layer => Test::Workflow::Layer->new(),
+        ok         => Fennec::Util->can( "${tb}_ok"         ),
+        diag       => Fennec::Util->can( "${tb}_diag"       ),
+        skip       => Fennec::Util->can( "${tb}_skip"       ),
+        todo_start => Fennec::Util->can( "${tb}_todo_start" ),
+        todo_end   => Fennec::Util->can( "${tb}_todo_end"   ),
     }, $class );
+
+    return $self;
 }
 
 1;
