@@ -53,12 +53,6 @@ sub tb_skip       { Test::Builder->new->skip( @_ )      }
 sub tb_todo_start { Test::Builder->new->todo_start( @_ )}
 sub tb_todo_end   { Test::Builder->new->todo_end        }
 
-sub tb2_ok         { croak "Fennec does not yet support Test::Builder2" }
-sub tb2_diag       { croak "Fennec does not yet support Test::Builder2" }
-sub tb2_skip       { croak "Fennec does not yet support Test::Builder2" }
-sub tb2_todo_start { croak "Fennec does not yet support Test::Builder2" }
-sub tb2_todo_end   { croak "Fennec does not yet support Test::Builder2" }
-
 1;
 
 __END__

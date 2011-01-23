@@ -8,6 +8,7 @@ use base 'Fennec::Listener';
 
 use Fennec::Util qw/accessors get_test_call/;
 use POSIX ":sys_wait_h";
+use Test::Builder;
 
 accessors qw/read write pid reporter_pid/;
 
@@ -108,6 +109,7 @@ sub handle_line {
     my $self = shift;
     my ( $line ) = @_;
     my ( $pid, $handle, $class, $file, $ln, $msg ) = split( "\0", $line );
+
     my $id = "$class\0$file\0$ln";
     my $buffer = $self->buffer->{$pid};
 

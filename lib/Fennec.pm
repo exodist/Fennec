@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.000_1';
+our $VERSION = '1.000_2';
 
 sub defaults {(
     utils => [qw/
@@ -149,8 +149,8 @@ comes see L<Test::Workflow>)
 
 =item Test::Builder and Test::Builder2 compatibility
 
-Fennec is compatible with L<Test::Builder> based tools. The goal is to have
-support for L<Test::Builder2> as soon as it is released, maybe shortly before.
+Fennec is compatible with L<Test::Builder> based tools. Test::Builder2 support
+is in-place, but experimental until Test::Builder2 is officially released.
 
 =item Ability to decouple from Test::Builder
 
@@ -331,10 +331,8 @@ If Fennec did not support this who would use it?
 
 =item Test::Builder2
 
-Test::Builder2 is not out yet, and some specific functionality necessary for
-Fennec has yet to be fully implemented. Fennec will develop support fot TB2 as
-it matures. The goal is to have a version of Fennec that works with TB2 as soon
-as TB2 is released, if not before.
+There is currently experimental support for Test::Builder2. Once Test::Builder2
+is officially released, support will be finalized.
 
 =back
 

@@ -17,7 +17,7 @@ sub new {
     my ( $test_class ) = @_;
 
     my $tb = "tb";
-    $tb = "tb2" if eval { require Test::Builder2; 1 };
+    #$tb = "tb2" if eval { require Test::Builder2; 1 };
 
     my $self = bless({
         test_class => $test_class,

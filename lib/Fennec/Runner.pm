@@ -26,7 +26,7 @@ sub listener_class {
             require Fennec::Listener::TB2;
             $listener_class = 'Fennec::Listener::TB2';
         }
-        elsif ( eval { require Test::Builder }) {
+        else {
             require Fennec::Listener::TB;
             $listener_class = 'Fennec::Listener::TB';
         }
