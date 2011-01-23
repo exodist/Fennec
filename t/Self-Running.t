@@ -5,6 +5,9 @@ use warnings;
 
 use Fennec parallel => 2;
 
+ok( !__PACKAGE__->can( $_ ), "$_ unimported" )
+    for qw/done_testing run_tests/;
+
 describe blah => sub {
     tests group_a => sub { ok( 1, 'a' )};
     tests group_b => sub { ok( 1, 'b' )};

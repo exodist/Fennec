@@ -11,7 +11,7 @@ BEGIN {
         $seed = join("", @date_time{qw/mday mon year/});
     }
     print STDERR "\n*** Seeding random with date ($seed) ***\n",
-                 "***use the 'FENNEC_SEED' environment variable to override***\n";
+                 "*** use the 'FENNEC_SEED' environment variable to override ***\n";
     srand( $seed );
 }
 
@@ -120,7 +120,8 @@ sub exception {
         $self->listener->ok( 1, "SKIPPING $name: $1")
     }
     else {
-        $self->listener->ok( 0, $name, $exception )
+        $self->listener->ok( 0, $name );
+        $self->listener->diag( $exception );
     }
 }
 

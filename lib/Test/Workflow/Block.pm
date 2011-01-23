@@ -46,24 +46,42 @@ sub clone_with {
     bless({ %$self, %params}, blessed($self));
 }
 
-
 sub run {
     my $self = shift;
+    my ( $instance, $layer ) = @_;
     my $success = eval { $self->code->( @_ ); 1 };
 
     return if $success && !$self->verbose;
+
     my $error = $@ || "Error masked!";
     chomp( $error );
 
-    Fennec::Runner->new->listener->ok(
+    my $ok = $instance->TEST_WORKFLOW->ok
+          || Test::More->can( 'ok' )
+          || Test::Simple->can( 'ok' )
+          || sub {
+              warn( "Block failed: " . join( ', ', map { "'$_'" } @_ ));
+          };
+
+    my $diag = $instance->TEST_WORKFLOW->diag
+          || Test::More->can( 'diag' )
+          || Test::Simple->can( 'diag' )
+          || sub {
+              die( "Additional info: " . join( ', ', map { "'$_'" } @_ ));
+          };
+
+    $ok->(
         $success || 0,
         $self->name,
+    );
+
+    $diag->(
         "  ================================"
         . "\n  Error: " . $error
         . "\n  Package: " . $self->package
         . "\n  Block: '" . $self->name . "' on " . $self->diag
         . "\n\n"
-    );
+    ) unless $success;
 }
 
 1;

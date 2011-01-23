@@ -35,15 +35,21 @@ sub new {
 
 sub ok {
     my $self = shift;
-    my ( $status, $name, @diag ) = @_;
+    my ( $status, $name ) = @_;
 
     require Test::More;
 
     Test::More::ok( $status, $name );
     return $status if $status;
+}
+
+sub diag {
+    my $self = shift;
+    my ( @diag ) = @_;
+
+    require Test::More;
 
     Test::More::diag( $_ ) for @diag;
-    return $status;
 }
 
 sub setup_tb {

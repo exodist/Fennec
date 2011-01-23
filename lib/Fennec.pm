@@ -14,9 +14,25 @@ sub defaults {(
     },
     parallel => 3,
     runner_class => 'Fennec::Runner',
+    with_tests => [],
 )}
 
-sub init {}
+sub init {
+    my $class = shift;
+    my %params = @_;
+    my $importer = $params{caller}->[0];
+    my $meta = $params{meta};
+
+    my $wfmeta = $importer->TEST_WORKFLOW;
+    $wfmeta->ok( sub { Fennec::Runner->new->listener->ok( @_ )});
+    $wfmeta->diag( sub { Fennec::Runner->new->listener->diag( @_ )});
+    $wfmeta->test_sort( $meta->test_sort )
+        if $meta->test_sort;
+
+    no strict 'refs';
+    my $stash = \%{"$importer\::"};
+    delete $stash->{$_} for qw/ run_tests done_testing/;
+}
 
 sub import {
     my $class = shift;
@@ -55,6 +71,10 @@ sub import {
     for my $util ( @{ $meta->utils }) {
         my $code = "package $importer; require $util; $util\->import(\@{\$params{'$util'}}); 1";
         eval $code || die $@;
+    }
+
+    for my $template ( @{ $meta->with_tests }) {
+        eval "package $importer; with_tests '$template'; 1" || die $@;
     }
 
     $class->init( %params, caller => \@caller, meta => $meta );
@@ -321,11 +341,45 @@ ModuleName->import().
 =item parallel => $MAX
 
 Specify the maximum number of processes Fennec should use to run your tests.
+Set to 0 to never create a new process. Depedning on conditions 1 MAY fork for
+test groups while still only running 1 at a time, but this behavior is not
+guarenteed.
+
 Default: 3
 
 =item runner_class => $CLASS
 
 Specify the runner class. Default: L<Fennec::Runner>
+
+=item test_sort => $SORT
+
+This sets the test sorting method for Test::Workflow test groups.  Accepts
+'random', 'sort', a codeblock, or 'ordered'. This uses a fuzzy matching, you
+can use the shorter versions 'rand', and 'ord'.
+
+Defaults to: 'rand'
+
+=over 4
+
+=item 'random'
+
+Will shuffle the order. Keep in mind Fennec sets the random seed using the date
+so that tests will be determinate on the day you write them, but random
+over time.
+
+=item 'sort'
+
+Sort the test groups by name. When multiple tests are wrapped in before_all or
+after_all the describe/cases block name will be used.
+
+=item 'ordered'
+
+Use the order in which the test groups were defined.
+
+=item sub { my @tests = @_; ...; return @new_tests }
+
+Specify a custom method of sorting. This is not the typical sort {} block, $a
+and $b will not be set.
 
 =back
 

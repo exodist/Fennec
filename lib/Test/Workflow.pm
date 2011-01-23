@@ -7,6 +7,9 @@ use Test::Workflow::Meta;
 use Test::Workflow::Test;
 use Test::Workflow::Layer;
 use List::Util qw/shuffle/;
+use Carp qw/croak/;
+
+our @CARP_NOT = qw/ Test::Workflow Test::Workflow::Test /;
 
 default_exports qw/
     tests       run_tests
@@ -69,14 +72,35 @@ sub test_sort { caller->TEST_WORKFLOW->test_sort( @_ )}
 
 sub run_tests {
     my ( $instance ) = @_;
+    unless ( $instance ) {
+        my $caller = caller;
+        $instance = $caller->new() if $caller->can( 'new' );
+        $instance ||= bless({}, $caller);
+    }
     my $layer = $instance->TEST_WORKFLOW->root_layer;
     $instance->TEST_WORKFLOW->build_complete(1);
     my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [] );
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
-    @tests = sort { $a->name cmp $b->name } @tests if "$sort" =~ /^sort/;
-    @tests = shuffle @tests if "$sort" =~ /^rand/;
-    @tests = $sort->( @tests ) if ref $sort eq 'CODE';
+    @tests = order_tests( $sort, @tests );
     $_->run( $instance ) for @tests;
+}
+
+sub order_tests {
+    my ( $sort, @tests ) = @_;
+
+    return if $sort =~ /^ord/;
+
+    if ( "$sort" =~ /^sort/ ) {
+        return sort { $a->name cmp $b->name } @tests;
+    }
+    elsif ( "$sort" =~ /^rand/ ) {
+        return shuffle @tests;
+    }
+    elsif( ref $sort eq 'CODE' ) {
+        return $sort->( @tests );
+    }
+
+    croak "'$sort' is not a recognized option to test_sort";
 }
 
 sub get_tests {

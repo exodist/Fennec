@@ -45,10 +45,7 @@ sub _wrap_tests {
     my ( $instance ) = @_;
 
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
-    my @tests = @{ $self->tests };
-    @tests = sort { $a->name cmp $b->name } @tests if "$sort" =~ /^sort/;
-    @tests = shuffle @tests if "$sort" =~ /^rand/;
-    @tests = $sort->( @tests ) if ref $sort eq 'CODE';
+    my @tests = Test::Workflow::order_tests( $sort, @{ $self->tests });
 
     return sub {
         $_->run( $instance ) for @{ $self->setup };

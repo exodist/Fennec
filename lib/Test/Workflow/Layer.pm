@@ -33,8 +33,11 @@ sub clone {
 
 sub merge_in {
     my $self = shift;
-    my ( $add ) = @_;
-    push @{ $self->$_ } => @{ $add->$_ } for @ATTRIBUTES;
+    my ( $caller, @classes ) = @_;
+    for my $class ( @classes ) {
+        eval "require $class; 1" || die $@;
+        push @{ $self->$_ } => @{ $class->TEST_WORKFLOW->root_layer->$_ } for @ATTRIBUTES;
+    }
 }
 
 for my $type ( qw/test case child before_each before_all around_each around_all/ ) {
