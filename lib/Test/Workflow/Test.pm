@@ -67,14 +67,8 @@ __END__
 
 =head1 NAME
 
-=head1 DESCRIPTION
-
-=head1 API STABILITY
-
-Fennec versions below 1.000 were considered experimental, and the API was
-subject to change. As of version 1.0 the API is considered stabalized. New
-versions may add functionality, but not remove or significantly alter existing
-functionality.
+package Test::Workflow::Test - A test block wrapped with setup/teardown
+methods, ready to be run.
 
 =head1 AUTHORS
 
@@ -84,8 +78,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2011 Chad Granum
 
-Fennec is free software; Standard perl licence.
+Test-Workflow is free software; Standard perl licence.
 
-Fennec is distributed in the hope that it will be useful, but WITHOUT
+Test-Workflow is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE. See the license for more details.

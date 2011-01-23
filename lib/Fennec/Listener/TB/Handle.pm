@@ -30,7 +30,12 @@ __END__
 
 =head1 NAME
 
+Fennec::Listener::TB::Handle - The handler used to forward test results to the
+reporter process.
+
 =head1 DESCRIPTION
+
+The handler used to forward test results to the reporter process.
 
 =head1 API STABILITY
 

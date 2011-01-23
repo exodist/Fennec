@@ -38,14 +38,13 @@ __END__
 
 =head1 NAME
 
+Test::Workflow::Meta - The meta-object added to all Test-Workflow test classes.
+
 =head1 DESCRIPTION
 
-=head1 API STABILITY
-
-Fennec versions below 1.000 were considered experimental, and the API was
-subject to change. As of version 1.0 the API is considered stabalized. New
-versions may add functionality, but not remove or significantly alter existing
-functionality.
+When you C<use Test::Workflow;> a function is added to you class named
+'TEST_WORKFLOW' that returns the single Test-Workflow meta-object that tracks
+information about your class.
 
 =head1 AUTHORS
 
@@ -55,8 +54,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2011 Chad Granum
 
-Fennec is free software; Standard perl licence.
+Test-Workflow is free software; Standard perl licence.
 
-Fennec is distributed in the hope that it will be useful, but WITHOUT
+Test-Workflow is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE. See the license for more details.

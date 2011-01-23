@@ -183,7 +183,12 @@ __END__
 
 =head1 NAME
 
+Fennec::Listener::TB - Listener used with Test::Builder
+
 =head1 DESCRIPTION
+
+This configured the Test::Builder singleton so that it will work with multiple
+processes by sending all results and diag to a central process.
 
 =head1 API STABILITY
 

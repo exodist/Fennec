@@ -126,7 +126,20 @@ __END__
 
 =head1 NAME
 
+Fennec::Runner - The runner class that loads test files/classes and runs them.
+
 =head1 DESCRIPTION
+
+Loads test classes and files, processes them, then runs the tests. This class
+is a singleton instantiated by import() or new(), whichever comes first.
+
+=head1 API
+
+There are no user servicable parts unless you use a test framework that is not
+based on Test::Builder. In that case it may be useful to subclass the runner
+and override the listener_class() and init() methods.
+
+For more information see L<Fennec::Recipe::CustomRunner>.
 
 =head1 API STABILITY
 

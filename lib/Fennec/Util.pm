@@ -65,7 +65,30 @@ __END__
 
 =head1 NAME
 
+Fennec::Util - Utility functions
+
 =head1 DESCRIPTION
+
+This class provides useful utility functions used all over Fennec.
+
+=head1 EXPORTS
+
+=over 4
+
+=item inject_sub( $package, $name, $code )
+
+Inject a sub into a package.
+
+=item accessors( @attributes )
+
+Generate basic accessors for the given attributes into the calling package.
+
+=item @call = get_test_call()
+
+Look back through the stack and find the last call that took place in a test
+class.
+
+=back
 
 =head1 API STABILITY
 

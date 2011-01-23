@@ -10,8 +10,6 @@ sub defaults {(
     utils => [qw/
         Test::More Test::Warn Test::Exception Test::Workflow
     /],
-    utils_with_args => {
-    },
     parallel => 3,
     runner_class => 'Fennec::Runner',
     with_tests => [],
@@ -206,6 +204,16 @@ errors will still go to STDERR.
         ok( 1, 'something passed' );
     };
 
+    tests not_ready => (
+        todo => "Feature not implemented",
+        code => sub { ... },
+    );
+
+    tests very_not_ready => (
+        skip => "These tests will die if run"
+        code => sub { ... },
+    );
+
     1;
 
 By default these test groups will be run in parallel. They will also be run in
@@ -342,10 +350,10 @@ Configuration options:
 Provide a list of modules to load. They will be imported as if you typed
 C<use MODULE>.
 
-=head3 utils_with_args => { ModuleName => [ ...ARGS... ]}
+You can specify arguments for each class like so:
 
-This is the same as utils except you can specify arguments to pass into
-ModuleName->import().
+    use Fennec utils => [ 'My::Util' ],
+          'My::Util' => [ 'Arg1', 'Arg2' ];
 
 =head3 parallel => $MAX
 
@@ -445,7 +453,9 @@ get $self.
     package MyTest;
     use strict;
     use warnings;
-    use Fennec;
+    use Fennec parallel   => 2,
+               with_tests => [qw/ Test::TemplateA Test::TemplateB /],
+               test_sort  => 'rand';
 
     # Tests can be at the package level
     use_ok( 'MyClass' );
@@ -462,6 +472,16 @@ get $self.
         my $self = shift;
         ok( 1, "1 is the loneliest number... " );
     };
+
+    tests not_ready => (
+        todo => "Feature not implemented",
+        code => sub { ... },
+    );
+
+    tests very_not_ready => (
+        skip => "These tests will die if run"
+        code => sub { ... },
+    );
 
 =head2 RSPEC WORKFLOW
 
@@ -496,6 +516,11 @@ behavior will be identical.
             # after_each from the parent block.
             ...
         };
+
+        describe maybe_later => (
+            todo => "We might get to this",
+            code => { ... },
+        );
     };
 
 =head3 FENNEC'S RSPEC IMPROVEMENT
@@ -563,6 +588,8 @@ any workflow and will work as expected.
 =head1 SEE ALSO
 
 =over 4
+
+=item L<Fennec::Lite>
 
 =item L<Test::Workflow>
 

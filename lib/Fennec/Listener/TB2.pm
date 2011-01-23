@@ -22,7 +22,11 @@ __END__
 
 =head1 NAME
 
+Fennec::Listener::TB2 - Listener for Test::Builder2
+
 =head1 DESCRIPTION
+
+This is not yet ready, please do nto use.
 
 =head1 API STABILITY
 

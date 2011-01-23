@@ -174,14 +174,229 @@ __END__
 
 =head1 NAME
 
+Test::Workflow - Provide test grouping, reusability, and structuring such as
+RSPEC and cases.
+
 =head1 DESCRIPTION
 
-=head1 API STABILITY
+Test::Workflow provides tools for grouping and structuring tests. There is also
+a facility to write re-usable tests. Test::Workflow test files define classes.
+Tests within the files are defined as a type of method.
 
-Fennec versions below 1.000 were considered experimental, and the API was
-subject to change. As of version 1.0 the API is considered stabalized. New
-versions may add functionality, but not remove or significantly alter existing
-functionality.
+Test::Workflow provides an RSPEC implementation. This implementation includes
+C<describe> blocks, C<it> blocks, as well as C<before_each>, C<before_all>,
+C<after_each>, C<after_all>. There are even two new types: C<around_each> and
+C<around_all>.
+
+Test::Workflow provides a cases workflow. This workflow allows you to create
+multiple cases, and multiple tests. Each test will be run under each case. This
+allows you to write a test that should pass under multiple conditions, then
+write a case that builds that specific condition.
+
+Test::Workflow provides a way to 'inherit' tests. You can write classes that
+use Test::Workflow, and define test groups, but not run them. These classes can
+then be imported into as many test classes as you want. This is achieved with
+the C<with_tests> function.
+
+Test::Workflow gives you control over the order in which test groups will be
+run. You can use the predefined 'random', 'ordered', or 'sort' settings. You
+may also provide your own ordering function. This is achieved using the
+C<test_sort> function.
+
+=head1 SYNOPSIS
+
+    package MyTest;
+    use strict;
+    use warnings;
+
+    use Test::More;
+    use Test::Workflow;
+
+    with_tests qw/ Test::TemplateA Test::TemplateB /;
+    test_sort 'rand';
+
+    # Tests can be at the package level
+    use_ok( 'MyClass' );
+
+    tests loner => sub {
+        my $self = shift;
+        ok( 1, "1 is the loneliest number... " );
+    };
+
+    tests not_ready => (
+        todo => "Feature not implemented",
+        code => sub { ... },
+    );
+
+    tests very_not_ready => (
+        skip => "These tests will die if run"
+        code => sub { ... },
+    );
+
+    run_tests();
+    done_testing();
+
+=head2 RSPEC WORKFLOW
+
+Here setup/teardown methods are declared in the order in which they are run,
+but they can really be declared anywhere within the describe block and the
+behavior will be identical.
+
+    describe example => sub {
+        my $self = shift;
+        my $number = 0;
+        my $letter = 'A';
+
+        before_all setup => sub { $number = 1 };
+
+        before_each letter_up => sub { $letter++ };
+
+        # it() is an alias for tests()
+        it check => sub {
+            my $self = shift;
+            is( $letter, 'B', "Letter was incremented" );
+            is( $number, 2,   "number was incremented" );
+        };
+
+        after_each reset => sub { $number = 1 };
+
+        after_all teardown => sub {
+            is( $number, 1, "number is back to 1" );
+        };
+
+        describe nested => sub {
+            # This nested describe block will inherit before_each and
+            # after_each from the parent block.
+            ...
+        };
+
+        describe maybe_later => (
+            todo => "We might get to this",
+            code => { ... },
+        );
+    };
+
+    describe addon => sub {
+        my $self = shift;
+
+        around_each localize_env => sub {
+            my $self = shift;
+            my ( $inner ) = @_;
+
+            local %ENV = ( %ENV, foo => 'bar' );
+
+            $inner->();
+        };
+
+        tests foo => sub {
+            is( $ENV{foo}, 'bar', "in the localized environment" );
+        };
+    };
+
+=head2 CASE WORKFLOW
+
+Cases are used when you have a test that you wish to run under several tests
+conditions. The following is a trivial example. Each test will be run once
+under each case. B<Beware!> this will run (cases x tests), with many tests and
+cases this can be a huge set of actual tests. In this example 8 in total will
+be run.
+
+B<Note:> The 'cases' keyword is an alias to describe. case blocks can go into
+any workflow and will work as expected.
+
+    cases check_several_numbers => sub {
+        my $number;
+        case one => sub { $number = 2 };
+        case one => sub { $number = 4 };
+        case one => sub { $number = 6 };
+        case one => sub { $number = 8 };
+
+        tests is_even => sub {
+            ok( !$number % 2, "number is even" );
+        };
+
+        tests only_digits => sub {
+            like( $number, qr/^\d+$/i, "number is all digits" );
+        };
+    };
+
+=head1 EXPORTS
+
+=over 4
+
+=item with_tests( @CLASSES )
+
+Use tests defined in the specified classes.
+
+=item test_sort( sub { my @tests = @_; ...; return @tests })
+
+=item test_sort( 'sort' )
+
+=item test_sort( 'random' )
+
+=item test_sort( 'ordered' )
+
+Declare how tests should be sorted.
+
+=item cases( name => sub { ... })
+
+=item cases( 'name', %params, code => sub { ... })
+
+=item describe( name => sub { ... })
+
+=item describe( 'name', %params, code => sub { ... })
+
+Define a block that encapsulates workflow elements.
+
+=item tests( name => sub { ... })
+
+=item tests( 'name', %params, code => sub { ... })
+
+=item it( name => sub { ... })
+
+=item it( 'name', %params, code => sub { ... })
+
+Define a test block.
+
+=item case( name => sub { ... })
+
+=item case( 'name', %params, code => sub { ... })
+
+Define a case, each test will be run once per case that is defined at the same
+level (within the same describe or cases block).
+
+=item before_each( name => sub { ... })
+
+=item after_each( name => sub { ... })
+
+=item before_all( name => sub { ... })
+
+=item after_all( name => sub { ... })
+
+These define setup and teardown functions that will be run around tests.
+
+=item around_each( name => sub { ... })
+
+=item around_all( name => sub { ... })
+
+These are special additions to the setup and teardown methods. They are used
+like so:
+
+    around_each localize_env => sub {
+        my $self = shift;
+        my ( $inner ) = @_;
+
+        local %ENV = ( %ENV, foo => 'bar' );
+
+        $inner->();
+    };
+
+=item run_tests()
+
+This will finalize the meta-data (forbid addition of new tests) and run the
+tests.
+
+=back
 
 =head1 AUTHORS
 
@@ -191,8 +406,8 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2011 Chad Granum
 
-Fennec is free software; Standard perl licence.
+Test-Workflow is free software; Standard perl licence.
 
-Fennec is distributed in the hope that it will be useful, but WITHOUT
+Test-Workflow is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE. See the license for more details.
