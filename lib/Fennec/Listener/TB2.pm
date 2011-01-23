@@ -17,10 +17,6 @@ __END__
 
 Fennec::Listener::TB2 - Listener for Test::Builder2
 
-=head1 DESCRIPTION
-
-This is not yet ready, please do nto use.
-
 =head1 API STABILITY
 
 Fennec versions below 1.000 were considered experimental, and the API was
