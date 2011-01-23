@@ -5,7 +5,7 @@ use Exporter::Declare;
 use Carp qw/croak/;
 use Scalar::Util qw/blessed/;
 
-exports qw/inject_sub accessors array_accessors get_test_call/;
+exports qw/inject_sub accessors get_test_call/;
 
 sub inject_sub {
     my ( $package, $name, $code ) = @_;
@@ -35,42 +35,6 @@ sub _accessor {
     });
 }
 
-sub array_accessors {
-    my $caller = caller;
-    for my $attribute ( @_ ) {
-        my $ref = "${attribute}_ref";
-        inject_sub( $caller, $ref, sub {
-            my $self = shift;
-            croak "$attribute() called on '$self' instead of an instance"
-                unless blessed( $self );
-            ( $self->{$attribute} ) = @_ if @_;
-            $self->{$attribute} ||= [];
-            return $self->{$attribute};
-        });
-
-        inject_sub( $caller, "${attribute}_pop", sub {
-            pop @{shift->$ref};
-        });
-
-        inject_sub( $caller, "${attribute}_peek", sub {
-            shift->$ref->[-1];
-        });
-
-        inject_sub( $caller, "${attribute}_push", sub {
-            my $self = shift;
-            push @{$self->$ref} => @_;
-        });
-
-        inject_sub( $caller, "${attribute}_clear", sub {
-            shift->$ref( [] );
-        });
-
-        inject_sub( $caller, $attribute, sub {
-            @{ shift->$ref };
-        });
-    }
-}
-
 sub get_test_call {
     my $runner;
     my $i = 1;
@@ -82,6 +46,5 @@ sub get_test_call {
 
     return( @$runner );
 }
-
 
 1;

@@ -44,7 +44,7 @@ sub import {
 
     $class->_restart_with_runner( $defaults{runner_class}, \@caller );
 
-    Fennec::Runner->new->test_classes_push( $importer );
+    push @{ Fennec::Runner->new->test_classes } => $importer;
 
     for my $require ( @{$params{skip_without} || []}) {
         die "FENNEC_SKIP: '$require' is not installed\n"

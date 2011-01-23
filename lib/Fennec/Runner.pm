@@ -17,11 +17,10 @@ BEGIN {
 
 use Carp qw/carp croak/;
 use Scalar::Util qw/blessed/;
-use Fennec::Util qw/accessors array_accessors/;
+use Fennec::Util qw/accessors/;
 use Fennec::Listener;
 
-accessors qw/pid listener/;
-array_accessors qw/test_classes/;
+accessors qw/pid listener test_classes/;
 
 my $SINGLETON;
 
@@ -49,6 +48,7 @@ sub new {
     return $SINGLETON if $SINGLETON;
 
     $SINGLETON = bless({
+        test_classes => [],
         pid => $$,
         listener => $class->listener_class->new() || croak "Could not init listener!",
     }, $class);
@@ -84,7 +84,7 @@ sub run {
     my $self = shift;
     Test::Class->runtests if $INC{'Test/Class.pm'} && !$ENV{'FENNEC_TEST'};
 
-    for my $class ( $self->test_classes ) {
+    for my $class ( @{ $self->test_classes }) {
         next unless $class && $class->can('TEST_WORKFLOW');
         print "Running: $class\n";
         my $instance = $class->can('new') ? $class->new : bless( {}, $class );
