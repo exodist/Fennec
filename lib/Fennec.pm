@@ -692,8 +692,6 @@ Define a method for an L<Mock::Quick::Object> instance.
 
 =over 4
 
-=item L<Fennec::Recipe::SingleRunner>
-
 =item L<Fennec::Recipe::CustomFennec>
 
 =item L<Fennec::Recipe::CustomRunner>

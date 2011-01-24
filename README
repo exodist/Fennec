@@ -516,7 +516,6 @@ MOCKING FROM MOCK::QUICK
         Define a method for an Mock::Quick::Object instance.
 
 ADDITIONAL USER DOCUMENTATION
-    Fennec::Recipe::SingleRunner
     Fennec::Recipe::CustomFennec
     Fennec::Recipe::CustomRunner
 
