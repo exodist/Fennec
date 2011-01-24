@@ -36,10 +36,10 @@ sub new {
         if !$code
         && ref $args[-1]
         && ref $args[-1] eq 'CODE'
-        && ( @args == 1 || ( @args > 1 && "$args[-2]" ne 'code' ));
+        && ( @args == 1 || ( @args > 1 && "$args[-2]" !~ m/^(code|method)$/ ));
 
     my %proto = @args;
-    $code ||= $proto{code};
+    $code ||= $proto{code} || $proto{method};
 
     croak "You must provide a codeblock"
         unless $code
