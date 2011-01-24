@@ -1,5 +1,3 @@
-=pod
-
 =head1 NAME
 
 Fennec::Recipe::CustomRunner - Recipe for a custom Fennec Runner.
@@ -28,5 +26,3 @@ to define a custom runner. Overriding listener_class() should be sufficient.
         my @CONSTRUCTION_ARGS = @_;
         ...
     }
-
-=end
