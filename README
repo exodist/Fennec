@@ -409,6 +409,112 @@ MORE COMPLETE EXAMPLE
 
         1;
 
+MOCKING FROM MOCK::QUICK
+    Mock::Quick is imported by default. Mock::Quick is a powerful mocking
+    library with a very friendly syntax.
+
+  MOCKING OBJECTS
+        use Mock::Quick;
+
+        my $obj = obj(
+            foo => 'bar',            # define attribute
+            do_it => qmeth { ... },  # define method
+            ...
+        );
+
+        is( $obj->foo, 'bar' );
+        $obj->foo( 'baz' );
+        is( $obj->foo, 'baz' );
+
+        $obj->do_it();
+
+        # define the new attribute automatically
+        $obj->bar( 'xxx' );
+
+        # define a new method on the fly
+        $obj->baz( qmeth { ... });
+
+        # remove an attribute or method
+        $obj->baz( qclear() );
+
+  MOCKING CLASSES
+        use Mock::Quick;
+
+        my $control = qclass(
+            # Insert a generic new() method (blessed hash)
+            -with_new => 1,
+
+            # Inheritance
+            -subclass => 'Some::Class',
+            # Can also do
+            -subclass => [ 'Class::A', 'Class::B' ],
+
+            # generic get/set attribute methods.
+            -attributes => [ qw/a b c d/ ],
+
+            # Method that simply returns a value.
+            simple => 'value',
+
+            # Custom method.
+            method => sub { ... },
+        );
+
+        my $obj = $control->packahe->new;
+
+        # Override a method
+        $control->override( foo => sub { ... });
+
+        # Restore it to the original
+        $control->restore( 'foo' );
+
+        # Remove the anonymous namespace we created.
+        $control->undefine();
+
+  TAKING OVER EXISTING CLASSES
+        use Mock::Quick;
+
+        my $control = qtakeover( 'Some::Package' );
+
+        # Override a method
+        $control->override( foo => sub { ... });
+
+        # Restore it to the original
+        $control->restore( 'foo' );
+
+        # Destroy the control object and completely restore the original class Some::Package.
+        $control = undef;
+
+  MOCKING EXPORTS
+    Mock-Quick uses Exporter::Declare. This allows for exports to be
+    prefixed or renamed. See "RENAMING IMPORTED ITEMS" in Exporter::Declare
+    for more information.
+
+    $obj = qobj( attribute => value, ... )
+        Create an object. Every possible attribute works fine as a get/set
+        accessor. You can define other methods using qmeth {...} and
+        assigning that to an attribute. You can clear a method using
+        qclear() as an argument.
+
+        See Mock::Quick::Object for more.
+
+    $control = qclass( -config => ..., name => $value || sub { ... }, ... )
+        Define an anonymous package with the desired methods and
+        specifications.
+
+        See Mock::Quick::Class for more.
+
+    $control = qtakeover( $package )
+        Take control over an existing class.
+
+        See Mock::Quick::Class for more.
+
+    qclear()
+        Returns a special reference that when used as an argument, will
+        cause Mock::Quick::Object methods to be cleared.
+
+    qmeth { my $self = shift; ... }
+        Define a method for an Mock::Quick::Object instance.
+
 ADDITIONAL USER DOCUMENTATION
     Fennec::Recipe::SingleRunner
     Fennec::Recipe::CustomFennec

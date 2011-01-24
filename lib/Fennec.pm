@@ -8,7 +8,7 @@ our $VERSION = '1.000_3';
 
 sub defaults {(
     utils => [qw/
-        Test::More Test::Warn Test::Exception Test::Workflow
+        Test::More Test::Warn Test::Exception Test::Workflow Mock::Quick
     /],
     parallel => 3,
     runner_class => 'Fennec::Runner',
@@ -570,6 +570,123 @@ any workflow and will work as expected.
     };
 
     1;
+
+=head1 MOCKING FROM MOCK::QUICK
+
+L<Mock::Quick> is imported by default. L<Mock::Quick> is a powerful mocking
+library with a very friendly syntax.
+
+=head2 MOCKING OBJECTS
+
+    use Mock::Quick;
+
+    my $obj = obj(
+        foo => 'bar',            # define attribute
+        do_it => qmeth { ... },  # define method
+        ...
+    );
+
+    is( $obj->foo, 'bar' );
+    $obj->foo( 'baz' );
+    is( $obj->foo, 'baz' );
+
+    $obj->do_it();
+
+    # define the new attribute automatically
+    $obj->bar( 'xxx' );
+
+    # define a new method on the fly
+    $obj->baz( qmeth { ... });
+
+    # remove an attribute or method
+    $obj->baz( qclear() );
+
+=head2 MOCKING CLASSES
+
+    use Mock::Quick;
+
+    my $control = qclass(
+        # Insert a generic new() method (blessed hash)
+        -with_new => 1,
+
+        # Inheritance
+        -subclass => 'Some::Class',
+        # Can also do
+        -subclass => [ 'Class::A', 'Class::B' ],
+
+        # generic get/set attribute methods.
+        -attributes => [ qw/a b c d/ ],
+
+        # Method that simply returns a value.
+        simple => 'value',
+
+        # Custom method.
+        method => sub { ... },
+    );
+
+    my $obj = $control->packahe->new;
+
+    # Override a method
+    $control->override( foo => sub { ... });
+
+    # Restore it to the original
+    $control->restore( 'foo' );
+
+    # Remove the anonymous namespace we created.
+    $control->undefine();
+
+=head2 TAKING OVER EXISTING CLASSES
+
+    use Mock::Quick;
+
+    my $control = qtakeover( 'Some::Package' );
+
+    # Override a method
+    $control->override( foo => sub { ... });
+
+    # Restore it to the original
+    $control->restore( 'foo' );
+
+    # Destroy the control object and completely restore the original class Some::Package.
+    $control = undef;
+
+=head2 MOCKING EXPORTS
+
+Mock-Quick uses L<Exporter::Declare>. This allows for exports to be prefixed or renamed.
+See L<Exporter::Declare/RENAMING IMPORTED ITEMS> for more information.
+
+=over 4
+
+=item $obj = qobj( attribute => value, ... )
+
+Create an object. Every possible attribute works fine as a get/set accessor.
+You can define other methods using qmeth {...} and assigning that to an
+attribute. You can clear a method using qclear() as an argument.
+
+See L<Mock::Quick::Object> for more.
+
+=item $control = qclass( -config => ..., name => $value || sub { ... }, ... )
+
+Define an anonymous package with the desired methods and specifications.
+
+See L<Mock::Quick::Class> for more.
+
+=item $control = qtakeover( $package )
+
+Take control over an existing class.
+
+See L<Mock::Quick::Class> for more.
+
+=item qclear()
+
+Returns a special reference that when used as an argument, will cause
+Mock::Quick::Object methods to be cleared.
+
+=item qmeth { my $self = shift; ... }
+
+Define a method for an L<Mock::Quick::Object> instance.
+
+=back
 
 =head1 ADDITIONAL USER DOCUMENTATION
 
