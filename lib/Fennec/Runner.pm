@@ -66,6 +66,11 @@ sub _load_guess {
     my $self = shift;
     my ( $item ) = @_;
 
+    if ( ref $item && ref $item eq 'CODE' ) {
+        $self->_load_guess( $_ ) for ($self->$item);
+        return;
+    }
+
     return $self->load_file( $item )
         if $item =~ m/\.(pm|t|pl)$/i
         || $item =~ m{/};
@@ -157,11 +162,65 @@ Fennec::Runner - The runner class that loads test files/classes and runs them.
 Loads test classes and files, processes them, then runs the tests. This class
 is a singleton instantiated by import() or new(), whichever comes first.
 
-=head1 API
+=head1 USING THE RUNNER
 
-There are no user servicable parts unless you use a test framework that is not
-based on Test::Builder. In that case it may be useful to subclass the runner
-and override the listener_class() and init() methods.
+If you directly run a file that has C<use Fennec> it will re-execute perl and
+call the test file from within the runner. In most cases you will not need to
+use the runner directly. However you may want to create a runner script or
+module that loads multiple test files at once before running the test groups.
+This section tells you how to do that.
+
+The simplest way to load modules and files is to simply use Fennec::Runner with
+filenames and/or module names as arguments.
+
+    #!/usr/bin/env perl
+    use strict;
+    use warnings;
+    use Fennec::Runner qw{
+        Some::Test::Module
+        a_test_file.t
+        /path/to/file.pl
+        Other::Module
+    };
+
+This will attempt to guess weather each item is a module or a file, then
+attempt to load it. Once all the files are loaded the runner, C<run()> will be
+called automatically and all tests will be run.
+
+You can also provide coderefs to generate lists of modules and files:
+
+    #!/usr/bin/env perl
+    use strict;
+    use warnings;
+    use Fennec::Runner sub {
+        my $runner = shift;
+        ...
+        return ( 'Some::Module', 'a_file.pl' );
+    };
+
+If you want to have more control over what is loaded, and do not want C<run()>
+to be run until you run it yourself you can do this:
+
+    #!/usr/bin/env perl
+    use strict;
+    use warnings;
+    use Fennec::Runner;
+
+    our $runner = Fennec::Runner->new(); # Get the singleton
+    $runner->load_file( 'some_file.t' );
+    $runner->load_module( 'Some::Module' );
+    ...
+    $runner->run();
+
+For regular Fennec tests this works perfectly fine. However if any of the test
+files use L<Test::Class> you will have to wrap the load method calls in a BEGIN
+block.
+
+=head1 CUSTOM RUNNER CLASS
+
+If you use a test framework that is not based on L<Test::Builder> it may be
+useful to subclass the runner and override the listener_class() and init()
+methods.
 
 For more information see L<Fennec::Recipe::CustomRunner>.
 
