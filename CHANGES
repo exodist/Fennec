@@ -1,0 +1,6 @@
+v1.001 - Feb 18, 2011 - Chad Granum:
+    * Create shortcut for using runner, improve runner re-exec command
+    * Remove verbose messages from STDERR, using STDOUT they cause less spam
+
+v1.000 - Jan 24, 2011 - Chad Granum
+    First stable release, API is now set.

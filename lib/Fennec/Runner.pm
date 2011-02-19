@@ -4,9 +4,12 @@ use warnings;
 
 BEGIN {
     my @ltime = localtime;
+    $ltime[5] += 1900;
+    for ( 3, 4 ) {
+        $ltime[4] = "0$ltime[$_]" unless $ltime[$_] > 9;
+    }
     my $seed = $ENV{FENNEC_SEED} || join( '', @ltime[5,4,3] );
-    print STDERR "\n*** Seeding random with date ($seed) ***\n",
-                 "*** use the 'FENNEC_SEED' environment variable to override ***\n";
+    print "\n*** Seeding random with date ($seed) ***\n";
     srand( $seed );
 }
 
@@ -36,7 +39,13 @@ sub listener_class {
 
 sub init {}
 
-sub import { shift->new() }
+sub import {
+    my $self = shift->new();
+    return unless @_;
+
+    $self->_load_guess( $_ ) for @_;
+    $self->run;
+}
 
 sub new {
     my $class = shift;
@@ -52,6 +61,21 @@ sub new {
 
     return $SINGLETON;
 };
+
+sub _load_guess {
+    my $self = shift;
+    my ( $item ) = @_;
+
+    return $self->load_file( $item )
+        if $item =~ m/\.(pm|t|pl)$/i
+        || $item =~ m{/};
+
+    return $self->load_module( $item )
+        if $item =~ m/::/
+        || $item =~ m/^\w[\w\d_]+$/;
+
+    die "Not sure how to load '$item'\n";
+}
 
 sub load_file {
     my $self = shift;
