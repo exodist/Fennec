@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.001';
+our $VERSION = '1.002';
 
 sub defaults {(
     utils => [qw/
