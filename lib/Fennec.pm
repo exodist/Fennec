@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.002';
+our $VERSION = '1.003';
 
 sub defaults {(
     utils => [qw/
@@ -89,7 +89,7 @@ sub _restart_with_runner {
     # test file through Fennec::Runner. The alternative is an END block.
     if ( $0 eq $caller->[1] ) {
         my $lib = join( ':', @INC );
-        my $command = qq|$^X '-M$runner_class=$0'|;
+        my $command = qq|$^X '-M$runner_class=$0' -e 'run()'|;
         my $env = qq|PERL5LIB="$lib"|;
         print(
             "\nRunner loaded too late, re-executing perl using command:\n",

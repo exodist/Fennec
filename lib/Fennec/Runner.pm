@@ -44,7 +44,13 @@ sub import {
     return unless @_;
 
     $self->_load_guess( $_ ) for @_;
-    $self->run;
+
+    require Fennec::Util;
+    Fennec::Util::inject_sub(
+        scalar(caller),
+        'run',
+        sub { $self->run }
+    );
 }
 
 sub new {
@@ -183,9 +189,11 @@ filenames and/or module names as arguments.
         Other::Module
     };
 
+    run();
+
 This will attempt to guess weather each item is a module or a file, then
-attempt to load it. Once all the files are loaded the runner, C<run()> will be
-called automatically and all tests will be run.
+attempt to load it. Once all the files are loaded, C<run()> will be
+exported into your namespace for you to call.
 
 You can also provide coderefs to generate lists of modules and files:
 
@@ -197,6 +205,7 @@ You can also provide coderefs to generate lists of modules and files:
         ...
         return ( 'Some::Module', 'a_file.pl' );
     };
+    run();
 
 If you want to have more control over what is loaded, and do not want C<run()>
 to be run until you run it yourself you can do this:
