@@ -25,7 +25,11 @@ my $SINGLETON;
 my $listener_class;
 sub listener_class {
     unless ( $listener_class ) {
-        if (eval { require Test::Builder2; 1 }) {
+        if ( $^O eq 'MSWin32' ) {
+            require Fennec::Listener::TBWin32;
+            $listener_class = 'Fennec::Listener::TBWin32';
+        }
+        elsif (eval { require Test::Builder2; 1 }) {
             require Fennec::Listener::TB2;
             $listener_class = 'Fennec::Listener::TB2';
         }
@@ -122,15 +126,20 @@ sub run {
 
         my $prunner;
         if ( my $max = $class->FENNEC->parallel ) {
-            require Parallel::Runner;
-            $prunner = Parallel::Runner->new( $max );
-            $meta->test_run( sub {
-                my $sub = shift;
-                $prunner->run( sub {
-                    $instance->TEST_WORKFLOW->test_run(undef);
-                    $sub->();
+            if ( $^O eq 'MSWin32' ) {
+                print "Parallization unavailable on windows.\n";
+            }
+            else {
+                require Parallel::Runner;
+                $prunner = Parallel::Runner->new( $max );
+                $meta->test_run( sub {
+                    my $sub = shift;
+                    $prunner->run( sub {
+                        $instance->TEST_WORKFLOW->test_run(undef);
+                        $sub->();
+                    });
                 });
-            });
+            }
         }
 
         Test::Workflow::run_tests( $instance );

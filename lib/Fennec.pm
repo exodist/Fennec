@@ -4,7 +4,8 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.004';
+our $VERSION = '1.005';
+our $WIN32_RELOAD = 0;
 
 sub defaults {(
     utils => [qw/
@@ -39,14 +40,24 @@ sub init {
 sub import {
     my $class = shift;
     my @caller = caller;
+
+    die "Fennec cannot be used in package 'main'"
+        if $caller[0] eq 'main';
+
     my %defaults = $class->defaults;
     $defaults{runner_class} ||= 'Fennec::Runner';
     my %params = ( %defaults, @_ );
     my $importer = $caller[0];
 
-    $class->_restart_with_runner( $defaults{runner_class}, \@caller );
+    if ( $^O eq 'MSWin32' ) {
+        $class->_reload_caller( $params{runner_class}, \@caller );
+    }
+    else {
+        $class->_restart_with_runner( $params{runner_class}, \@caller );
+    }
 
-    push @{ Fennec::Runner->new->test_classes } => $importer;
+    eval "require $params{runner_class}; 1" || die $@;
+    push @{ $params{runner_class}->new->test_classes } => $importer;
 
     for my $require ( @{$params{skip_without} || []}) {
         die "FENNEC_SKIP: '$require' is not installed\n"
@@ -82,29 +93,52 @@ sub import {
     $class->init( %params, caller => \@caller, meta => $meta );
 }
 
+sub _reload_caller {
+    my $class = shift;
+    my ( $runner_class, $caller ) = @_;
+    return if $WIN32_RELOAD;
+    return unless $0 eq $caller->[1];
+    $WIN32_RELOAD = 1;
+
+    print "\nWin32 detected, cannot reload perl\n",
+          "Runner loaded too late, unloading test module and reloading through runner\n";
+
+    my $cpackage = $caller->[0];
+    $cpackage =~ s|/|::|g;
+    $cpackage =~ s|\.pm$||g;
+    delete $INC{$cpackage};
+
+    no strict 'refs';
+    my $stash = \%{$caller->[0] . '::'};
+
+    delete $stash->{$_} for keys %$stash;
+    eval "require $runner_class; 1;" || die $@;
+    my $runner = $runner_class->new;
+    $runner->load_file( $0 );
+    $runner->run();
+    exit 0;
+}
+
 sub _restart_with_runner {
     my $class = shift;
     my ( $runner_class, $caller ) = @_;
     # If the Fennec test file was run directly we need to re-run perl and run the
     # test file through Fennec::Runner. The alternative is an END block.
-    if ( $0 eq $caller->[1] ) {
-        my $lib = join( ':', @INC );
-        local %ENV = (
-            %ENV,
-            PERL5LIB => $lib,
-        );
+    return unless $0 eq $caller->[1];
 
-        my $command = qq|$^X '-M$runner_class=$0' -e 'run()'|;
-        print(
-            "\nRunner loaded too late, re-executing perl using command:\n",
-            $command,
-            "\n\nPERL5LIB:\n",
-            $lib,
-            "\n"
-        );
+    my @args = (
+        $^X,
+        (map {( "-I$_" )} @INC),
+        "-M$runner_class=$0",
+        '-erun()'
+    );
 
-        exit system( "$command" );
-    }
+    print(
+        "\nRunner loaded too late, re-executing perl using command:\n",
+        join( ' ', @args ),
+    );
+
+    exit system( @args );
 }
 
 1;
