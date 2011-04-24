@@ -44,7 +44,7 @@ sub get_test_call {
         return @call if $call[0]->can('FENNEC');
     }
 
-    return( @$runner );
+    return( $runner ? @$runner : ( "UNKNOWN", "UNKNOWN", 0 ) );
 }
 
 sub tb_ok         { Test::Builder->new->ok( @_ )        }

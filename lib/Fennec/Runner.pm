@@ -48,10 +48,16 @@ sub import {
     return unless @_;
 
     $self->_load_guess( $_ ) for @_;
+    $self->inject_run( scalar caller )
+}
+
+sub inject_run {
+    my $self = shift;
+    my ($caller) = @_;
 
     require Fennec::Util;
     Fennec::Util::inject_sub(
-        scalar(caller),
+        $caller,
         'run',
         sub { $self->run }
     );
