@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.006';
+our $VERSION = '1.007';
 our $WIN32_RELOAD = 0;
 
 sub defaults {(
