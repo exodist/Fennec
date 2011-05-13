@@ -1,3 +1,9 @@
+v1.008 - May 12, 2011 - Chad Granum:
+    * Fix? hisenbug in TB listener.
+
+v1.002-v1.007
+    * Forgot to fill this out when I made the changes :-(
+
 v1.001 - Feb 18, 2011 - Chad Granum:
     * Create shortcut for using runner, improve runner re-exec command
     * Remove verbose messages from STDERR, using STDOUT they cause less spam
