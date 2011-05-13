@@ -90,12 +90,23 @@ sub listen {
     my $self = shift;
     require Time::HiRes;
     my $alarm = \&Time::HiRes::alarm;
-    local $SIG{ALRM} = sub { $self->flush; $alarm->( 0.10 )};
+    my $lock = 0;
+    local $SIG{ALRM} = sub {
+        $self->flush unless $lock;
+        $alarm->( 0.01 )
+    };
     my $read = $self->read;
 
-    $alarm->(0.10);
-    while( my $line = <$read> ) {
-        $self->handle_line( $line );
+    $alarm->(0.01);
+    # Catch odd case were we stop reading too soon
+    # TODO: Figure out why it happens.
+    for ( 1 .. 2 ) {
+        while( my $line = <$read> ) {
+            $lock = 1;
+            $self->handle_line( $line ) if $line;
+            $lock = 0;
+        }
+        sleep 0.5;
     }
 
     $alarm->(0);
@@ -110,7 +121,7 @@ sub handle_line {
     my ( $line ) = @_;
     my ( $pid, $handle, $class, $file, $ln, $msg ) = split( "\0", $line );
 
-    my $id = "$class\0$file\0$ln";
+    my $id = "$class $file $ln";
     my $buffer = $self->buffer->{$pid};
 
     if ( !$buffer || $buffer->{id} ne $id ) {
@@ -143,7 +154,37 @@ sub render_buffer {
     my ( $buffer ) = @_;
 
     for my $line ( @{ $buffer->{ lines }}) {
-        my $parser = TAP::Parser->new({ source => $line->[1] });
+        my $parser;
+        my $error;
+
+        # Tap::Parser seems to fail randomly?
+        for ( 1 .. 3 ) {
+            $parser = eval { TAP::Parser->new({ source => $line->[1] })};
+            $error = $@;
+            last if $parser;
+
+            require Data::Dumper;
+            my $debug = Data::Dumper::Dumper({
+                error => $error,
+                buffer => $buffer,
+            });
+
+            warn <<"            EOT"
+TAP::Parser encountered a problem... Attempting to recover.
+
+*** This is known to happen from time to time, you can probably ignore this
+*** message. This message is here purely to help us debug why this occurs and
+*** correct it in a better way in the future.
+
+DEBUG INFO
+----------------
+$debug
+----------------
+            EOT
+        }
+
+        die "Failed to parse input." unless $parser;
+
         while ( my $result = $parser->next ) {
             next if $result->is_plan;
             if( $result->is_test ) {
