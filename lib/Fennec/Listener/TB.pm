@@ -77,7 +77,7 @@ sub spawn_reporter {
     close( $write );
     $self->write(undef);
 
-    require TAP::Parser;
+    require Fennec::Listener::TB::Result;
     accessors qw/buffer count error_count/;
 
     $self->buffer({});
@@ -154,50 +154,19 @@ sub render_buffer {
     my ( $buffer ) = @_;
 
     for my $line ( @{ $buffer->{ lines }}) {
-        my $parser;
-        my $error;
+        my $result = Fennec::Listener::TB::Result->new( $line->[1] );
 
-        # Tap::Parser seems to fail randomly?
-        for ( 1 .. 3 ) {
-            $parser = eval { TAP::Parser->new({ source => $line->[1] })};
-            $error = $@;
-            last if $parser;
-
-            require Data::Dumper;
-            my $debug = Data::Dumper::Dumper({
-                error => $error,
-                buffer => $buffer,
-            });
-
-            warn <<"            EOT"
-TAP::Parser encountered a problem... Attempting to recover.
-
-*** This is known to happen from time to time, you can probably ignore this
-*** message. This message is here purely to help us debug why this occurs and
-*** correct it in a better way in the future.
-
-DEBUG INFO
-----------------
-$debug
-----------------
-            EOT
+        next if $result->is_plan;
+        if( $result->is_test ) {
+            $self->count( $self->count + 1 );
+            $self->error_count( $self->error_count + 1 )
+                if !$result->is_ok;
         }
-
-        die "Failed to parse input." unless $parser;
-
-        while ( my $result = $parser->next ) {
-            next if $result->is_plan;
-            if( $result->is_test ) {
-                $self->count( $self->count + 1 );
-                $self->error_count( $self->error_count + 1 )
-                    if !$result->is_ok;
-            }
-            if ( $line->[0] eq 'STDERR' && !$ENV{HARNESS_IS_VERBOSE} ) {
-                print STDERR $result->raw . "\n";
-            }
-            else {
-                print STDOUT $result->raw . "\n";
-            }
+        if ( $line->[0] eq 'STDERR' && !$ENV{HARNESS_IS_VERBOSE} ) {
+            print STDERR $result->render;
+        }
+        else {
+            print STDOUT $result->render;
         }
     }
 }
