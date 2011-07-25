@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.008';
+our $VERSION = '1.010';
 our $WIN32_RELOAD = 0;
 
 sub defaults {(
@@ -419,6 +419,16 @@ This sets the test sorting method for Test::Workflow test groups.  Accepts
 can use the shorter versions 'rand', and 'ord'.
 
 Defaults to: 'rand'
+
+=head3 debug_long_running => $TIMEOUT
+
+This will cause a test block to abort after a specified timeout (value is
+passed directly to alaram).
+
+B<NOTE> This uses the C<alarm($timeout)> function. If your tests include alarms
+the behavior is not defined. One will certainly clobber the other, your will
+most likely come out on top, but that is not guarenteed in any way. Only use
+this while debugging and remove it afterwords.
 
 =over 4
 

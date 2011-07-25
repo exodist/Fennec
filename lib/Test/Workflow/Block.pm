@@ -81,7 +81,7 @@ sub run {
     $meta->todo_start->( $self->todo )
         if $self->todo;
 
-    my $success = eval { $self->code->( @_ ); 1 } || $self->should_fail;
+    my $success = eval { $self->code->( @_ ); 1 } || $self->should_fail || 0;
     my $error = $@ || "Error masked!";
     chomp( $error );
 

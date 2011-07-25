@@ -100,7 +100,8 @@ sub listen {
     $alarm->(0.01);
     # Catch odd case were we stop reading too soon
     # TODO: Figure out why it happens.
-    for ( 1 .. 2 ) {
+    # OMG: This is a horrible hack!
+    for ( 1 .. 100 ) {
         while( my $line = <$read> ) {
             $lock = 1;
             $self->handle_line( $line ) if $line;

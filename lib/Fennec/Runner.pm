@@ -129,6 +129,7 @@ sub run {
         print "Running: $class\n";
         my $instance = $class->can('new') ? $class->new : bless( {}, $class );
         my $meta = $instance->TEST_WORKFLOW;
+        $meta->debug_long_running( $instance->FENNEC->debug_long_running );
 
         my $prunner;
         if ( my $max = $class->FENNEC->parallel ) {
@@ -138,8 +139,16 @@ sub run {
             else {
                 require Parallel::Runner;
                 $prunner = Parallel::Runner->new( $max );
+                $prunner->reap_callback( sub {
+                    my ( $status, $pid, $pid_again, $proc ) = @_;
+
+                    # Status as returned from system, so 0 is good, 1+ is bad.
+                    die "Child $pid did not exit 0"
+                        if $status;
+                });
+
                 $meta->test_run( sub {
-                    my $sub = shift;
+                    my ( $sub, $test, $obj ) = shift;
                     $prunner->run( sub {
                         $instance->TEST_WORKFLOW->test_run(undef);
                         $sub->();

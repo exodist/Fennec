@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/accessors/;
 
-accessors qw/parallel class fennec base test_sort with_tests/;
+accessors qw/parallel class fennec base test_sort with_tests debug_long_running/;
 
 sub new {
     my $class = shift;

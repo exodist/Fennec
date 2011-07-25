@@ -232,6 +232,15 @@ CONFIGURATION
 
     Defaults to: 'rand'
 
+   debug_long_running => $TIMEOUT
+    This will cause a test block to abort after a specified timeout (value
+    is passed directly to alaram).
+
+    NOTE This uses the "alarm($timeout)" function. If your tests include
+    alarms the behavior is not defined. One will certainly clobber the
+    other, your will most likely come out on top, but that is not guarenteed
+    in any way. Only use this while debugging and remove it afterwords.
+
     'random'
         Will shuffle the order. Keep in mind Fennec sets the random seed
         using the date so that tests will be determinate on the day you
