@@ -40,6 +40,9 @@ sub debug_handler {
     return sub {
         require Data::Dumper;
 
+        my $meta = $instance->TEST_WORKFLOW;
+        $meta->ok->(0, "Long running process timeout");
+
         my $out = "Long running process timeout\n";
 
         $out .= "\ttimeout - $timeout\n\ttest - " . $self->name . "\n\n";
@@ -76,6 +79,7 @@ sub _timeout_wrap {
     return $inner unless $timeout;
 
     return sub {
+        no warnings 'uninitialized';
         $SIG{ALRM} = $self->debug_handler( $timeout, $instance );
         alarm $timeout;
         $inner->();
