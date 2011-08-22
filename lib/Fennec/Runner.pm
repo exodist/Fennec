@@ -138,18 +138,34 @@ sub run {
             }
             else {
                 require Parallel::Runner;
-                $prunner = Parallel::Runner->new( $max );
+                $prunner = Parallel::Runner->new( $max, pipe => 1 );
                 $prunner->reap_callback( sub {
                     my ( $status, $pid, $pid_again, $proc ) = @_;
 
+                    while( my $data = eval { $proc->read() }) {
+                        $self->listener->process( $data );
+                    }
+
+                    $self->listener->flush( $pid );
+
                     # Status as returned from system, so 0 is good, 1+ is bad.
-                    die "Child $pid did not exit 0"
+                    $self->exception( "Child process did not exit cleanly", "Status: $status" )
                         if $status;
+                });
+                $prunner->iteration_callback( sub {
+                    my $runner = shift;
+                    for my $proc ( $runner->children ) {
+                        while( my $data = eval { $proc->read() }) {
+                            $self->listener->process( $data );
+                        }
+                    }
                 });
 
                 $meta->test_run( sub {
                     my ( $sub, $test, $obj ) = shift;
                     $prunner->run( sub {
+                        my ($parent) = @_;
+                        $self->listener->setup_child( $parent->write_handle ) if $parent;
                         $instance->TEST_WORKFLOW->test_run(undef);
                         $sub->();
                     });

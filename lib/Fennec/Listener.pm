@@ -4,13 +4,16 @@ use warnings;
 
 use Carp qw/croak/;
 
-sub new        { croak "You must subclass new()in your listener(" . shift(@_) . ")"         }
-sub ok         { croak "You must subclass ok() in your listener(" . shift(@_) . ")"         }
-sub diag       { croak "You must subclass diag() in your listener(" . shift(@_) . ")"       }
-sub skip       { croak "You must subclass skip() in your listener(" . shift(@_) . ")"       }
-sub todo_start { croak "You must subclass todo_start() in your listener(" . shift(@_) . ")" }
-sub todo_end   { croak "You must subclass todo_end() in your listener(" . shift(@_) . ")"   }
-sub terminate  { 1;                                                                         }
+sub new        { croak "You must override new() in your listener(" . shift(@_) . ")"        }
+sub ok         { croak "You must override ok() in your listener(" . shift(@_) . ")"         }
+sub diag       { croak "You must override diag() in your listener(" . shift(@_) . ")"       }
+sub skip       { croak "You must override skip() in your listener(" . shift(@_) . ")"       }
+sub todo_start { croak "You must override todo_start() in your listener(" . shift(@_) . ")" }
+sub todo_end   { croak "You must override todo_end() in your listener(" . shift(@_) . ")"   }
+sub process    { croak "You must override process() in your listener(" . shift(@_) . ")"    }
+
+sub terminate   { 1 }
+sub setup_child { 1 }
 
 1;
 

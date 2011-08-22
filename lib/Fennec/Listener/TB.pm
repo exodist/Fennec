@@ -2,56 +2,37 @@ package Fennec::Listener::TB;
 use strict;
 use warnings;
 
+use Fennec::Listener::TB::Collector;
 use Fennec::Listener::TB::Handle;
+use Test::Builder();
 
 use base 'Fennec::Listener';
 
 use Fennec::Util qw/accessors get_test_call/;
-use POSIX ":sys_wait_h";
 use Test::Builder;
 
-accessors qw/read write pid reporter_pid/;
+accessors qw/collector tbout tberr/;
+
+sub ok         { shift; Test::Builder->new->ok( @_ )        }
+sub diag       { shift; Test::Builder->new->diag( @_ )      }
+sub skip       { shift; Test::Builder->new->skip( @_ )      }
+sub todo_start { shift; Test::Builder->new->todo_start( @_ )}
+sub todo_end   { shift; Test::Builder->new->todo_end        }
 
 sub new {
     my $class = shift;
-    my ( $read, $write );
-    pipe( $read, $write );
+
+    my $tbout = tie( *TBOUT, 'Fennec::Listener::TB::Handle', 'STDOUT' );
+    my $tberr = tie( *TBERR, 'Fennec::Listener::TB::Handle', 'STDERR' );
 
     my $self = bless({
-        pid => $$,
-        read => $read,
-        write => $write,
+        collector => Fennec::Listener::TB::Collector->new(),
+        tbout => $tbout,
+        tberr => $tberr,
     }, $class);
 
-    $self->spawn_reporter;
-    close( $read );
-    $self->read( undef );
-
-    my $old = select( $write );
-    $| = 0;
-    select( $old );
-
-    $self->setup_tb;
-
-    return $self;
-}
-
-sub ok         { shift; Fennec::Util::tb_ok( @_ )        }
-sub diag       { shift; Fennec::Util::tb_diag( @_ )      }
-sub skip       { shift; Fennec::Util::tb_skip( @_ )      }
-sub todo_start { shift; Fennec::Util::tb_todo_start( @_ )}
-sub todo_end   { shift; Fennec::Util::tb_todo_end        }
-
-sub setup_tb {
-    my $self = shift;
-    Test::Builder->new->use_numbers(0);
-    my $out = $self->write;
-
-    my $TB = Test::Builder->new;
-    $TB->no_ending(1);
-
-    tie( *TBOUT, 'Fennec::Listener::TB::Handle', 'STDOUT', $out );
-    tie( *TBERR, 'Fennec::Listener::TB::Handle', 'STDERR', $out );
+    my $tb = Test::Builder->new();
+    $tb->no_ending(1);
 
     my $old = select( TBOUT );
     $| = 1;
@@ -59,135 +40,36 @@ sub setup_tb {
     $| = 1;
     select( $old );
 
-    $TB->output(\*TBOUT);
-    $TB->todo_output(\*TBOUT);
-    $TB->failure_output(\*TBERR);
+    $tb->output(\*TBOUT);
+    $tb->todo_output(\*TBOUT);
+    $tb->failure_output(\*TBERR);
+
+    $self->setup_child( $self->collector );
+
+    return $self;
 }
 
-sub spawn_reporter {
+sub setup_child {
     my $self = shift;
-    my $pid = fork();
+    my ( $handle ) = @_;
 
-    if ( $pid ) {
-        $self->reporter_pid( $pid );
-        return $pid;
-    }
-
-    my $write = $self->write;
-    close( $write );
-    $self->write(undef);
-
-    require Fennec::Listener::TB::Result;
-    accessors qw/buffer count error_count/;
-
-    $self->buffer({});
-    $self->count(0);
-    $self->error_count(0);
-    $self->listen;
+    $self->tbout->out( $handle );
+    $self->tberr->out( $handle );
 }
 
-sub listen {
+sub process {
     my $self = shift;
-    require Time::HiRes;
-    my $alarm = \&Time::HiRes::alarm;
-    my $lock = 0;
-    local $SIG{ALRM} = sub {
-        $self->flush unless $lock;
-        $alarm->( 0.01 )
-    };
-    my $read = $self->read;
-
-    $alarm->(0.01);
-    # Catch odd case were we stop reading too soon
-    # TODO: Figure out why it happens.
-    # OMG: This is a horrible hack!
-    for ( 1 .. 100 ) {
-        while( my $line = <$read> ) {
-            $lock = 1;
-            $self->handle_line( $line ) if $line;
-            $lock = 0;
-        }
-        sleep 0.5;
-    }
-
-    $alarm->(0);
-    $self->flush while keys %{ $self->buffer };
-
-    print STDOUT "1.." . $self->count . "\n";
-    exit( $self->error_count || 0 );
+    $self->collector->process( @_ );
 }
 
-sub handle_line {
+sub terminate { 
     my $self = shift;
-    my ( $line ) = @_;
-    my ( $pid, $handle, $class, $file, $ln, $msg ) = split( "\0", $line );
-
-    my $id = "$class $file $ln";
-    my $buffer = $self->buffer->{$pid};
-
-    if ( !$buffer || $buffer->{id} ne $id ) {
-        $self->render_buffer( $buffer ) if $buffer;
-        $buffer = {
-            pid   => $pid,
-            id    => $id,
-            lines => [],
-        };
-    }
-
-    push @{ $buffer->{lines} } => [ $handle, $msg ];
-    $self->buffer->{$pid} = $buffer;
+    $self->collector->terminate( @_ );
 }
 
 sub flush {
     my $self = shift;
-    for my $pid ( keys %{ $self->buffer }) {
-        my $wait = waitpid( $pid, WNOHANG );
-        next unless $wait == -1
-                 || $wait == $pid;
-        $self->render_buffer(
-            delete $self->buffer->{ $pid }
-        );
-    }
-}
-
-sub render_buffer {
-    my $self = shift;
-    my ( $buffer ) = @_;
-
-    for my $line ( @{ $buffer->{ lines }}) {
-        my $result = Fennec::Listener::TB::Result->new( $line->[1] );
-
-        next if $result->is_plan;
-        if( $result->is_test ) {
-            $self->count( $self->count + 1 );
-            $self->error_count( $self->error_count + 1 )
-                if !$result->is_ok;
-        }
-        if ( $line->[0] eq 'STDERR' && !$ENV{HARNESS_IS_VERBOSE} ) {
-            print STDERR $result->render;
-        }
-        else {
-            print STDOUT $result->render;
-        }
-    }
-}
-
-sub terminate {
-    my $self = shift;
-
-    my $write = $self->write;
-    close( $write );
-    $self->write( undef );
-
-    waitpid( $self->reporter_pid, 0 );
-    my $exit = $? >> 8;
-    exit( $exit );
-}
-
-sub DESTROY {
-    my $self = shift;
-    my $write = $self->write;
-    close( $write ) if $write;
+    $self->collector->flush( @_ );
 }
 
 1;
