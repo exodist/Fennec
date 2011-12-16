@@ -6,7 +6,7 @@ use base 'Fennec::Listener::TB';
 
 use Test::Builder2;
 
-my $tb = Test::Builder2->singleton;
+my $tb = Test::Builder2->default();
 $tb->formatter->show_tap_version(0);
 
 1;
