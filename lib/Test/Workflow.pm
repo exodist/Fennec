@@ -19,7 +19,7 @@ default_exports qw/
     before_all  after_all  around_all
     with_tests
     test_sort
-/;
+    /;
 
 gen_default_export TEST_WORKFLOW => sub {
     my ( $class, $importer ) = @_;
@@ -27,19 +27,21 @@ gen_default_export TEST_WORKFLOW => sub {
     return sub { $meta };
 };
 
-{ no warnings 'once'; @DB::CARP_NOT = qw/ DB Test::Workflow /}
+{ no warnings 'once'; @DB::CARP_NOT = qw/ DB Test::Workflow / }
+
 sub _get_layer {
+
     package DB;
     use Carp qw/croak/;
     use Scalar::Util qw/blessed/;
 
-    my ($sub, $caller) = @_;
+    my ( $sub, $caller ) = @_;
 
     my @parent = caller(2);
-    my @pargs = @DB::args;
-    my $layer = $pargs[-1];
+    my @pargs  = @DB::args;
+    my $layer  = $pargs[-1];
 
-    if ( blessed($layer) && blessed($layer)->isa( 'Test::Workflow::Layer' )) {
+    if ( blessed($layer) && blessed($layer)->isa('Test::Workflow::Layer') ) {
         croak "Layer has already been finalized!"
             if $layer->finalized;
         return $layer;
@@ -52,37 +54,37 @@ sub _get_layer {
     return $meta->root_layer;
 }
 
-sub with_tests  { my @caller = caller; _get_layer( 'with_tests', \@caller )->merge_in( \@caller, @_ )}
+sub with_tests { my @caller = caller; _get_layer( 'with_tests', \@caller )->merge_in( \@caller, @_ ) }
 
-sub tests { my @caller = caller; _get_layer( 'tests', \@caller )->add_test( \@caller, shift( @_ ), verbose => 1, @_ )}
-sub it    { my @caller = caller; _get_layer( 'it',    \@caller )->add_test( \@caller, shift( @_ ), verbose => 1, @_ )}
-sub case  { my @caller = caller; _get_layer( 'case',  \@caller )->add_case( \@caller, @_ )}
+sub tests { my @caller = caller; _get_layer( 'tests', \@caller )->add_test( \@caller, shift(@_), verbose => 1, @_ ) }
+sub it    { my @caller = caller; _get_layer( 'it',    \@caller )->add_test( \@caller, shift(@_), verbose => 1, @_ ) }
+sub case { my @caller = caller; _get_layer( 'case', \@caller )->add_case( \@caller, @_ ) }
 
-sub describe { my @caller = caller; _get_layer( 'describe', \@caller )->add_child( \@caller, @_ )}
-sub cases    { my @caller = caller; _get_layer( 'cases',    \@caller )->add_child( \@caller, @_ )}
+sub describe { my @caller = caller; _get_layer( 'describe', \@caller )->add_child( \@caller, @_ ) }
+sub cases    { my @caller = caller; _get_layer( 'cases',    \@caller )->add_child( \@caller, @_ ) }
 
-sub before_each { my @caller = caller; _get_layer( 'before_each', \@caller )->add_before_each( \@caller, @_ )}
-sub before_all  { my @caller = caller; _get_layer( 'before_all',  \@caller )->add_before_all(  \@caller, @_ )}
-sub after_each  { my @caller = caller; _get_layer( 'after_each',  \@caller )->add_after_each(  \@caller, @_ )}
-sub after_all   { my @caller = caller; _get_layer( 'after_all',   \@caller )->add_after_all(   \@caller, @_ )}
-sub around_each { my @caller = caller; _get_layer( 'around_each', \@caller )->add_around_each( \@caller, @_ )}
-sub around_all  { my @caller = caller; _get_layer( 'around_all',  \@caller )->add_around_all(  \@caller, @_ )}
+sub before_each { my @caller = caller; _get_layer( 'before_each', \@caller )->add_before_each( \@caller, @_ ) }
+sub before_all { my @caller = caller; _get_layer( 'before_all', \@caller )->add_before_all( \@caller, @_ ) }
+sub after_each { my @caller = caller; _get_layer( 'after_each', \@caller )->add_after_each( \@caller, @_ ) }
+sub after_all { my @caller = caller; _get_layer( 'after_all', \@caller )->add_after_all( \@caller, @_ ) }
+sub around_each { my @caller = caller; _get_layer( 'around_each', \@caller )->add_around_each( \@caller, @_ ) }
+sub around_all { my @caller = caller; _get_layer( 'around_all', \@caller )->add_around_all( \@caller, @_ ) }
 
-sub test_sort { caller->TEST_WORKFLOW->test_sort( @_ )}
+sub test_sort { caller->TEST_WORKFLOW->test_sort(@_) }
 
 sub run_tests {
-    my ( $instance ) = @_;
-    unless ( $instance ) {
+    my ($instance) = @_;
+    unless ($instance) {
         my $caller = caller;
-        $instance = $caller->new() if $caller->can( 'new' );
-        $instance ||= bless({}, $caller);
+        $instance = $caller->new() if $caller->can('new');
+        $instance ||= bless( {}, $caller );
     }
     my $layer = $instance->TEST_WORKFLOW->root_layer;
     $instance->TEST_WORKFLOW->build_complete(1);
     my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [] );
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
     @tests = order_tests( $sort, @tests );
-    $_->run( $instance ) for @tests;
+    $_->run($instance) for @tests;
 }
 
 sub order_tests {
@@ -96,13 +98,14 @@ sub order_tests {
     elsif ( "$sort" =~ /^rand/ ) {
         return shuffle @tests;
     }
-    elsif( ref $sort eq 'CODE' ) {
-        return $sort->( @tests );
+    elsif ( ref $sort eq 'CODE' ) {
+        return $sort->(@tests);
     }
 
     croak "'$sort' is not a recognized option to test_sort";
 }
 
+#<<< no-tidy
 sub get_tests {
     my ( $instance, $layer, $name, $before_each, $after_each, $around_each ) = @_;
     # get before_each and after_each
@@ -127,24 +130,33 @@ sub get_tests {
 
     my @cases = @{ $layer->case };
     if ( @cases ) {
-        @tests = map {
-            my $test = $_;
-            map { Test::Workflow::Test->new(
-                setup => [ $_    ],
-                tests => [ $test->clone_with(
-                    name => "'" . $_->name . "' x '" . $test->name . "'"
-                )],
-            )} @cases
-        } @tests;
+        my @new_tests;
+        for my $test ( @tests ) {
+            for my $case ( @cases ) {
+                push @new_tests => Test::Workflow::Test->new(
+                    setup => [ $case, @$before_each ],
+                    tests => [
+                        $test->clone_with(
+                            name => "'" . $case->name . "' x '" . $test->name . "'"
+                        )
+                    ],
+                    teardown   => [ @$after_each  ],
+                    around     => [ @$around_each ],
+                    block_name => $name,
+                );
+            }
+        }
+        @tests = @new_tests;
     }
-
-    @tests = map { Test::Workflow::Test->new(
-        setup      => [ @$before_each ],
-        tests      => [ $_            ],
-        teardown   => [ @$after_each  ],
-        around     => [ @$around_each ],
-        block_name => $name,
-    )} @tests;
+    else {
+        @tests = map { Test::Workflow::Test->new(
+            setup      => [ @$before_each ],
+            tests      => [ $_            ],
+            teardown   => [ @$after_each  ],
+            around     => [ @$around_each ],
+            block_name => $name,
+        )} @tests;
+    }
 
     push @tests => map {
         my $layer = Test::Workflow::Layer->new;
@@ -167,6 +179,7 @@ sub get_tests {
 
     return @tests;
 }
+#>>>
 
 1;
 
