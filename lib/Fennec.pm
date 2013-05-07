@@ -4,30 +4,34 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION = '1.012';
+our $VERSION      = '1.013';
 our $WIN32_RELOAD = 0;
 
-sub defaults {(
-    utils => [qw/
-        Test::More Test::Warn Test::Exception Test::Workflow Mock::Quick
-    /],
-    parallel => 3,
-    runner_class => 'Fennec::Runner',
-    with_tests => [],
-)}
+sub defaults {
+    (
+        utils => [
+            qw/
+                Test::More Test::Warn Test::Exception Test::Workflow Mock::Quick
+                /
+        ],
+        parallel     => 3,
+        runner_class => 'Fennec::Runner',
+        with_tests   => [],
+    );
+}
 
 sub init {
-    my $class = shift;
-    my %params = @_;
+    my $class    = shift;
+    my %params   = @_;
     my $importer = $params{caller}->[0];
-    my $meta = $params{meta};
+    my $meta     = $params{meta};
 
     my $wfmeta = $importer->TEST_WORKFLOW;
-    $wfmeta->ok(         sub { Fennec::Runner->new->listener->ok( @_ )        });
-    $wfmeta->diag(       sub { Fennec::Runner->new->listener->diag( @_ )      });
-    $wfmeta->skip(       sub { Fennec::Runner->new->listener->skip( @_ )      });
-    $wfmeta->todo_start( sub { Fennec::Runner->new->listener->todo_start( @_ )});
-    $wfmeta->todo_end(   sub { Fennec::Runner->new->listener->todo_end( @_ )  });
+    $wfmeta->ok( sub         { Fennec::Runner->new->listener->ok(@_) } );
+    $wfmeta->diag( sub       { Fennec::Runner->new->listener->diag(@_) } );
+    $wfmeta->skip( sub       { Fennec::Runner->new->listener->skip(@_) } );
+    $wfmeta->todo_start( sub { Fennec::Runner->new->listener->todo_start(@_) } );
+    $wfmeta->todo_end( sub   { Fennec::Runner->new->listener->todo_end(@_) } );
 
     $wfmeta->test_sort( $meta->test_sort )
         if $meta->test_sort;
@@ -38,7 +42,7 @@ sub init {
 }
 
 sub import {
-    my $class = shift;
+    my $class  = shift;
     my @caller = caller;
 
     die "Fennec cannot be used in package 'main'"
@@ -57,9 +61,9 @@ sub import {
     }
 
     eval "require $params{runner_class}; 1" || die $@;
-    push @{ $params{runner_class}->new->test_classes } => $importer;
+    push @{$params{runner_class}->new->test_classes} => $importer;
 
-    for my $require ( @{$params{skip_without} || []}) {
+    for my $require ( @{$params{skip_without} || []} ) {
         die "FENNEC_SKIP: '$require' is not installed\n"
             unless eval "require $require; 1";
     }
@@ -67,26 +71,26 @@ sub import {
     require Fennec::Meta;
     my $meta = Fennec::Meta->new(
         fennec => $class,
-        class => $importer,
+        class  => $importer,
         %params,
     );
 
-    inject_sub( $importer, 'FENNEC', sub { $meta });
+    inject_sub( $importer, 'FENNEC', sub { $meta } );
 
     my $base = $meta->base;
-    if ( $base ) {
+    if ($base) {
         no strict 'refs';
         eval "require $base" || die $@;
-        push @{ "$importer\::ISA" } => $base
-            unless grep { $_ eq $base } @{ "$importer\::ISA" };
+        push @{"$importer\::ISA"} => $base
+            unless grep { $_ eq $base } @{"$importer\::ISA"};
     }
 
-    for my $util ( @{ $params{utils} || [] }) {
+    for my $util ( @{$params{utils} || []} ) {
         my $code = "package $importer; require $util; $util\->import(\@{\$params{'$util'}}); 1";
         eval $code || die $@;
     }
 
-    for my $template ( @{ $params{with_tests} || [] }) {
+    for my $template ( @{$params{with_tests} || []} ) {
         eval "package $importer; with_tests '$template'; 1" || die $@;
     }
 
@@ -100,8 +104,7 @@ sub _reload_caller {
     return unless $0 eq $caller->[1];
     $WIN32_RELOAD = 1;
 
-    print "\nWin32 detected, cannot reload perl\n",
-          "Runner loaded too late, unloading test module and reloading through runner\n";
+    print "\nWin32 detected, cannot reload perl\n", "Runner loaded too late, unloading test module and reloading through runner\n";
 
     my $cpackage = $caller->[0];
     $cpackage =~ s|/|::|g;
@@ -114,7 +117,7 @@ sub _reload_caller {
     delete $stash->{$_} for keys %$stash;
     eval "require $runner_class; 1;" || die $@;
     my $runner = $runner_class->new;
-    $runner->load_file( $0 );
+    $runner->load_file($0);
     $runner->run();
     exit 0;
 }
@@ -128,7 +131,7 @@ sub _restart_with_runner {
 
     my @args = (
         $^X,
-        (map {( "-I$_" )} @INC),
+        ( map { ("-I$_") } @INC ),
         "-M$runner_class=$0",
         '-erun()'
     );
@@ -138,7 +141,7 @@ sub _restart_with_runner {
         join( ' ', @args ),
     );
 
-    exit system( @args );
+    exit system(@args);
 }
 
 1;

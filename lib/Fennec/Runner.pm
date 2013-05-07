@@ -8,9 +8,9 @@ BEGIN {
     for ( 3, 4 ) {
         $ltime[4] = "0$ltime[$_]" unless $ltime[$_] > 9;
     }
-    my $seed = $ENV{FENNEC_SEED} || join( '', @ltime[5,4,3] );
+    my $seed = $ENV{FENNEC_SEED} || join( '', @ltime[5, 4, 3] );
     print "\n*** Seeding random with date ($seed) ***\n";
-    srand( $seed );
+    srand($seed);
 }
 
 use Carp qw/carp croak/;
@@ -23,13 +23,14 @@ accessors qw/pid listener test_classes/;
 my $SINGLETON;
 
 my $listener_class;
+
 sub listener_class {
-    unless ( $listener_class ) {
+    unless ($listener_class) {
         if ( $^O eq 'MSWin32' ) {
             require Fennec::Listener::TBWin32;
             $listener_class = 'Fennec::Listener::TBWin32';
         }
-        elsif (eval { require Test::Builder2; 1 }) {
+        elsif ( eval { require Test::Builder2; 1 } ) {
             require Fennec::Listener::TB2;
             $listener_class = 'Fennec::Listener::TB2';
         }
@@ -41,14 +42,14 @@ sub listener_class {
     return $listener_class;
 }
 
-sub init {}
+sub init { }
 
 sub import {
     my $self = shift->new();
     return unless @_;
 
-    $self->_load_guess( $_ ) for @_;
-    $self->inject_run( scalar caller )
+    $self->_load_guess($_) for @_;
+    $self->inject_run( scalar caller );
 }
 
 sub inject_run {
@@ -67,31 +68,34 @@ sub new {
     my $class = shift;
     return $SINGLETON if $SINGLETON;
 
-    $SINGLETON = bless({
-        test_classes => [],
-        pid => $$,
-        listener => $class->listener_class->new() || croak "Could not init listener!",
-    }, $class);
+    $SINGLETON = bless(
+        {
+            test_classes => [],
+            pid          => $$,
+            listener     => $class->listener_class->new() || croak "Could not init listener!",
+        },
+        $class
+    );
 
-    $SINGLETON->init( @_ );
+    $SINGLETON->init(@_);
 
     return $SINGLETON;
-};
+}
 
 sub _load_guess {
     my $self = shift;
-    my ( $item ) = @_;
+    my ($item) = @_;
 
     if ( ref $item && ref $item eq 'CODE' ) {
-        $self->_load_guess( $_ ) for ($self->$item);
+        $self->_load_guess($_) for ( $self->$item );
         return;
     }
 
-    return $self->load_file( $item )
+    return $self->load_file($item)
         if $item =~ m/\.(pm|t|pl)$/i
         || $item =~ m{/};
 
-    return $self->load_module( $item )
+    return $self->load_module($item)
         if $item =~ m/::/
         || $item =~ m/^\w[\w\d_]+$/;
 
@@ -100,7 +104,7 @@ sub _load_guess {
 
 sub load_file {
     my $self = shift;
-    my ( $file ) = @_;
+    my ($file) = @_;
     print "Loading: $file\n";
     eval { require $file; 1 } || $self->exception( $file, $@ );
     $self->check_pid();
@@ -113,7 +117,7 @@ sub check_pid {
 }
 
 sub load_module {
-    my $self = shift;
+    my $self   = shift;
     my $module = shift;
     print "Loading: $module\n";
     eval "require $module" || $self->exception( $module, $@ );
@@ -124,7 +128,7 @@ sub run {
     my $self = shift;
     Test::Class->runtests if $INC{'Test/Class.pm'} && !$ENV{'FENNEC_TEST'};
 
-    for my $class ( @{ $self->test_classes }) {
+    for my $class ( @{$self->test_classes} ) {
         next unless $class && $class->can('TEST_WORKFLOW');
         print "Running: $class\n";
         my $instance = $class->can('new') ? $class->new : bless( {}, $class );
@@ -137,49 +141,67 @@ sub run {
                 print "Parallization unavailable on windows.\n";
             }
             else {
-                require Parallel::Runner;
-                $prunner = Parallel::Runner->new( $max, pipe => 1 );
-                $prunner->reap_callback( sub {
-                    my ( $status, $pid, $pid_again, $proc ) = @_;
+                $prunner = $self->get_prunner( max => $max );
 
-                    while( my $data = eval { $proc->read() }) {
-                        $self->listener->process( $data );
+                $meta->test_run(
+                    sub {
+                        my ( $sub, $test, $obj ) = shift;
+                        $prunner->run(
+                            sub {
+                                my ($parent) = @_;
+                                $self->listener->setup_child( $parent->write_handle ) if $parent;
+                                $sub->();
+                            }
+                        );
                     }
-
-                    $self->listener->flush( $pid );
-
-                    # Status as returned from system, so 0 is good, 1+ is bad.
-                    $self->exception( "Child process did not exit cleanly", "Status: $status" )
-                        if $status;
-                });
-                $prunner->iteration_callback( sub {
-                    my $runner = shift;
-                    for my $proc ( $runner->children ) {
-                        while( my $data = eval { $proc->read() }) {
-                            $self->listener->process( $data );
-                        }
-                    }
-                });
-
-                $meta->test_run( sub {
-                    my ( $sub, $test, $obj ) = shift;
-                    $prunner->run( sub {
-                        my ($parent) = @_;
-                        $self->listener->setup_child( $parent->write_handle ) if $parent;
-                        $instance->TEST_WORKFLOW->test_run(undef);
-                        $sub->();
-                    });
-                });
+                );
             }
         }
 
-        Test::Workflow::run_tests( $instance );
+        Test::Workflow::run_tests($instance);
         $prunner->finish if $prunner;
-        $meta->test_run( undef );
+        $meta->test_run(undef);
         $self->check_pid();
     }
 
     $self->listener->terminate();
+}
+
+sub get_prunner {
+    my $self   = shift;
+    my %params = @_;
+
+    require Parallel::Runner;
+    my $prunner = Parallel::Runner->new( $params{max}, pipe => 1 );
+
+    $prunner->reap_callback(
+        sub {
+            my ( $status, $pid, $pid_again, $proc ) = @_;
+
+            while ( my $data = eval { $proc->read() } ) {
+                $self->listener->process($data);
+            }
+
+            $self->listener->flush($pid);
+
+            # Status as returned from system, so 0 is good, 1+ is bad.
+            $self->exception( "Child process did not exit cleanly", "Status: $status" )
+                if $status;
+        }
+    );
+
+    $prunner->iteration_callback(
+        sub {
+            my $runner = shift;
+            for my $proc ( $runner->children ) {
+                while ( my $data = eval { $proc->read() } ) {
+                    $self->listener->process($data);
+                }
+            }
+        }
+    );
+
+    return $prunner;
 }
 
 sub exception {
@@ -187,11 +209,11 @@ sub exception {
     my ( $name, $exception ) = @_;
 
     if ( $exception =~ m/^FENNEC_SKIP: (.*)\n/ ) {
-        $self->listener->ok( 1, "SKIPPING $name: $1")
+        $self->listener->ok( 1, "SKIPPING $name: $1" );
     }
     else {
         $self->listener->ok( 0, $name );
-        $self->listener->diag( $exception );
+        $self->listener->diag($exception);
     }
 }
 

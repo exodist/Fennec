@@ -9,12 +9,13 @@ describe procs_1 => sub {
     my @pids = ($$);
 
     before_all setup => sub {
-        ok( $pids[-1] != $$, "In a new process" );
+        ok( $pids[-1] == $$, "before_all happens in parent" );
         push @pids => $$;
     };
 
     tests a => sub {
-        ok( $$ == $pids[-1], "Only 1 test, no need for a new process" );
+        ok( $$ != $pids[-1], "New proc, even for just 1 test" );
+        push @pids => $$;
     };
 
     after_all teardown => sub {
@@ -27,7 +28,7 @@ describe procs_2 => sub {
     my $test_pid;
 
     before_all setup => sub {
-        ok( $pids[-1] != $$, "In a new process" );
+        ok( $pids[-1] == $$, "before_all happens in parent" );
         push @pids => $$;
     };
 
@@ -53,13 +54,13 @@ describe procs_nested => sub {
     my $test_pid;
 
     before_all setup => sub {
-        ok( $pids[-1] != $$, "In a new process" );
+        ok( $pids[-1] == $$, "before_all happens in parent" );
         push @pids => $$;
     };
 
     describe inner => sub {
-        before_all setup => sub {
-            ok( $pids[-1] != $$, "In a new process" );
+        before_all inner_setup => sub {
+            ok( $pids[-1] == $$, "before_all happens in parent" );
             push @pids => $$;
         };
 
@@ -75,7 +76,7 @@ describe procs_nested => sub {
             $test_pid = $$;
         };
 
-        after_all teardown => sub {
+        after_all inner_teardown => sub {
             ok( $$ == $pids[-1], "Same process as before_all" );
         };
     };

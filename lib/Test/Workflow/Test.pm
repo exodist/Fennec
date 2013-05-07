@@ -6,24 +6,28 @@ use Fennec::Util qw/accessors/;
 use List::Util qw/shuffle/;
 use Carp qw/cluck/;
 
-accessors qw/setup tests teardown around block_name/;
+accessors qw/setup tests teardown around block_name is_wrap/;
 
 sub new {
-    my $class = shift;
+    my $class  = shift;
     my %params = @_;
-    return bless({
-        setup      => $params{setup}      || [],
-        tests      => $params{tests}      || [],
-        teardown   => $params{teardown}   || [],
-        around     => $params{around}     || [],
-        block_name => $params{block_name} || ""
-    }, $class );
+    return bless(
+        {
+            setup      => $params{setup}      || [],
+            tests      => $params{tests}      || [],
+            teardown   => $params{teardown}   || [],
+            around     => $params{around}     || [],
+            block_name => $params{block_name} || "",
+            is_wrap    => $params{is_wrap}    || 0,
+        },
+        $class
+    );
 }
 
 sub name {
     my $self = shift;
     return $self->tests->[0]->name
-        if @{ $self->tests } == 1;
+        if @{$self->tests} == 1;
 
     return $self->block_name;
 }
@@ -34,14 +38,14 @@ sub debug_handler {
 
     my $data = {
         instance => $instance,
-        test => $self,
+        test     => $self,
     };
 
     return sub {
         require Data::Dumper;
 
         my $meta = $instance->TEST_WORKFLOW;
-        $meta->ok->(0, "Long running process timeout");
+        $meta->ok->( 0, "Long running process timeout" );
 
         my $out = "Long running process timeout\n";
 
@@ -55,18 +59,21 @@ sub debug_handler {
         $out .= "Full Dump: " . Data::Dumper::Dumper($data);
 
         die $out;
-    }
-};
+        }
+}
 
 sub run {
     my $self = shift;
-    my ( $instance ) = @_;
+    my ($instance) = @_;
 
-    my $run = $self->_wrap_tests( $instance );
-    my $prunner = $instance->TEST_WORKFLOW->test_run;
-    my $testcount = @{ $self->tests };
+    my $run       = $self->_wrap_tests($instance);
+    my $prunner   = $instance->TEST_WORKFLOW->test_run;
+    my $testcount = @{$self->tests};
 
-    return $prunner->( $run, $self, $instance ) if $prunner && $testcount == 1;
+    return $run->() if $self->is_wrap;
+
+    return $prunner->( $run, $self, $instance )
+        if $prunner && $testcount == 1;
 
     $run->();
 }
@@ -91,23 +98,23 @@ sub _timeout_wrap {
 
 sub _wrap_tests {
     my $self = shift;
-    my ( $instance ) = @_;
+    my ($instance) = @_;
 
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
-    my @tests = Test::Workflow::order_tests( $sort, @{ $self->tests });
+    my @tests = Test::Workflow::order_tests( $sort, @{$self->tests} );
 
     return sub {
-        $_->run( $instance ) for @{ $self->setup };
-        for my $test ( @tests ) {
-            my $outer = sub { $test->run( $instance )};
+        $_->run($instance) for @{$self->setup};
+        for my $test (@tests) {
+            my $outer = sub { $test->run($instance) };
             $outer = $self->_timeout_wrap( $instance, $outer );
-            for my $around ( @{ $self->around }) {
+            for my $around ( @{$self->around} ) {
                 my $inner = $outer;
-                $outer = sub { $around->run( $instance, $inner )};
+                $outer = sub { $around->run( $instance, $inner ) };
             }
             $outer->();
         }
-        $_->run( $instance ) for @{ $self->teardown };
+        $_->run($instance) for @{$self->teardown};
     };
 }
 

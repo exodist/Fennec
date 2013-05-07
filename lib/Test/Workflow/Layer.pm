@@ -8,7 +8,7 @@ use Fennec::Util qw/accessors/;
 use Scalar::Util qw/blessed/;
 use Carp qw/croak/;
 
-our @ATTRIBUTES = qw/
+our @ATTRIBUTES = qw{
     test
     case
     child
@@ -18,41 +18,43 @@ our @ATTRIBUTES = qw/
     after_all
     around_each
     around_all
-/;
+};
 
 accessors 'finalized', @ATTRIBUTES;
 
-sub new { bless({ map {( $_ => [] )} @ATTRIBUTES }, shift )}
+sub new {
+    bless( {map { ( $_ => [] ) } @ATTRIBUTES}, shift );
+}
 
 sub clone {
-    my $self = shift;
-    my $class = blessed( $self );
-    my $new = bless( { %{$self} }, $class );
+    my $self  = shift;
+    my $class = blessed($self);
+    my $new   = bless( {%{$self}}, $class );
     return $new;
 }
 
 sub merge_in {
     my $self = shift;
     my ( $caller, @classes ) = @_;
-    for my $class ( @classes ) {
+    for my $class (@classes) {
         eval "require $class; 1" || die $@;
-        push @{ $self->$_ } => @{ $class->TEST_WORKFLOW->root_layer->$_ } for @ATTRIBUTES;
+        push @{$self->$_} => @{$class->TEST_WORKFLOW->root_layer->$_} for @ATTRIBUTES;
     }
 }
 
-for my $type ( qw/test case child before_each before_all around_each around_all/ ) {
+for my $type (qw/test case child before_each before_all around_each around_all/) {
     my $add = sub {
         my $self = shift;
-        push @{ $self->$type } => Test::Workflow::Block->new( @_ );
+        push @{$self->$type} => Test::Workflow::Block->new(@_);
     };
     no strict 'refs';
     *{"add_$type"} = $add;
 }
 
-for my $type ( qw/after_each after_all/ ) {
+for my $type (qw/after_each after_all/) {
     my $add = sub {
         my $self = shift;
-        unshift @{ $self->$type } => Test::Workflow::Block->new( @_ );
+        unshift @{$self->$type} => Test::Workflow::Block->new(@_);
     };
     no strict 'refs';
     *{"add_$type"} = $add;
@@ -60,9 +62,9 @@ for my $type ( qw/after_each after_all/ ) {
 
 sub get_all {
     my $self = shift;
-    my ( $type ) = @_;
-    return @{ $self->$type }
-        if $self->can( $type );
+    my ($type) = @_;
+    return @{$self->$type}
+        if $self->can($type);
 
     croak "No such type: $type";
 }

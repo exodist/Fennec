@@ -35,9 +35,9 @@ sub _get_layer {
     use Carp qw/croak/;
     use Scalar::Util qw/blessed/;
 
-    my ( $sub, $caller ) = @_;
+    my ( $offset, $sub, $caller ) = @_;
 
-    my @parent = caller(2);
+    my @parent = caller( 2 + $offset );
     my @pargs  = @DB::args;
     my $layer  = $pargs[-1];
 
@@ -54,21 +54,52 @@ sub _get_layer {
     return $meta->root_layer;
 }
 
-sub with_tests { my @caller = caller; _get_layer( 'with_tests', \@caller )->merge_in( \@caller, @_ ) }
+sub with_tests {
+    my @caller = caller;
+    my $layer = _get_layer( 0, 'with_tests', \@caller );
+    $layer->merge_in( \@caller, @_ );
+}
 
-sub tests { my @caller = caller; _get_layer( 'tests', \@caller )->add_test( \@caller, shift(@_), verbose => 1, @_ ) }
-sub it    { my @caller = caller; _get_layer( 'it',    \@caller )->add_test( \@caller, shift(@_), verbose => 1, @_ ) }
-sub case { my @caller = caller; _get_layer( 'case', \@caller )->add_case( \@caller, @_ ) }
+*it = \&tests;
 
-sub describe { my @caller = caller; _get_layer( 'describe', \@caller )->add_child( \@caller, @_ ) }
-sub cases    { my @caller = caller; _get_layer( 'cases',    \@caller )->add_child( \@caller, @_ ) }
+sub tests {
+    my $name   = shift;
+    my @caller = caller;
+    my $layer  = _get_layer( 0, 'tests', \@caller );
+    $layer->add_test(
+        \@caller,
+        $name,
+        verbose => 1,
+        @_
+    );
+}
 
-sub before_each { my @caller = caller; _get_layer( 'before_each', \@caller )->add_before_each( \@caller, @_ ) }
-sub before_all { my @caller = caller; _get_layer( 'before_all', \@caller )->add_before_all( \@caller, @_ ) }
-sub after_each { my @caller = caller; _get_layer( 'after_each', \@caller )->add_after_each( \@caller, @_ ) }
-sub after_all { my @caller = caller; _get_layer( 'after_all', \@caller )->add_after_all( \@caller, @_ ) }
-sub around_each { my @caller = caller; _get_layer( 'around_each', \@caller )->add_around_each( \@caller, @_ ) }
-sub around_all { my @caller = caller; _get_layer( 'around_all', \@caller )->add_around_all( \@caller, @_ ) }
+sub describe { _add_child( 'describe', @_ ) }
+sub cases    { _add_child( 'case',     @_ ) }
+
+sub _add_child {
+    my $type   = shift;
+    my @caller = caller(1);
+    my $layer  = _get_layer( 1, $type, \@caller );
+    $layer->add_child( \@caller, @_ );
+}
+
+sub case        { _add_type( 'case',        @_ ) }
+sub before_each { _add_type( 'before_each', @_ ) }
+sub before_all  { _add_type( 'before_all',  @_ ) }
+sub after_each  { _add_type( 'after_each',  @_ ) }
+sub after_all   { _add_type( 'after_all',   @_ ) }
+sub around_each { _add_type( 'around_each', @_ ) }
+sub around_all  { _add_type( 'around_all',  @_ ) }
+
+sub _add_type {
+    my $type = shift;
+    my $meth = "add_$type";
+
+    my @caller = caller(1);
+    my $layer = _get_layer( 1, $type, \@caller );
+    $layer->$meth( \@caller, @_ );
+}
 
 sub test_sort { caller->TEST_WORKFLOW->test_sort(@_) }
 
@@ -160,10 +191,26 @@ sub get_tests {
 
     push @tests => map {
         my $layer = Test::Workflow::Layer->new;
+
         $_->run( $instance, $layer );
-        warn "No tests in block '" . $_->name . "' approx lines " . $_->start_line . "->" . $_->end_line . "\n"
-            unless @{ $layer->test };
-        get_tests( $instance, $layer, $_->name, [@$before_each], [@$after_each], [@$around_each] );
+
+        my @tests = get_tests(
+            $instance,
+            $layer,
+            $_->name,
+            [@$before_each],
+            [@$after_each],
+            [@$around_each]
+        );
+
+        unless (@tests) {
+            my $name  = $_->name;
+            my $start = $_->start_line;
+            my $end   = $_->end_line;
+            warn "No tests in block '$name' approx lines $start -> $end\n";
+        }
+
+        @tests;
     } @{ $layer->child };
 
     my @before_all = @{ $layer->before_all };
@@ -175,6 +222,7 @@ sub get_tests {
         teardown   => [ @after_all  ],
         around     => [ @around_all ],
         block_name => $name,
+        is_wrap    => 1,
     ) if @before_all || @after_all || @around_all;
 
     return @tests;

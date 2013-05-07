@@ -7,26 +7,29 @@ use Test::Builder;
 
 use Fennec::Util qw/accessors/;
 
-accessors qw/
+accessors qw{
     test_class build_complete root_layer test_run test_sort
     ok diag skip todo_start todo_end debug_long_running
-/;
+};
 
 sub new {
     my $class = shift;
-    my ( $test_class ) = @_;
+    my ($test_class) = @_;
 
     my $tb = "tb";
 
-    my $self = bless({
-        test_class => $test_class,
-        root_layer => Test::Workflow::Layer->new(),
-        ok         => Fennec::Util->can( "${tb}_ok"         ),
-        diag       => Fennec::Util->can( "${tb}_diag"       ),
-        skip       => Fennec::Util->can( "${tb}_skip"       ),
-        todo_start => Fennec::Util->can( "${tb}_todo_start" ),
-        todo_end   => Fennec::Util->can( "${tb}_todo_end"   ),
-    }, $class );
+    my $self = bless(
+        {
+            test_class => $test_class,
+            root_layer => Test::Workflow::Layer->new(),
+            ok         => Fennec::Util->can("${tb}_ok"),
+            diag       => Fennec::Util->can("${tb}_diag"),
+            skip       => Fennec::Util->can("${tb}_skip"),
+            todo_start => Fennec::Util->can("${tb}_todo_start"),
+            todo_end   => Fennec::Util->can("${tb}_todo_end"),
+        },
+        $class
+    );
 
     return $self;
 }
