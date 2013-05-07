@@ -3,7 +3,11 @@ package Test::Procs;
 use strict;
 use warnings;
 
-use Fennec parallel => 1;
+use Fennec parallel => 3, test_sort => 'ordered';
+
+use File::Temp qw/tempfile/;
+
+my ( $fh, $name ) = tempfile();
 
 describe procs_1 => sub {
     my @pids = ($$);
@@ -55,23 +59,34 @@ describe procs_nested => sub {
     my $test_pid;
 
     before_all setup => sub {
+        print $fh "OUTER SETUP\n";
         ok( $pids[-1] == $$, "before_all happens in parent" );
         push @pids => $$;
     };
 
+    tests outer_a => sub {
+        print $fh "OUTER TEST\n";
+        ok( $$ != $pids[-1], "Multiple Tests, each should have a different proc" );
+        ok( !$test_pid,      "Did not see other test" );
+        $test_pid = $$;
+    };
+
     describe inner => sub {
         before_all inner_setup => sub {
+            print $fh "INNER SETUP\n";
             ok( $pids[-1] == $$, "before_all happens in parent" );
             push @pids => $$;
         };
 
         tests a => sub {
+            print $fh "INNER TEST\n";
             ok( $$ != $pids[-1], "Multiple Tests, each should have a different proc" );
             ok( !$test_pid,      "Did not see other test" );
             $test_pid = $$;
         };
 
         tests b => sub {
+            print $fh "INNER TEST\n";
             ok( $$ != $pids[-1], "Multiple Tests, each should have a different proc" );
             ok( !$test_pid,      "Did not see other test" );
             $test_pid = $$;
@@ -82,9 +97,29 @@ describe procs_nested => sub {
         };
     };
 
+    tests outer_b => sub {
+        print $fh "OUTER TEST\n";
+        ok( $$ != $pids[-1], "Multiple Tests, each should have a different proc" );
+        ok( !$test_pid,      "Did not see other test" );
+        $test_pid = $$;
+    };
+
     after_all teardown => sub {
         ok( $$ == $pids[-1], "Same process as before_all" );
     };
+};
+
+after_all order_check => sub {
+    close($fh);
+    open( $fh, '<', $name ) || die $!;
+    is_deeply( join( '' => <$fh> ), <<"    EOT", "Order is correct" );
+OUTER SETUP
+OUTER TEST
+OUTER TEST
+INNER SETUP
+INNER TEST
+INNER TEST
+    EOT
 };
 
 1;

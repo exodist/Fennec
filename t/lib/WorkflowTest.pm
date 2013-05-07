@@ -71,41 +71,31 @@ tests verify => sub {
             qw/b x  b y  b z/,
             qw/c x  c y  c z/,
 
-            # Root before all
+            #<<< no-tidy
             "Before All",
+                "Before Each",
+                    "It",
+                "After Each",
 
-            # Nested
-            "Before All Nested",
+                "Before All Nested",
+                    "Before Each",
+                        "Before Each Nested",
+                            "around start",
+                                "It Nested",
+                            "around end",
+                        "After Each Nested",
+                    "After Each",
 
-            "Before Each",
-            "Before Each Nested",
-            "around start",
-
-            "It Nested",
-
-            "around end",
-            "After Each Nested",
-            "After Each",
-
-            "Before Each",
-            "Before Each Nested",
-            "around start",
-
-            "It Nested xx",
-
-            "around end",
-            "After Each Nested",
-            "After Each",
-
-            "After All Nested",
-
-            # It and each
-            "Before Each",
-            "It",
-            "After Each",
-
-            # Root after all
+                    "Before Each",
+                        "Before Each Nested",
+                            "around start",
+                                "It Nested xx",
+                            "around end",
+                        "After Each Nested",
+                    "After Each",
+                "After All Nested",
             "After All",
+            #>>>
         ],
         "Order is correct"
     );

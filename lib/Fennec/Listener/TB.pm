@@ -13,11 +13,11 @@ use Test::Builder;
 
 accessors qw/collector tbout tberr/;
 
-sub ok         { shift; Test::Builder->new->ok( @_ )        }
-sub diag       { shift; Test::Builder->new->diag( @_ )      }
-sub skip       { shift; Test::Builder->new->skip( @_ )      }
-sub todo_start { shift; Test::Builder->new->todo_start( @_ )}
-sub todo_end   { shift; Test::Builder->new->todo_end        }
+sub ok         { shift; Test::Builder->new->ok(@_) }
+sub diag       { shift; Test::Builder->new->diag(@_) }
+sub skip       { shift; Test::Builder->new->skip(@_) }
+sub todo_start { shift; Test::Builder->new->todo_start(@_) }
+sub todo_end   { shift; Test::Builder->new->todo_end }
 
 sub new {
     my $class = shift;
@@ -25,24 +25,27 @@ sub new {
     my $tbout = tie( *TBOUT, 'Fennec::Listener::TB::Handle', 'STDOUT' );
     my $tberr = tie( *TBERR, 'Fennec::Listener::TB::Handle', 'STDERR' );
 
-    my $self = bless({
-        collector => Fennec::Listener::TB::Collector->new(),
-        tbout => $tbout,
-        tberr => $tberr,
-    }, $class);
+    my $self = bless(
+        {
+            collector => Fennec::Listener::TB::Collector->new(),
+            tbout     => $tbout,
+            tberr     => $tberr,
+        },
+        $class
+    );
 
     my $tb = Test::Builder->new();
     $tb->no_ending(1);
 
-    my $old = select( TBOUT );
+    my $old = select(TBOUT);
     $| = 1;
-    select( TBERR );
+    select(TBERR);
     $| = 1;
-    select( $old );
+    select($old);
 
-    $tb->output(\*TBOUT);
-    $tb->todo_output(\*TBOUT);
-    $tb->failure_output(\*TBERR);
+    $tb->output( \*TBOUT );
+    $tb->todo_output( \*TBOUT );
+    $tb->failure_output( \*TBERR );
 
     $self->setup_child( $self->collector );
 
@@ -51,25 +54,20 @@ sub new {
 
 sub setup_child {
     my $self = shift;
-    my ( $handle ) = @_;
+    my ($handle) = @_;
 
-    $self->tbout->out( $handle );
-    $self->tberr->out( $handle );
+    $self->tbout->out($handle);
+    $self->tberr->out($handle);
 }
 
 sub process {
     my $self = shift;
-    $self->collector->process( @_ );
+    $self->collector->process(@_);
 }
 
-sub terminate { 
+sub terminate {
     my $self = shift;
-    $self->collector->terminate( @_ );
-}
-
-sub flush {
-    my $self = shift;
-    $self->collector->flush( @_ );
+    $self->collector->terminate(@_);
 }
 
 1;

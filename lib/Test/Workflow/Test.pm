@@ -73,6 +73,13 @@ sub run {
 
     return $run->() if $self->is_wrap;
 
+#    my $wait = $instance->TEST_WORKFLOW->test_wait;
+#    if ( $self->is_wrap ) {
+#        my $out = $run->();
+#        $wait->() if $wait;
+#        return $out;
+#    }
+
     return $prunner->( $run, $self, $instance )
         if $prunner && $testcount == 1;
 
@@ -104,6 +111,9 @@ sub _wrap_tests {
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
     my @tests = Test::Workflow::order_tests( $sort, @{$self->tests} );
 
+    my $wait = $instance->TEST_WORKFLOW->test_wait;
+    my $pid  = $$;
+
     return sub {
         $_->run($instance) for @{$self->setup};
         for my $test (@tests) {
@@ -113,9 +123,11 @@ sub _wrap_tests {
                 my $inner = $outer;
                 $outer = sub { $around->run( $instance, $inner ) };
             }
+            $wait->() if $wait && $test->can('is_wrap') && $test->is_wrap;
             $outer->();
         }
         $_->run($instance) for @{$self->teardown};
+        $wait->() if $wait && $self->is_wrap;
     };
 }
 

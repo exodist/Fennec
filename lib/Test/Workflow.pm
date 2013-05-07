@@ -121,19 +121,24 @@ sub run_tests {
 sub order_tests {
     my ( $sort, @tests ) = @_;
 
-    return @tests if $sort =~ /^ord/;
-
     if ( "$sort" =~ /^sort/ ) {
-        return sort { $a->name cmp $b->name } @tests;
+        @tests = sort { $a->name cmp $b->name } @tests;
     }
     elsif ( "$sort" =~ /^rand/ ) {
-        return shuffle @tests;
+        @tests = shuffle @tests;
     }
     elsif ( ref $sort eq 'CODE' ) {
-        return $sort->(@tests);
+        @tests = $sort->(@tests);
+    }
+    elsif ( $sort !~ /^ord/ ) {
+        croak "'$sort' is not a recognized option to test_sort";
     }
 
-    croak "'$sort' is not a recognized option to test_sort";
+    return sort {
+        return 0 if $a->is_wrap == $b->is_wrap;
+        return 1 if $a->is_wrap;
+        return 0;
+    } @tests;
 }
 
 #<<< no-tidy

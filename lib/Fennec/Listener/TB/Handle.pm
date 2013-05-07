@@ -9,8 +9,8 @@ accessors qw/name out/;
 
 sub TIEHANDLE {
     my $class = shift;
-    my ( $name ) = @_;
-    return bless( { name => $name }, $class );
+    my ($name) = @_;
+    return bless( {name => $name}, $class );
 }
 
 sub PRINT {
@@ -19,13 +19,11 @@ sub PRINT {
     my @call = get_test_call();
     my $out  = $self->out;
 
-    for my $output ( @data ) {
-        my @serialized = map {
-            join( "\0", $$, $self->name, $call[0], $call[1], $call[2], $_ ) . "\n"
-        } split /[\n\r]+/, $output;
+    for my $output (@data) {
+        my @serialized = map { join( "\0", $$, $self->name, $call[0], $call[1], $call[2], $_ ) . "\n" } split /[\n\r]+/, $output;
 
-        if (blessed $out && $out->isa( 'Fennec::Listener::TB::Collector' )) {
-            $out->process( $_ ) for @serialized;
+        if ( blessed $out && $out->isa('Fennec::Listener::TB::Collector') ) {
+            $out->process($_) for @serialized;
         }
         else {
             print $out @serialized;

@@ -143,6 +143,7 @@ sub run {
             else {
                 $prunner = $self->get_prunner( max => $max );
 
+                $meta->test_wait( sub { $prunner->finish } );
                 $meta->test_run(
                     sub {
                         my ( $sub, $test, $obj ) = shift;
@@ -182,8 +183,6 @@ sub get_prunner {
             while ( my $data = eval { $proc->read() } ) {
                 $self->listener->process($data);
             }
-
-            $self->listener->flush($pid);
 
             # Status as returned from system, so 0 is good, 1+ is bad.
             $self->exception( "Child process did not exit cleanly", "Status: $status" )
