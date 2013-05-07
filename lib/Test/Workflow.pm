@@ -90,7 +90,7 @@ sub run_tests {
 sub order_tests {
     my ( $sort, @tests ) = @_;
 
-    return if $sort =~ /^ord/;
+    return @tests if $sort =~ /^ord/;
 
     if ( "$sort" =~ /^sort/ ) {
         return sort { $a->name cmp $b->name } @tests;
