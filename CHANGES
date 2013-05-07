@@ -1,3 +1,12 @@
+v1.013 - May 06 2013
+    * Add 2 test files for badly broken behavior
+    * Fixed broken behavior
+     * Nested test structures did not run in proper seperate procs
+     * test_sort => 'ordered' did not run any tests
+
+vXXXX - Lots
+    * Missed a lot :-(
+
 v1.008 - May 12, 2011 - Chad Granum:
     * Fix? hisenbug in TB listener.
 

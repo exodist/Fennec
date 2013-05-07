@@ -186,6 +186,8 @@ file. (See L<Test::Workflow>)
 Encapsulated test groups can be run in parallel if desired. (On by default with
 up to 3 processes)
 
+See the L</"PARALLEL"> for details about what runs in what processes.
+
 =item Test reordering
 
 Tests groups can be sorted, randomized, or sorted via a custom method. (see
@@ -377,6 +379,61 @@ If Fennec did not support this who would use it?
 
 There is currently experimental support for Test::Builder2. Once Test::Builder2
 is officially released, support will be finalized.
+
+=back
+
+=head1 PARALLEL
+
+When tests run in parallel (default) the following notes should be observed.
+
+=over 4
+
+=item parallel => 1 means fork for test blocks, but only run 1 proc at a time.
+
+=item parallel => 0 turns forking off completely
+
+=item describe and cases run in the parent process
+
+    describe something => sub { ... }
+
+Blocks like the above run in the parent process, all will run BEFORE any test
+or state-building blocks.
+
+=item test blocks run in their own processes
+
+    tests foo => sub { ... };
+
+Test blocks like this will all run in their own process.
+
+=item before_each, after_each and around_each run in the test block process
+
+    before_each set_it => sub { ... };
+    tests test_it => sub { ... };
+
+C<XXX_each> will run in the same process as the test block, that is after the
+fork() call.
+
+=item before_all, after_all, and around_all run in the parent process
+
+    before_all set_once => sub { ... };
+    tests test_it => sub { ... };
+
+C<XXX_all> will run in the parent process, that is before fork() is called to
+run the test block.
+
+=item each case + test combination runs in its own process
+
+    case c1 { ... }
+    case c2 { ... }
+    test t1 { ... }
+    test t2 { ... }
+
+This effectively builds 4 combinations to run: c1+t1, c1+t2, c2+t1, c2+t2. Each
+of these 4 combinations will be run in their own process. The case will run
+first, followed by the test block.
+
+Be aware, it is easy to define an exponential number of tests using the
+case+test combiner.
 
 =back
 

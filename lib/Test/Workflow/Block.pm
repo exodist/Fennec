@@ -12,11 +12,11 @@ our @CARP_NOT = qw/
     Test::Workflow::Meta
     Test::Workflow::Block
     Test::Workflow::Layer
-/;
+    /;
 
 accessors qw/
     name start_line end_line code verbose package diag skip todo should_fail
-/;
+    /;
 
 sub new {
     my $class = shift;
@@ -28,15 +28,15 @@ sub new {
     croak "You must provide a name"
         unless $name and !ref $name;
 
-    $code = shift( @args )
+    $code = shift(@args)
         if ref $args[0]
         && ref $args[0] eq 'CODE';
 
-    $code = pop( @args )
+    $code = pop(@args)
         if !$code
         && ref $args[-1]
         && ref $args[-1] eq 'CODE'
-        && ( @args == 1 || ( @args > 1 && "$args[-2]" !~ m/^(code|method)$/ ));
+        && ( @args == 1 || ( @args > 1 && "$args[-2]" !~ m/^(code|method)$/ ) );
 
     my %proto = @args;
     $code ||= $proto{code} || $proto{method};
@@ -45,8 +45,8 @@ sub new {
         unless $code
         && ref $code eq 'CODE';
 
-    my $start_line = B::svref_2object( $code )->START->line;
-    my $end_line = $caller->[2];
+    my $start_line = B::svref_2object($code)->START->line;
+    my $end_line   = $caller->[2];
     $start_line-- unless $start_line == $end_line;
 
     %proto = (
@@ -56,17 +56,18 @@ sub new {
         package    => $caller->[0],
         start_line => $start_line,
         end_line   => $end_line,
-        diag       => ($start_line == $end_line) ? "line $start_line"
-                                                 : "lines $start_line -> $end_line",
+        diag       => ( $start_line == $end_line )
+        ? "line $start_line"
+        : "lines $start_line -> $end_line",
     );
 
-    return bless( \%proto, $class);
+    return bless( \%proto, $class );
 }
 
 sub clone_with {
-    my $self = shift;
+    my $self   = shift;
     my %params = @_;
-    bless({ %$self, %params}, blessed($self));
+    bless( {%$self, %params}, blessed($self) );
 }
 
 sub run {
@@ -81,9 +82,9 @@ sub run {
     $meta->todo_start->( $self->todo )
         if $self->todo;
 
-    my $success = eval { $self->code->( @_ ); 1 } || $self->should_fail || 0;
+    my $success = eval { $self->code->(@_); 1 } || $self->should_fail || 0;
     my $error = $@ || "Error masked!";
-    chomp( $error );
+    chomp($error);
 
     $meta->todo_end->()
         if $self->todo;
@@ -91,13 +92,7 @@ sub run {
     return if $success && !$self->verbose;
 
     $meta->ok->( $success || 0, $name );
-    $meta->diag->(
-        "  ================================"
-        . "\n  Error: " . $error
-        . "\n  Package: " . $self->package
-        . "\n  Block: '" . $self->name . "' on " . $self->diag
-        . "\n\n"
-    ) unless $success;
+    $meta->diag->( "  ================================" . "\n  Error: " . $error . "\n  Package: " . $self->package . "\n  Block: '" . $self->name . "' on " . $self->diag . "\n\n" ) unless $success;
 }
 
 1;

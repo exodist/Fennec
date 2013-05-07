@@ -3,7 +3,7 @@ package Test::Procs;
 use strict;
 use warnings;
 
-use Fennec parallel => 3;
+use Fennec parallel => 1;
 
 describe procs_1 => sub {
     my @pids = ($$);
@@ -50,7 +50,8 @@ describe procs_2 => sub {
 };
 
 describe procs_nested => sub {
-    my @pids = ($$);
+    my @caller = caller;
+    my @pids   = ($$);
     my $test_pid;
 
     before_all setup => sub {

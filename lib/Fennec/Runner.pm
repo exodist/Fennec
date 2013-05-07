@@ -151,7 +151,8 @@ sub run {
                                 my ($parent) = @_;
                                 $self->listener->setup_child( $parent->write_handle ) if $parent;
                                 $sub->();
-                            }
+                            },
+                            1,
                         );
                     }
                 );

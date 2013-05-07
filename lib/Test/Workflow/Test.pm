@@ -64,6 +64,7 @@ sub debug_handler {
 
 sub run {
     my $self = shift;
+
     my ($instance) = @_;
 
     my $run       = $self->_wrap_tests($instance);

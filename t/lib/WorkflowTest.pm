@@ -10,7 +10,7 @@ our @RUN_ORDER;
 describe a => sub {
     push @RUN_ORDER => "Describe";
 
-    before_all b => sub { push @RUN_ORDER => "Before All" };
+    before_all b  => sub { push @RUN_ORDER => "Before All" };
     before_each c => sub { push @RUN_ORDER => "Before Each" };
 
     it d => sub {
@@ -18,12 +18,12 @@ describe a => sub {
     };
 
     after_each e => sub { push @RUN_ORDER => "After Each" };
-    after_all f => sub { push @RUN_ORDER => "After All" };
+    after_all f  => sub { push @RUN_ORDER => "After All" };
 
     describe aa => sub {
         push @RUN_ORDER => "Describe Nested";
 
-        before_all bb => sub { push @RUN_ORDER => "Before All Nested" };
+        before_all bb  => sub { push @RUN_ORDER => "Before All Nested" };
         before_each cc => sub { push @RUN_ORDER => "Before Each Nested" };
 
         around_each ar => sub {
@@ -43,15 +43,15 @@ describe a => sub {
         };
 
         after_each ee => sub { push @RUN_ORDER => "After Each Nested" };
-        after_all ff => sub { push @RUN_ORDER => "After All Nested" };
+        after_all ff  => sub { push @RUN_ORDER => "After All Nested" };
     };
 };
 
 cases m => sub {
     push @RUN_ORDER => 'm';
-    case a => sub { push @RUN_ORDER => 'a' };
-    case b => sub { push @RUN_ORDER => 'b' };
-    case c => sub { push @RUN_ORDER => 'c' };
+    case a  => sub { push @RUN_ORDER => 'a' };
+    case b  => sub { push @RUN_ORDER => 'b' };
+    case c  => sub { push @RUN_ORDER => 'c' };
     tests x => sub { push @RUN_ORDER => 'x' };
     tests y => sub { push @RUN_ORDER => 'y' };
     tests z => sub { push @RUN_ORDER => 'z' };
@@ -75,29 +75,29 @@ tests verify => sub {
             "Before All",
 
             # Nested
-                "Before All Nested",
+            "Before All Nested",
 
             "Before Each",
-                "Before Each Nested",
-                    "around start",
+            "Before Each Nested",
+            "around start",
 
-                    "It Nested",
+            "It Nested",
 
-                    "around end",
-                "After Each Nested",
+            "around end",
+            "After Each Nested",
             "After Each",
 
             "Before Each",
-                "Before Each Nested",
-                    "around start",
+            "Before Each Nested",
+            "around start",
 
-                    "It Nested xx",
+            "It Nested xx",
 
-                    "around end",
-                "After Each Nested",
+            "around end",
+            "After Each Nested",
             "After Each",
 
-                "After All Nested",
+            "After All Nested",
 
             # It and each
             "Before Each",

@@ -24,11 +24,11 @@ before_each set_the_before => sub {
 };
 
 tests check_before_each => sub {
-    is($before_var, $var);
+    is( $before_var, $var );
 };
 
 tests check_before_all => sub {
-    is($before_all, undef);
+    is( $before_all, undef );
 };
 
 1;
