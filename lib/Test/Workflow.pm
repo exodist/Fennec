@@ -143,13 +143,18 @@ sub order_tests {
 
 #<<< no-tidy
 sub get_tests {
-    my ( $instance, $layer, $name, $before_each, $after_each, $around_each ) = @_;
+    my ( $instance, $layer, $name, $before_each, $after_each, $around_each, $todo ) = @_;
+
     # get before_each and after_each
     push    @$before_each => @{ $layer->before_each };
     push    @$around_each => @{ $layer->around_each };
     unshift @$after_each  => @{ $layer->after_each  };
 
     my @tests = @{ $layer->test };
+
+    if ($todo) {
+        $_->todo( $todo ) for @tests
+    }
 
     if ( my $specific = $ENV{FENNEC_TEST}) {
         @tests = grep {
@@ -197,6 +202,7 @@ sub get_tests {
     push @tests => map {
         my $layer = Test::Workflow::Layer->new;
 
+        $_->todo( $todo ) if $todo;
         $_->run( $instance, $layer );
 
         my @tests = get_tests(
@@ -205,7 +211,8 @@ sub get_tests {
             $_->name,
             [@$before_each],
             [@$after_each],
-            [@$around_each]
+            [@$around_each],
+            $_->todo,
         );
 
         unless (@tests) {

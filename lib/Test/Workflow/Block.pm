@@ -7,16 +7,16 @@ use Carp qw/croak/;
 use B ();
 use Scalar::Util qw/blessed/;
 
-our @CARP_NOT = qw/
+our @CARP_NOT = qw{
     Test::Workflow
     Test::Workflow::Meta
     Test::Workflow::Block
     Test::Workflow::Layer
-    /;
+};
 
-accessors qw/
+accessors qw{
     name start_line end_line code verbose package diag skip todo should_fail
-    /;
+};
 
 sub new {
     my $class = shift;
@@ -28,18 +28,23 @@ sub new {
     croak "You must provide a name"
         unless $name and !ref $name;
 
+    # If code is first, grab it
     $code = shift(@args)
         if ref $args[0]
         && ref $args[0] eq 'CODE';
 
-    $code = pop(@args)
-        if !$code
-        && ref $args[-1]
-        && ref $args[-1] eq 'CODE'
-        && ( @args == 1 || ( @args > 1 && "$args[-2]" !~ m/^(code|method)$/ ) );
+    # If code is last, grab it
+    my $ref = ref $args[-1] || '';
+    if ( !$code && $ref eq 'CODE' ) {
+        $code = pop(@args);
 
+        # if code was last, and in key => code form, pop the key
+        pop(@args) if $args[-1] =~ m/^(code|method|sub)$/;
+    }
+
+    # Code must be a param
     my %proto = @args;
-    $code ||= $proto{code} || $proto{method};
+    $code ||= $proto{code} || $proto{method} || $proto{sub};
 
     croak "You must provide a codeblock"
         unless $code

@@ -73,13 +73,6 @@ sub run {
 
     return $run->() if $self->is_wrap;
 
-#    my $wait = $instance->TEST_WORKFLOW->test_wait;
-#    if ( $self->is_wrap ) {
-#        my $out = $run->();
-#        $wait->() if $wait;
-#        return $out;
-#    }
-
     return $prunner->( $run, $self, $instance )
         if $prunner && $testcount == 1;
 
@@ -137,8 +130,8 @@ __END__
 
 =head1 NAME
 
-package Test::Workflow::Test - A test block wrapped with setup/teardown
-methods, ready to be run.
+Test::Workflow::Test - A test block wrapped with setup/teardown methods, ready
+to be run.
 
 =head1 AUTHORS
 

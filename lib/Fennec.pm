@@ -4,7 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION      = '1.014';
+our $VERSION      = '1.015';
 our $WIN32_RELOAD = 0;
 
 sub defaults {
@@ -551,7 +551,7 @@ and $b will not be set.
 
 This is a more complete example than that which is given in the synopsis. Most
 of this actually comes from L<Method::Workflow>, See those docs for more
-details. Significant sections are in seperate headers, but all examples should
+details. Significant sections are in separate headers, but all examples should
 be considered part of the same long test file.
 
 B<NOTE:> All blocks, including setup/teardown are methods, you can shift @_ to

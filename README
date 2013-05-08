@@ -337,7 +337,7 @@ CONFIGURATION
 MORE COMPLETE EXAMPLE
     This is a more complete example than that which is given in the
     synopsis. Most of this actually comes from Method::Workflow, See those
-    docs for more details. Significant sections are in seperate headers, but
+    docs for more details. Significant sections are in separate headers, but
     all examples should be considered part of the same long test file.
 
     NOTE: All blocks, including setup/teardown are methods, you can shift @_
