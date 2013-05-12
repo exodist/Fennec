@@ -13,34 +13,17 @@ BEGIN {
     srand($seed);
 }
 
-use Carp qw/carp croak/;
+use Carp qw/carp croak confess/;
+use List::Util qw/shuffle/;
 use Scalar::Util qw/blessed/;
 use Fennec::Util qw/accessors/;
-use Fennec::Listener;
+use Fennec::Collector;
+use Parallel::Runner;
 
-accessors qw/pid listener test_classes/;
+accessors qw/pid test_classes loaded_classes parallel collector/;
 
 my $SINGLETON;
-
-my $listener_class;
-
-sub listener_class {
-    unless ($listener_class) {
-        if ( $^O eq 'MSWin32' ) {
-            require Fennec::Listener::TBWin32;
-            $listener_class = 'Fennec::Listener::TBWin32';
-        }
-        elsif ( eval { require Test::Builder2; 1 } ) {
-            require Fennec::Listener::TB2;
-            $listener_class = 'Fennec::Listener::TB2';
-        }
-        else {
-            require Fennec::Listener::TB;
-            $listener_class = 'Fennec::Listener::TB';
-        }
-    }
-    return $listener_class;
-}
+sub is_initialized { $SINGLETON ? 1 : 0 }
 
 sub init { }
 
@@ -48,36 +31,49 @@ sub import {
     my $self = shift->new();
     return unless @_;
 
-    $self->_load_guess($_) for @_;
     $self->inject_run( scalar caller );
 }
 
 sub inject_run {
     my $self = shift;
-    my ($caller) = @_;
+    my ( $caller, $sub ) = @_;
+
+    $sub ||= sub { $self->run };
 
     require Fennec::Util;
-    Fennec::Util::inject_sub(
-        $caller,
-        'run',
-        sub { $self->run }
-    );
+    Fennec::Util::inject_sub( $caller, 'run', $sub );
 }
 
 sub new {
     my $class = shift;
+
+    croak "listener_class is deprecated, it was thought nobody used it... sorry. See Fennec::Collector now"
+        if $class->can('listener_class');
+
+    croak "Runner was already initialized!"
+        if $SINGLETON && @_;
+
     return $SINGLETON if $SINGLETON;
+
+    my %params = @_;
+
+    my $collector =
+        $params{collector_class}
+        ? Fennec::Collector->new( $params{collector_class} )
+        : Fennec::Collector->new();
 
     $SINGLETON = bless(
         {
-            test_classes => [],
-            pid          => $$,
-            listener     => $class->listener_class->new() || croak "Could not init listener!",
+            test_classes   => [],
+            loaded_classes => [],
+            pid            => $$,
+            collector      => $collector,
+            parallel       => $params{parallel} || 3,
         },
         $class
     );
 
-    $SINGLETON->init(@_);
+    $SINGLETON->init(%params);
 
     return $SINGLETON;
 }
@@ -105,7 +101,7 @@ sub _load_guess {
 sub load_file {
     my $self = shift;
     my ($file) = @_;
-    print "Loading: $file\n";
+    print "Loading: $file ($$)\n";
     eval { require $file; 1 } || $self->exception( $file, $@ );
     $self->check_pid();
 }
@@ -124,97 +120,127 @@ sub load_module {
     $self->check_pid();
 }
 
-sub run {
-    my $self = shift;
-    Test::Class->runtests if $INC{'Test/Class.pm'} && !$ENV{'FENNEC_TEST'};
-
-    for my $class ( @{$self->test_classes} ) {
-        next unless $class && $class->can('TEST_WORKFLOW');
-        print "Running: $class\n";
-        my $instance = $class->can('new') ? $class->new : bless( {}, $class );
-        my $meta = $instance->TEST_WORKFLOW;
-        $meta->debug_long_running( $instance->FENNEC->debug_long_running );
-
-        my $prunner;
-        if ( my $max = $class->FENNEC->parallel ) {
-            if ( $^O eq 'MSWin32' ) {
-                print "Parallization unavailable on windows.\n";
-            }
-            else {
-                $prunner = $self->get_prunner( max => $max );
-
-                $meta->test_wait( sub { $prunner->finish } );
-                $meta->test_run(
-                    sub {
-                        my ( $sub, $test, $obj ) = shift;
-                        $prunner->run(
-                            sub {
-                                my ($parent) = @_;
-                                $self->listener->setup_child( $parent->write_handle ) if $parent;
-                                $sub->();
-                            },
-                            1,
-                        );
-                    }
-                );
-            }
-        }
-
-        Test::Workflow::run_tests($instance);
-        $prunner->finish if $prunner;
-        $meta->test_run(undef);
-        $self->check_pid();
-    }
-
-    $self->listener->terminate();
-}
-
-sub get_prunner {
-    my $self   = shift;
-    my %params = @_;
-
-    require Parallel::Runner;
-    my $prunner = Parallel::Runner->new( $params{max}, pipe => 1 );
-
-    $prunner->reap_callback(
-        sub {
-            my ( $status, $pid, $pid_again, $proc ) = @_;
-
-            while ( my $data = eval { $proc->read() } ) {
-                $self->listener->process($data);
-            }
-
-            # Status as returned from system, so 0 is good, 1+ is bad.
-            $self->exception( "Child process did not exit cleanly", "Status: $status" )
-                if $status;
-        }
-    );
-
-    $prunner->iteration_callback(
-        sub {
-            my $runner = shift;
-            for my $proc ( $runner->children ) {
-                while ( my $data = eval { $proc->read() } ) {
-                    $self->listener->process($data);
-                }
-            }
-        }
-    );
-
-    return $prunner;
-}
-
 sub exception {
     my $self = shift;
     my ( $name, $exception ) = @_;
 
     if ( $exception =~ m/^FENNEC_SKIP: (.*)\n/ ) {
-        $self->listener->ok( 1, "SKIPPING $name: $1" );
+        print "\n!!!!FIXME:SKIPPING $name: $1\n\n";
     }
     else {
-        $self->listener->ok( 0, $name );
-        $self->listener->diag($exception);
+        confess "\n!!!!FIXME: $name - $exception\n\n";
+        #$self->listener->ok( 0, $name );
+        #$self->listener->diag($exception);
     }
+}
+
+sub run {
+    my $self = shift;
+
+    my @to_run;
+
+    for my $class ( @{$self->loaded_classes} ) {
+        next unless $class && $class->can('TEST_WORKFLOW');
+        push @to_run => $self->to_run_loaded($class);
+    }
+
+    for my $class ( @{$self->test_classes} ) {
+        push @to_run => $self->to_run_load($class);
+    }
+
+    my $pfiles = $self->prunner( $self->parallel );
+    my $force_fork = $self->parallel ? 1 : 0;
+
+    for my $file ( shuffle @to_run ) {
+        $pfiles->run( $file, $force_fork );
+    }
+
+    $pfiles->finish();
+    $self->collector->collect;
+    $self->collector->finish();
+}
+
+sub _to_run {
+    my $self = shift;
+    my ($class) = @_;
+
+    return sub {
+        my $instance = $class->can('new') ? $class->new : bless( {}, $class );
+        my $ptests   = Parallel::Runner->new( $class->FENNEC->parallel );
+        my $pforce   = $class->FENNEC->parallel ? 1 : 0;
+        my $meta     = $instance->TEST_WORKFLOW;
+
+        $meta->test_wait( sub { $ptests->finish } );
+        $meta->test_run(
+            sub {
+                $ptests->run( $_[0], $pforce );
+            }
+        );
+
+        Test::Workflow::run_tests($instance);
+        $ptests->finish;
+        $self->check_pid;
+    };
+}
+
+sub to_run_loaded {
+    my $self = shift;
+    my ($class) = @_;
+
+    return unless $class && $class->can('TEST_WORKFLOW');
+
+    my $inner = $self->_to_run($class);
+    return sub {
+        local $self->{pid} = $$;
+        print "# Running: $class ($$)\n";
+        $inner->();
+    };
+}
+
+sub to_run_load {
+    my $self = shift;
+    my ($item) = @_;
+
+    return sub {
+        local $self->{pid} = $$;
+
+        my %loaded = map { $_ => 1 } @{$self->loaded_classes};
+        $self->_load_guess($item);
+        my @new = grep { !$loaded{$_} } @{$self->loaded_classes};
+
+        for my $class (@new) {
+            my $inner = $self->_to_run($class);
+
+            next unless $class && $class->can('TEST_WORKFLOW');
+            print "# Running: $class ($$)\n";
+            $inner->();
+        }
+    };
+}
+
+sub prunner {
+    my $self = shift;
+    my ($max) = @_;
+
+    $self->{prunner} ||= do {
+        my $runner = Parallel::Runner->new($max);
+
+        $runner->reap_callback(
+            sub {
+                my ( $status, $pid, $pid_again, $proc ) = @_;
+
+                # Status as returned from system, so 0 is good, 1+ is bad.
+                $self->exception( "Child process did not exit cleanly", "Status: $status" )
+                    if $status;
+            }
+        );
+
+        $runner->iteration_callback( sub { $self->collector->collect } );
+
+        $runner;
+    };
+
+    return $self->{prunner};
 }
 
 1;
@@ -283,14 +309,10 @@ to be run until you run it yourself you can do this:
     ...
     $runner->run();
 
-For regular Fennec tests this works perfectly fine. However if any of the test
-files use L<Test::Class> you will have to wrap the load method calls in a BEGIN
-block.
-
 =head1 CUSTOM RUNNER CLASS
 
 If you use a test framework that is not based on L<Test::Builder> it may be
-useful to subclass the runner and override the listener_class() and init()
+useful to subclass the runner and override the collector_class() and init()
 methods.
 
 For more information see L<Fennec::Recipe::CustomRunner>.

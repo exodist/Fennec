@@ -15,7 +15,7 @@ my $build = Module::Build->new(
         'Parallel::Runner'  => '0.013',
         'Scalar::Util'      => 0,
         'List::Util'        => 0,
-        'TAP::Parser'       => 0,
+        'Test::Harness'     => '3.24',
         'Test::Exception'   => '0.29',
         'Test::Simple'      => '0.88',
         'Test::Warn'        => 0,
@@ -29,6 +29,7 @@ my $build = Module::Build->new(
             homepage    => 'http://open-exodus.net/projects/Fennec'
         },
     }
+    script_files => [ 'script/fennec' ],
 );
 
 $build->create_build_script;

@@ -7,24 +7,24 @@ use File::Find qw/find/;
 
 sub import {
     my $self = shift->new;
-    $self->find_files( @_ );
-    $self->inject_run( scalar caller )
+    $self->find_files(@_);
+    $self->inject_run( scalar caller );
 }
 
 sub find_files {
-    my $self = shift;
+    my $self  = shift;
     my @paths = @_;
 
-    unless( @paths ) {
-        @paths = -d './t' ? ( './t' ) : ( './' );
+    unless (@paths) {
+        @paths = -d './t' ? ('./t') : ('./');
     }
 
     find(
         {
             wanted => sub {
                 my $file = $File::Find::name;
-                return unless $self->validate_file( $file );
-                $self->load_file( $file );
+                return unless $self->validate_file($file);
+                push @{$self->test_classes} => $file;
             },
             no_chdir => 1,
         },

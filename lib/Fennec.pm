@@ -4,15 +4,15 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION      = '1.015';
+our $VERSION      = '2.000';
 our $WIN32_RELOAD = 0;
 
 sub defaults {
     (
         utils => [
-            qw/
+            qw{
                 Test::More Test::Warn Test::Exception Test::Workflow Mock::Quick
-                /
+                },
         ],
         parallel     => 3,
         runner_class => 'Fennec::Runner',
@@ -27,11 +27,7 @@ sub init {
     my $meta     = $params{meta};
 
     my $wfmeta = $importer->TEST_WORKFLOW;
-    $wfmeta->ok( sub         { Fennec::Runner->new->listener->ok(@_) } );
-    $wfmeta->diag( sub       { Fennec::Runner->new->listener->diag(@_) } );
-    $wfmeta->skip( sub       { Fennec::Runner->new->listener->skip(@_) } );
-    $wfmeta->todo_start( sub { Fennec::Runner->new->listener->todo_start(@_) } );
-    $wfmeta->todo_end( sub   { Fennec::Runner->new->listener->todo_end(@_) } );
+    Fennec::Runner->new->collector->update_wfmeta($wfmeta);
 
     $wfmeta->test_sort( $meta->test_sort )
         if $meta->test_sort;
@@ -53,15 +49,49 @@ sub import {
     my %params = ( %defaults, @_ );
     my $importer = $caller[0];
 
-    if ( $^O eq 'MSWin32' ) {
-        $class->_reload_caller( $params{runner_class}, \@caller );
-    }
-    else {
-        $class->_restart_with_runner( $params{runner_class}, \@caller );
+    eval "require $params{runner_class}; 1" || die $@;
+
+    unless ( $params{runner_class}->is_initialized ) {
+        warn(<<'        EOT');
+
+# *****************************************************************************
+# Fennec::Runner is not initialized! This means you attempted to run a Fennec
+# test directly with perl or prove.
+# Fennec tests are meant to be run either by the 'fennec' script, or by a .t
+# file that uses Fennec::Runner to load them.
+#
+# Attempting to remove and reload the Fennec test with Fennec::Runner. This is
+# a questionable practice. For most code this is fine, but for some code it can
+# result in strange errors.
+#
+# If you get strange errors try re-running the tests using the 'fennec' script,
+# or using a .t file that uses Fennec::Runner.
+# *****************************************************************************
+
+        EOT
+
+        my $cpackage = $caller[0];
+        $cpackage =~ s|/|::|g;
+        $cpackage =~ s|\.pm$||g;
+        delete $INC{$cpackage};
+
+        my $stash = do {
+            no strict 'refs';
+            \%{$caller[0] . '::'};
+        };
+
+        delete $stash->{$_} for keys %$stash;
+        my $success = eval {
+            my $runner = $params{runner_class}->new;
+            $runner->load_file($0);
+            $runner->run();
+            1;
+        };
+        warn $@ unless $success;
+        exit !$success;
     }
 
-    eval "require $params{runner_class}; 1" || die $@;
-    push @{$params{runner_class}->new->test_classes} => $importer;
+    push @{$params{runner_class}->new->loaded_classes} => $importer;
 
     for my $require ( @{$params{skip_without} || []} ) {
         die "FENNEC_SKIP: '$require' is not installed\n"
@@ -95,53 +125,6 @@ sub import {
     }
 
     $class->init( %params, caller => \@caller, meta => $meta );
-}
-
-sub _reload_caller {
-    my $class = shift;
-    my ( $runner_class, $caller ) = @_;
-    return if $WIN32_RELOAD;
-    return unless $0 eq $caller->[1];
-    $WIN32_RELOAD = 1;
-
-    print "\nWin32 detected, cannot reload perl\n", "Runner loaded too late, unloading test module and reloading through runner\n";
-
-    my $cpackage = $caller->[0];
-    $cpackage =~ s|/|::|g;
-    $cpackage =~ s|\.pm$||g;
-    delete $INC{$cpackage};
-
-    no strict 'refs';
-    my $stash = \%{$caller->[0] . '::'};
-
-    delete $stash->{$_} for keys %$stash;
-    eval "require $runner_class; 1;" || die $@;
-    my $runner = $runner_class->new;
-    $runner->load_file($0);
-    $runner->run();
-    exit 0;
-}
-
-sub _restart_with_runner {
-    my $class = shift;
-    my ( $runner_class, $caller ) = @_;
-    # If the Fennec test file was run directly we need to re-run perl and run the
-    # test file through Fennec::Runner. The alternative is an END block.
-    return unless $0 eq $caller->[1];
-
-    my @args = (
-        $^X,
-        ( map { ("-I$_") } @INC ),
-        "-M$runner_class=$0",
-        '-erun()'
-    );
-
-    print(
-        "\nRunner loaded too late, re-executing perl using command:\n",
-        join( ' ', @args ),
-    );
-
-    exit system(@args);
 }
 
 1;
@@ -367,18 +350,9 @@ Quick and effective mocking with no action at a distance side effects.
 
 =over 4
 
-=item L<Test::Class>
-
-A Fennec class can also be a Test::Class class.
-
 =item L<Test::Builder>
 
 If Fennec did not support this who would use it?
-
-=item L<Test::Builder2>
-
-There is currently experimental support for Test::Builder2. Once Test::Builder2
-is officially released, support will be finalized.
 
 =back
 
@@ -568,14 +542,6 @@ get $self.
 
     # Tests can be at the package level
     use_ok( 'MyClass' );
-
-    # Fennec works with Test::Class
-    use base 'Test::Class';
-
-    sub tc_test : Test(1) {
-        my $self = shift;
-        ok( 1, 'This is a Test::Class test' );
-    }
 
     tests loner => sub {
         my $self = shift;
@@ -826,8 +792,6 @@ Define a method for an L<Mock::Quick::Object> instance.
 =item L<Test::Exception>
 
 =item L<Test::Warn>
-
-=item L<Test::Class>
 
 =item L<Test::Builder>
 
