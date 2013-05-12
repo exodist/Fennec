@@ -18,20 +18,43 @@ sub new {
 
     my $tb = "tb";
 
+    my $root_layer = Test::Workflow::Layer->new();
+
     my $self = bless(
         {
-            test_class => $test_class,
-            root_layer => Test::Workflow::Layer->new(),
-            ok         => Fennec::Util->can("${tb}_ok"),
-            diag       => Fennec::Util->can("${tb}_diag"),
-            skip       => Fennec::Util->can("${tb}_skip"),
-            todo_start => Fennec::Util->can("${tb}_todo_start"),
-            todo_end   => Fennec::Util->can("${tb}_todo_end"),
+            test_class  => $test_class,
+            root_layer  => $root_layer,
+            ok          => Fennec::Util->can("${tb}_ok"),
+            diag        => Fennec::Util->can("${tb}_diag"),
+            skip        => Fennec::Util->can("${tb}_skip"),
+            todo_start  => Fennec::Util->can("${tb}_todo_start"),
+            todo_end    => Fennec::Util->can("${tb}_todo_end"),
+            layer_stack => [$root_layer],
         },
         $class
     );
 
     return $self;
+}
+
+my @LAYER_STACK;
+
+sub push_layer {
+    my $self = shift;
+    push @LAYER_STACK => @_;
+}
+
+sub pop_layer {
+    my $self    = shift;
+    my ($check) = @_;
+    my $layer   = pop @LAYER_STACK;
+    die "Bad pop!" unless $layer == $check;
+    return $layer;
+}
+
+sub peek_layer {
+    my $self = shift;
+    return $LAYER_STACK[-1];
 }
 
 1;

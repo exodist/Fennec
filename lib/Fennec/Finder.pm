@@ -6,24 +6,23 @@ use base 'Fennec::Runner';
 use File::Find qw/find/;
 
 sub import {
-    my $self = shift->new;
-    $self->find_files(@_);
+    my $self   = shift->new;
+    my %params = @_;
+    $self->find_files(%params);
     $self->inject_run( scalar caller );
 }
 
 sub find_files {
-    my $self  = shift;
-    my @paths = @_;
+    my $self   = shift;
+    my %params = @_;
 
-    unless (@paths) {
-        @paths = -d './t' ? ('./t') : ('./');
-    }
+    my @paths = $params{paths} ? @{$params{paths}} : -d './t' ? ('./t') : ('./');
 
     find(
         {
             wanted => sub {
                 my $file = $File::Find::name;
-                return unless $self->validate_file($file);
+                return unless $self->validate_file( $file, $params{match} );
                 push @{$self->test_classes} => $file;
             },
             no_chdir => 1,
@@ -34,8 +33,9 @@ sub find_files {
 
 sub validate_file {
     my $self = shift;
-    my ($file) = @_;
-    return unless $file =~ m{\.pm$};
+    my ( $file, $match ) = @_;
+    $match ||= qr/\.(pm|ft)$/;
+    return unless $file =~ $match;
     return 1;
 }
 

@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Fennec::Finder;
+use Fennec::Finder match => qr/\.pm$/;
 use Test::More;
 
 my $found = grep { m/FinderTest/ } @{Fennec::Finder->new->test_classes};
