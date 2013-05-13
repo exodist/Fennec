@@ -1,4 +1,4 @@
-package Fennec::Collector::SQLite;
+package Fennec::Collector::TB::SQLite;
 use strict;
 use warnings;
 

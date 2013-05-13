@@ -1,8 +1,8 @@
-package Fennec::Collector::TempFiles;
+package Fennec::Collector::TB::TempFiles;
 use strict;
 use warnings;
 
-use base 'Fennec::Collector';
+use base 'Fennec::Collector::TB';
 
 use File::Temp;
 
@@ -27,9 +27,6 @@ sub new {
         tempdir => "$temp",
     }, $class;
 }
-
-sub ok   { shift; Test::Builder->new->ok(@_) }
-sub diag { shift; Test::Builder->new->diag(@_) }
 
 sub report {
     my $self   = shift;
