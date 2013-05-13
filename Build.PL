@@ -19,6 +19,9 @@ my $build = Module::Build->new(
         'Test::Simple'      => '0.88',
         'Test::Warn'        => 0,
     },
+    recommends => {
+        'DBD::SQLite' => '1.10'
+    },
     build_requires => {
     },
     meta_merge => {

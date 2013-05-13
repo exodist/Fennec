@@ -7,13 +7,15 @@ use Fennec::Util qw/accessors/;
 
 accessors qw/test_count/;
 
+# Do not use TB::SQLite, performance sucks!
+# Fennec::Collector::TB::SQLite
 my @PREFERENCE = qw{
-    Fennec::Collector::TB::SQLite
     Fennec::Collector::TB::TempFiles
 };
 
 sub ok           { confess "Must override ok" }
 sub diag         { confess "Must override diag" }
+sub end_pid      { confess "Must override end_pid" }
 sub collect      { confess "Must override collect" }
 sub validate_env { confess "must override validate_env" }
 

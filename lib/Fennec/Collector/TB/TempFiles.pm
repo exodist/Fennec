@@ -74,16 +74,7 @@ sub collect {
             my ( $handle, $source, $part ) = ( $line =~ m/^(\w+)\|([^\|]+)\|(.*)$/g );
             warn "Bad Input: '$line'\n" unless $handle && $source;
 
-            $self->inc_test_count
-                if $handle eq 'STDOUT'
-                && $part =~ m/^\s*(not\s+)?ok(\s|$)/;
-
-            if ( $ENV{HARNESS_IS_VERBOSE} || $handle eq 'STDOUT' ) {
-                print STDOUT "$part\n";
-            }
-            else {
-                print STDERR "$part\n";
-            }
+            $self->render( $handle, $part );
         }
 
         close($fh);
@@ -106,6 +97,16 @@ sub finish {
 
     die "($$) Not all files were collected?!"
         if grep { m/^\d+(\.ready)?$/ } readdir $handle;
+
+    if ( !$ENV{HARNESS_IS_VERBOSE} ) {
+        rewinddir $handle;
+        while ( my $file = readdir $handle ) {
+            next unless $file =~ m/\.done$/;
+            unlink( $self->tempdir . '/' . $file ) || warn "error deleting $file: $!";
+        }
+        close($handle);
+        rmdir( $self->tempdir ) || warn "Could not cleanup temp dir: $!";
+    }
 }
 
 sub ready {
@@ -116,6 +117,8 @@ sub ready {
     close( $self->handles->{$$} ) || warn "Could not close file $path - $!";
     rename( $path => "$path.ready" ) || warn "Could not rename file $path - $!";
 }
+
+sub end_pid { }
 
 sub DESTROY {
     my $self = shift;

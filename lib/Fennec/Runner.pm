@@ -174,7 +174,14 @@ sub _to_run {
         $meta->test_wait( sub { $ptests->finish } );
         $meta->test_run(
             sub {
-                $ptests->run( $_[0], $pforce );
+                my ($run) = @_;
+                $ptests->run(
+                    sub {
+                        $run->();
+                        $self->collector->end_pid();
+                    },
+                    $pforce
+                );
             }
         );
 
