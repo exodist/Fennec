@@ -5,7 +5,7 @@ use warnings;
 
 use Fennec;
 
-ok( !__PACKAGE__->can($_), "$_ not imported" ) for qw/done_testing run_tests/;
+ok( !__PACKAGE__->can($_), "$_ not imported" ) for qw/done_testing/;
 
 describe blah => sub {
     tests group_a => code => sub { ok( 1, 'a' ) };
@@ -32,5 +32,7 @@ tests skip_group => (
     skip => "This is a skip group",
     code => sub { ok( 0, "You should not see this!" ) },
 );
+
+run_tests;
 
 1;

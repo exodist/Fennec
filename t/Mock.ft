@@ -40,4 +40,4 @@ tests class => sub {
     is( $two->package, 'Foo', "took over Foo" );
 };
 
-1;
+run_tests;

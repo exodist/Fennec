@@ -20,7 +20,7 @@ use Fennec::Util qw/accessors/;
 use Fennec::Collector;
 use Parallel::Runner;
 
-accessors qw/pid test_classes loaded_classes parallel collector/;
+accessors qw/pid test_classes loaded_classes parallel collector _ran _skip_all/;
 
 my $SINGLETON;
 sub is_initialized { $SINGLETON ? 1 : 0 }
@@ -29,8 +29,7 @@ sub init { }
 
 sub import {
     my $self = shift->new();
-    return unless @_;
-
+    $self->_load_guess($_) for @_;
     $self->inject_run( scalar caller );
 }
 
@@ -125,17 +124,19 @@ sub exception {
     my ( $name, $exception ) = @_;
 
     if ( $exception =~ m/^FENNEC_SKIP: (.*)\n/ ) {
-        print "\n!!!!FIXME:SKIPPING $name: $1\n\n";
+        $self->collector->ok( 1, "SKIPPING $name: $1" );
+        $self->_skip_all(1);
     }
     else {
-        confess "\n!!!!FIXME: $name - $exception\n\n";
-        #$self->listener->ok( 0, $name );
-        #$self->listener->diag($exception);
+        $self->collector->ok( 0, $name );
+        $self->collector->diag($exception);
     }
 }
 
 sub run {
     my $self = shift;
+
+    $self->_ran(1);
 
     my @to_run;
 
@@ -241,6 +242,34 @@ sub prunner {
     };
 
     return $self->{prunner};
+}
+
+sub DESTROY {
+    my $self = shift;
+    return if $self->_ran || $self->_skip_all;
+
+    my $tests = join "\n" => map { "#   * $_" } @{$self->loaded_classes};
+
+    print STDERR <<"    EOT";
+
+# *****************************************************************************
+# ERROR: run_tests() was never called!
+#
+# This usually means you ran a Fennec test file directly with prove or perl,
+# but the file does not call run_tests at the end.
+#
+# This is new behavior as of Fennec 2.000. Old versions used a couple of evil
+# hacks to make it work without calling run_tests. These resulted in things
+# such as broken coverage tests, broken Win32 (who cares right?), and other
+# strange and hard to debug behavior.
+#
+# Fennec Tests loaded, but not run:
+$tests
+#
+# *****************************************************************************
+
+    EOT
+    exit(1);
 }
 
 1;

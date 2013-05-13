@@ -8,7 +8,7 @@ use File::Temp;
 
 use Fennec::Util qw/ accessors /;
 
-accessors qw/tempdir handles tempobj/;
+accessors qw/tempdir handles tempobj _pid/;
 
 sub validate_env { 1 }
 
@@ -20,12 +20,16 @@ sub new {
         if $ENV{HARNESS_IS_VERBOSE};
 
     return bless {
+        _pid    => $$,
         handles => {},
 
         tempobj => $temp,
         tempdir => "$temp",
     }, $class;
 }
+
+sub ok   { shift; Test::Builder->new->ok(@_) }
+sub diag { shift; Test::Builder->new->diag(@_) }
 
 sub report {
     my $self   = shift;
@@ -93,6 +97,7 @@ sub collect {
 
 sub finish {
     my $self = shift;
+    return unless $self->_pid == $$;
 
     $self->ready() if $self->handles->{$$};
 

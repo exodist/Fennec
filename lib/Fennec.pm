@@ -4,8 +4,7 @@ use warnings;
 
 use Fennec::Util qw/inject_sub/;
 
-our $VERSION      = '2.000';
-our $WIN32_RELOAD = 0;
+our $VERSION = '2.000';
 
 sub defaults {
     (
@@ -50,52 +49,18 @@ sub import {
     my $importer = $caller[0];
 
     eval "require $params{runner_class}; 1" || die $@;
+    my $runner_init = $params{runner_class}->is_initialized;
+    my $runner      = $params{runner_class}->new;
 
-    unless ( $params{runner_class}->is_initialized ) {
-        warn(<<'        EOT');
-
-# *****************************************************************************
-# Fennec::Runner is not initialized! This means you attempted to run a Fennec
-# test directly with perl or prove.
-# Fennec tests are meant to be run either by the 'fennec' script, or by a .t
-# file that uses Fennec::Runner to load them.
-#
-# Attempting to remove and reload the Fennec test with Fennec::Runner. This is
-# a questionable practice. For most code this is fine, but for some code it can
-# result in strange errors.
-#
-# If you get strange errors try re-running the tests using the 'fennec' script,
-# or using a .t file that uses Fennec::Runner.
-# *****************************************************************************
-
-        EOT
-
-        my $cpackage = $caller[0];
-        $cpackage =~ s|/|::|g;
-        $cpackage =~ s|\.pm$||g;
-        delete $INC{$cpackage};
-
-        my $stash = do {
-            no strict 'refs';
-            \%{$caller[0] . '::'};
-        };
-
-        delete $stash->{$_} for keys %$stash;
-        my $success = eval {
-            my $runner = $params{runner_class}->new;
-            $runner->load_file($0);
-            $runner->run();
-            1;
-        };
-        warn $@ unless $success;
-        exit !$success;
-    }
-
-    push @{$params{runner_class}->new->loaded_classes} => $importer;
+    push @{$runner->loaded_classes} => $importer;
 
     for my $require ( @{$params{skip_without} || []} ) {
-        die "FENNEC_SKIP: '$require' is not installed\n"
-            unless eval "require $require; 1";
+        unless ( eval "require $require; 1" ) {
+            warn "Skipping $importer, '$require' is not installed\n";
+            $runner->_skip_all(1);
+            $runner->collector->finish;
+            exit 0;
+        }
     }
 
     require Fennec::Meta;
@@ -125,6 +90,22 @@ sub import {
     }
 
     $class->init( %params, caller => \@caller, meta => $meta );
+
+    if ($runner_init) {
+        no strict 'refs';
+        no warnings 'redefine';
+        *{"$importer\::run_tests"} = sub { 1 };
+    }
+    else {
+        if ( $ENV{HARNESS_IS_VERBOSE} ) {
+            print STDERR "# Fennec file run directly! ($caller[1] - $importer)\n";
+            print STDERR "# run_tests() must be called at the end for this to work.\n";
+        }
+        my $runner = $params{runner_class}->new;
+        no strict 'refs';
+        no warnings 'redefine';
+        *{"$importer\::run_tests"} = sub { $runner->run; 1 };
+    }
 }
 
 1;

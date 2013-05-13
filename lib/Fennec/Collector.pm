@@ -31,6 +31,8 @@ sub new {
     die "Could not find a valid collector!";
 }
 
+sub ok           { confess "Must override ok" }
+sub diag         { confess "Must override diag" }
 sub collect      { confess "Must override collect" }
 sub report       { confess "Must override report" }
 sub validate_env { confess "must override validate_env" }

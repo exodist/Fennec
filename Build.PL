@@ -28,7 +28,6 @@ my $build = Module::Build->new(
             homepage    => 'http://open-exodus.net/projects/Fennec'
         },
     },
-    script_files => [ 'script/fennec' ],
 );
 
 $build->create_build_script;
