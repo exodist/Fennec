@@ -33,4 +33,4 @@ tests skip_group => (
     code => sub { ok( 0, "You should not see this!" ) },
 );
 
-run_tests;
+1

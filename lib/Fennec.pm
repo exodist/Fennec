@@ -3,7 +3,6 @@ use strict;
 use warnings;
 
 use Fennec::Util qw/inject_sub/;
-
 our $VERSION = '2.000';
 
 sub defaults {
@@ -34,6 +33,28 @@ sub init {
     no strict 'refs';
     my $stash = \%{"$importer\::"};
     delete $stash->{$_} for qw/ run_tests done_testing/;
+}
+
+use Filter::Simple sub {
+    return $_ if m/run_tests/;
+
+    print STDERR "\n***************************************************\n";
+    print STDERR "It does not look like you called run_tests()\n";
+    print STDERR "Using a source filter to append it to your test\n";
+    print STDERR "This is a stopgap and will be deprecated soon\n";
+    print STDERR "DO NOT RELY ON THIS BEHAVIOR\n";
+    print STDERR "***************************************************\n";
+
+    $_ .= "; run_tests();";
+};
+
+my $old_import;
+
+BEGIN {
+    $old_import = \&import;
+    no strict 'refs';
+    my $stash = \%{__PACKAGE__ . '::'};
+    delete $stash->{import};
 }
 
 sub import {
@@ -105,6 +126,8 @@ sub import {
         no strict 'refs';
         no warnings 'redefine';
         *{"$importer\::run_tests"} = sub { $runner->run; 1 };
+
+        goto &$old_import;
     }
 }
 
