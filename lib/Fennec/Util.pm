@@ -103,7 +103,7 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2011 Chad Granum
 
-Fennec is free software; Standard perl licence.
+Fennec is free software; Standard perl license.
 
 Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
