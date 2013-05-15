@@ -2,7 +2,17 @@
 use strict;
 use warnings;
 
-use Fennec::Finder match => qr/\.ft$/;
+BEGIN {
+    require Fennec::Finder;
+    *Fennec::Finder::validate_file = sub {
+        my $self = shift;
+        my ($file) = @_;
+        return unless $file =~ m/\.ft$/;
+        return 1;
+    };
+}
+
+use Fennec::Finder;
 use Test::More;
 
 is_deeply(

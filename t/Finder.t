@@ -2,7 +2,17 @@
 use strict;
 use warnings;
 
-use Fennec::Finder match => qr/\.pm$/;
+BEGIN {
+    require Fennec::Finder;
+    *Fennec::Finder::validate_file = sub {
+        my $self = shift;
+        my ($file) = @_;
+        return unless $file =~ m/\.pm$/;
+        return 1;
+    };
+}
+
+use Fennec::Finder;
 use Test::More;
 
 my $found = grep { m/FinderTest/ } @{Fennec::Finder->new->test_classes};

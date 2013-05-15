@@ -5,14 +5,21 @@ use Carp qw/confess/;
 
 use base 'Fennec::Collector';
 
+use Fennec::Util qw/accessors/;
+
+accessors qw/skip/;
+
 sub ok   { shift; Test::Builder->new->ok(@_) }
 sub diag { shift; Test::Builder->new->diag(@_) }
 sub report { confess "Must override report" }
 
 sub finish {
     my $self = shift;
+
     my $count = $self->test_count || 0;
-    print STDOUT "1..$count\n";
+    print STDOUT "1..$count";
+    print STDOUT " # SKIP " . $self->skip if $self->skip;
+    print STDOUT "\n";
 }
 
 sub initialize {

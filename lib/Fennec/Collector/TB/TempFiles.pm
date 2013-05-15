@@ -15,7 +15,7 @@ sub validate_env { 1 }
 sub new {
     my $class = shift;
 
-    my $temp = File::Temp->newdir( CLEANUP => 0 );
+    my $temp = File::Temp::tempdir( CLEANUP => 0 );
     print STDERR "# Using temp dir: '$temp' for process results\n"
         if $ENV{HARNESS_IS_VERBOSE};
 

@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Fennec::Util qw/inject_sub/;
+use Carp qw/croak/;
 our $VERSION = '2.000';
 
 sub defaults {
@@ -35,28 +36,6 @@ sub init {
     delete $stash->{$_} for qw/ run_tests done_testing/;
 }
 
-use Filter::Simple sub {
-    return $_ if m/run_tests/;
-
-    print STDERR "\n***************************************************\n";
-    print STDERR "It does not look like you called run_tests()\n";
-    print STDERR "Using a source filter to append it to your test\n";
-    print STDERR "This is a stopgap and will be deprecated soon\n";
-    print STDERR "DO NOT RELY ON THIS BEHAVIOR\n";
-    print STDERR "***************************************************\n";
-
-    $_ .= "; run_tests();";
-};
-
-my $old_import;
-
-BEGIN {
-    $old_import = \&import;
-    no strict 'refs';
-    my $stash = \%{__PACKAGE__ . '::'};
-    delete $stash->{import};
-}
-
 sub import {
     my $class  = shift;
     my @caller = caller;
@@ -73,12 +52,17 @@ sub import {
     my $runner_init = $params{runner_class}->is_initialized;
     my $runner      = $params{runner_class}->new;
 
+    if ( !$runner_init ) {
+        require Fennec::EndRunner;
+        Fennec::EndRunner->set_runner($runner);
+    }
+
     push @{$runner->loaded_classes} => $importer;
 
     for my $require ( @{$params{skip_without} || []} ) {
         unless ( eval "require $require; 1" ) {
-            warn "Skipping $importer, '$require' is not installed\n";
             $runner->_skip_all(1);
+            $runner->collector->skip("'$require' is not installed");
             $runner->collector->finish;
             exit 0;
         }
@@ -118,16 +102,18 @@ sub import {
         *{"$importer\::run_tests"} = sub { 1 };
     }
     else {
-        if ( $ENV{HARNESS_IS_VERBOSE} ) {
-            print STDERR "# Fennec file run directly! ($caller[1] - $importer)\n";
-            print STDERR "# run_tests() must be called at the end for this to work.\n";
-        }
         my $runner = $params{runner_class}->new;
         no strict 'refs';
         no warnings 'redefine';
-        *{"$importer\::run_tests"} = sub { $runner->run; 1 };
+        my $has_run = 0;
+        *{"$importer\::run_tests"} = sub {
+            croak "run_tests() called more than once!"
+                if $has_run++;
 
-        goto &$old_import;
+            Fennec::EndRunner->set_runner(undef);
+            $runner->run;
+            1;
+        };
     }
 }
 

@@ -185,15 +185,8 @@ MODULES LOADED AUTOMATICALLY WITH FENNEC
         effects.
 
 MODULES FENNEC MAKES AN EFFORT TO SUPPORT
-    Test::Class
-        A Fennec class can also be a Test::Class class.
-
     Test::Builder
         If Fennec did not support this who would use it?
-
-    Test::Builder2
-        There is currently experimental support for Test::Builder2. Once
-        Test::Builder2 is officially released, support will be finalized.
 
 PARALLEL
     When tests run in parallel (default) the following notes should be
@@ -353,14 +346,6 @@ MORE COMPLETE EXAMPLE
 
         # Tests can be at the package level
         use_ok( 'MyClass' );
-
-        # Fennec works with Test::Class
-        use base 'Test::Class';
-
-        sub tc_test : Test(1) {
-            my $self = shift;
-            ok( 1, 'This is a Test::Class test' );
-        }
 
         tests loner => sub {
             my $self = shift;
@@ -582,7 +567,6 @@ SEE ALSO
     Test::More
     Test::Exception
     Test::Warn
-    Test::Class
     Test::Builder
 
 NOTES

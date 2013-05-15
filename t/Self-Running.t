@@ -34,3 +34,5 @@ tests skip_group => (
 );
 
 run_tests;
+
+1;
