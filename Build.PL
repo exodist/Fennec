@@ -20,7 +20,7 @@ my $build = Module::Build->new(
         'Test::Warn'        => 0,
     },
     recommends => {
-        'DBD::SQLite' => '1.10'
+        'Fennec::Declare'   => '1.001',
     },
     build_requires => {
     },

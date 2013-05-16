@@ -2,16 +2,6 @@
 use strict;
 use warnings;
 
-BEGIN {
-    require Fennec::Finder;
-    *Fennec::Finder::validate_file = sub {
-        my $self = shift;
-        my ($file) = @_;
-        return unless $file =~ m/\.pm$/;
-        return 1;
-    };
-}
-
 use Fennec::Finder;
 use Test::More;
 

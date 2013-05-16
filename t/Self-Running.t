@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-package Fennec::Test::SelfRunning;
 use strict;
 use warnings;
 

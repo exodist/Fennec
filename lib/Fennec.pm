@@ -40,9 +40,6 @@ sub import {
     my $class  = shift;
     my @caller = caller;
 
-    die "Fennec cannot be used in package 'main'"
-        if $caller[0] eq 'main';
-
     my %defaults = $class->defaults;
     $defaults{runner_class} ||= 'Fennec::Runner';
     my %params = ( %defaults, @_ );
@@ -51,6 +48,9 @@ sub import {
     eval "require $params{runner_class}; 1" || die $@;
     my $runner_init = $params{runner_class}->is_initialized;
     my $runner      = $params{runner_class}->new;
+
+    die "Fennec cannot be used in package 'main' when the test is used with Fennec::Finder"
+        if $runner_init && $caller[0] eq 'main';
 
     if ( !$runner_init ) {
         require Fennec::EndRunner;
@@ -70,9 +70,9 @@ sub import {
 
     require Fennec::Meta;
     my $meta = Fennec::Meta->new(
+        %params,
         fennec => $class,
         class  => $importer,
-        %params,
     );
 
     inject_sub( $importer, 'FENNEC', sub { $meta } );
@@ -125,179 +125,404 @@ __END__
 
 =head1 NAME
 
-Fennec - A test helper providing RSPEC, Workflows, Parallelization, and Encapsulation.
+Fennec - A testers toolbox, and best friend
 
 =head1 DESCRIPTION
 
-Fennec started as a project to improve the state of testing in Perl. Fennec
-looks to existing solutions for most problems, so long as the existing
-solutions help meet the features listed below.
+Fennec is a testers toolbox, and best friend. Fennec is glue that ties together
+several modules and features to make testing easier, and more powerful. Fennec
+imports all the common Test::* modules for you, in addition to several other
+features.
 
-=head1 API STABILITY
+=head1 SYNOPSYS
 
-Fennec versions below 1.000 were considered experimental, and the API was
-subject to change. As of version 1.0 the API is considered stabalized. New
-versions may add functionality, but not remove or significantly alter existing
-functionality.
+There are 2 ways to use Fennec. You can use Fennec directly, or you can use the
+shiny sugar-coated interface provided by the add-on module L<Fennec::Declare>.
+
+=head2 DECLARATIVE INTERFACE
+
+B<Note:> In order to use this you B<MUST> install L<Fennec::Declare> which is a
+seperate distribution on cpan. This module is seperate because it uses the
+controversial L<Devel::Declare> module.
+
+t/some_test.t:
+    package TEST::SomeTest;
+    use strict;
+    use warnings;
+
+    use Fennec::Declare(
+        parallel  => 3,
+        test_sort => 'random',
+    );
+
+    # This is optional, there is a default 'new' if you do not override it.
+    sub new { ... }
+
+    # Test blocks are called as methods on an instance of your test package.
+    tests group_1 {
+        # Note: $self is automatically shifted for you.
+        ok( $self, "Got self automatically" );
+    };
+
+    test group_2 ( todo => 'This is not ready yet' ) {
+        # Note: $self is automatically shifted for you.
+        ok( 0, "Not ready" );
+    }
+
+    # This has one test that gets run twice, once for each case.
+    # The letter is uppercased before each test is run, but restored to
+    # lowercase after each test is run.
+    describe complex {
+        # Note: $self is automatically shifted for you.
+
+        my $letter;
+        case a { $letter => 'a' }
+        case b { $letter => 'b' }
+
+        before_each uppercase { $letter = uc $letter }
+        after_each  restore   { $letter = lc $letter }
+
+        tests is_letter {
+            like( $letter, qr/^[A-Z]$/, "Got a letter" );
+        }
+
+        # You can nest describe blocks, test blocks inside will inherit cases
+        # and before/after blocks from the parent, and can add additional ones.
+        describe inner { ... }
+    }
+
+    # It is important to always end a Fennec test with this function call.
+    run_test();
+
+
+=head2 PURE INTERFACE
+
+If L<Devel::Declare> and its awesome power of syntax specification scares you,
+you can always write your Fennec tests in the stone age like this... just don't
+miss any semicolons.
+
+t/some_test.t:
+    package TEST::SomeTest;
+    use strict;
+    use warnings;
+
+    use Fennec(
+        parallel  => 3,
+        test_sort => 'random',
+    );
+
+    # This is optional, there is a default 'new' if you do not override it.
+    sub new { ... }
+
+    # Test blocks are called as methods on an instance of your test package.
+    tests group_1 => sub {
+        my $self = shift;
+        ok( 1, "1 is true" );
+    };
+
+    test group_2 => (
+        todo => 'This is not ready yet',
+        code => sub {
+            my $self = shift;
+            ok( 0, "Not ready" );
+        }
+    );
+
+    # This has one test that gets run twice, once for each case.
+    # The letter is uppercased before each test is run, but restored to
+    # lowercase after each test is run.
+    describe complex => sub {
+        my $self = shift;
+        my $letter;
+        case a => sub { $letter => 'a' };
+        case b => sub { $letter => 'b' };
+
+        before_each uppercase => sub { $letter = uc $letter };
+        after_each  restore   => sub { $letter = lc $letter };
+
+        tests is_letter => sub {
+            like( $letter, qr/^[A-Z]$/, "Got a letter" );
+        };
+
+        # You can nest describe blocks, test blocks inside will inherit cases
+        # and before/after blocks from the parent, and can add additional ones.
+        describe inner => sub { ... };
+    };
+
+    # It is important to always end a Fennec test with this function call.
+    run_test();
 
 =head1 FEATURES
 
 =over 4
 
-=item Forking Works
+=item Forking just works
 
-Forking in tests just plain works. You can fork, and run assertions (tests) in
-both processes.
+Forking in perl tests that use L<Test::Builder> is perilous at best. Fennec
+initiates an L<Fennec::Collector> class which sets up Test::Builder to funnel
+all test results to the main thread for rendering. A result of this is that
+forking just works.
 
-=item Test groups can be run alone
+=item RSPEC support
 
-Encapsulated test groups can be run individually, without running the entire
-file. (See L<Test::Workflow>)
+Those familiar with Ruby may already know about the RSPEC testing process. In
+general you C<describe> something that is to be tested, then you define setup
+and teardown methods (C<before_all>, C<before_each>, C<after_all>,
+C<after_each>) and then finally you test C<it>. See the L</EXAMPLES> section or
+L<Test::Workflow> for more details.
 
-=item Parallelization within test files
+=item Concurrency, test blocks can run in parallel
 
-Encapsulated test groups can be run in parallel if desired. (On by default with
-up to 3 processes)
+By default all C<test> blocks are run in parallel with a cap of 3 concurrent
+processes. The process cap can be set with the C<parallel> import argument.
 
-See the L</"PARALLEL"> for details about what runs in what processes.
+=item No need to maintain a test count
 
-=item Test reordering
+The test count traditionally was used to ensure your file finished running
+instead of exiting silently too early. With L<Test::Builder> and friends this
+has largely been replaced with the C<done_testing()> function typically called
+at the end of tests. Fennec shares this concept, except you do not call
+C<done_testing> yourself, C<run_tests> will do it for you when it finishes.
 
-Tests groups can be sorted, randomized, or sorted via a custom method. (see
-L<Test::Workflow>)
+=item Can be decoupled from Test::Builder
 
-=item Test::Builder and Test::Builder2 compatibility
+Fennec is built with the assumption that L<Test::Builder> and tools built from
+it will be used. However custom L<Fennec::Collector> and L<Fennec::Runner>
+classes can replace this assumption with any testing framework you want to use.
 
-Fennec is compatible with L<Test::Builder> based tools. Test::Builder2 support
-is in-place, but experimental until Test::Builder2 is officially released.
+=item Can run specific test blocks, excluding others
 
-=item Ability to decouple from Test::Builder
+Have you ever had a huge test that took a long time to run? Have you ever
+needed to debug a failing test at the end of the file? How many times did you
+need to sit through tests that didn't matter?
 
-Fennec is configurable to work on alternatives to L<Test::Builder>.
+With Fennec you can specify the C<FENNEC_TEST> environment variable with either
+a line number or test block name. Only tests defined on that line, or with that
+name will be run.
 
-=item No need to formally end tests
+=item Predictability: Rand is always seeded with the date
 
-You do not need to put anything such as done_testing() at the end of your test file.
+Randomizing the order in which test blocks are run can help find subtle
+interaction bugs. At the same time if tests are always in random order you
+cannot reliably reproduce a failure.
 
-=item Test counting is handled for you
+Fennec always seeds rand with the current date. This means that on any given
+date the test run order will always be the same. However different days test
+different orders. You can always specify the C<FENNEC_SEED> environment
+variable to override the value used to seed rand.
 
-You do not need to worry about test counts.
+=item Test re-ordering, tests can run in random, sorted, or defined order.
 
-=item Diagnostic messages are grouped with the failed test
+When you load Fennec you can specify a test order. The default is random. You
+can also use the order in which they are defined, or sorted (alphabetically)
+order. If necessary you can pass in a sorting function that takes a list of all
+test-objects as arguments.
 
-Annoyed when your test failure and the diagnostics messages about that test are
-decoupled?
+=item Diag output is coupled with test output
 
-    ok 1 - foo
-    ok 2 - bar
-    not ok 3 - baz
-    ok 4 - bannana
-    ok 5 - pear
-    # Test failure on line 67
-    # expected: 'baz'
-    #      got: 'bazz'
+When you run a Fennec test with a verbose harness (prove -v) the diagnostic
+output will be coupled with the TAP output. This is done by sending both output
+to STDOUT. In a non-verbose harness the diagnostics will be sent to STDERR per
+usual.
 
-This happens because normal output is sent to STDOUT, while errors are sent to
-STDERR. This is important in a non-verbose harness so that you can still see
-error messages. In a verbose harness however it is just plain annoying. Fennec
-checks the verbosity of the harness, and sends diagnostic messages to STDOUT
-when the harness is verbose.
+=item Reusable test modules
 
-B<Note:> This is not IO redirection or handle manipulation, your warnings and
-errors will still go to STDERR.
+You can write tests in modules using L<Test::Workflow> and then import those
+tests into Fennec tests. This is useful if you have tests that you want run in
+several, or even all test files.
+
+=item Works with Moose
+
+All your test classes are instantiated objects. You can use Moose to define
+these test classes. But you do not have to, you are not forced to use OOP in
+your tests.
 
 =back
 
-=head1 SYNOPSIS
+=head1 DEFAULT IMPORTED MODULES
 
-    package MyTest;
-    use strict;
-    use warnings;
-    use Fennec;
+B<Note:> These can be overriden either on import, or by subclassing Fennec.
 
-    tests foo => sub {
-        ok( 1, 'bar' );
-    };
+=over 4
 
-    tests another => sub {
-        ok( 1, 'something passed' );
-    };
+=item Mock::Quick - Mocking without the eye gouging
 
-    tests not_ready => (
-        todo => "Feature not implemented",
-        code => sub { ... },
-    );
+L<Mock::Quick> is a mocking library that makes mocking easy. In additon it uses
+a declarative style interface. Unlike most other mocking libraries on CPAN, it
+does not make people want to gouge their eyes out and curl up in the fetal
+position.
 
-    tests very_not_ready => (
-        skip => "These tests will die if run"
-        code => sub { ... },
-    );
+=item Test::Workflow - RSPEC for perl.
 
-    1;
+L<Test::Workflow> is a testing library written specifically for Fennec. This
+library provides RSPEC workflow functions and structure. It can be useful on
+its own, but combined with Fennec it gets concurrency.
 
-By default these test groups will be run in parallel. They will also be run in
-random order by default. See the L</CONFIGURATION> for more details on
-controlling behavior. Also see L<Test::Workflow> for more useful and poweful
-test groups and structures.
+=item Test::More
 
-=head2 FRIENDLIER INTERFACE
+Tried and True testing module that everyone uses.
 
-B<If you use L<Fennec::Declare> you can write tests like this:>
+=item Test::Warn
 
-    package MyTest;
-    use strict;
-    use warnings;
-    use Fennec;
+L<Test::Warn> - Test code that issues warnings.
 
-    tests foo {
-        ok( 1, 'bar' );
-    }
+=item Test::Exception
 
-    1;
+L<Test::Exception> - Test code that throws exceptions
 
-Thats right, no C<=E<gt> sub> and no trailing ';'.
+=back
 
-=head1 RUNNING ONLY A SPECIFIC GROUP
+=head1 IMPORT ARGUMENTS
 
-     1: package MyTest;
-     2: use strict;
-     3: use warnings;
-     4: use Fennec;
-     5:
-     6: tests foo => sub {
-     7:     ok( 1, 'bar' );
-     8: };
-     9:
-    10: tests another => sub {
-    11:    ok( 1, 'something passed' );
-    12: };
-    13:
-    14: 1;
+=over 4
 
-In the above code there are 2 test groups, 'foo', and 'another'. If you wanted,
-you could run just one, without the others running. Fennec looks at the
-'FENNEC_TEST' environment variable. If the variable is set to a string, then
-only the test groups with that string as a name will run.
+=item base => 'Some::Base'
 
-    $ FENNEC_TEST="foo" prove -Ilib -v t/FennecTest.t
+Load the specified module and make it the base class for your test class.
 
-In addition, you could provide a line number, and only the test group defined
-across that line will be run. For example, to run 'foo' you could give the line
-number 6, 7 or 8 to run that group alone.
+=item parallel => $PROC_LIMIT
 
-    $ FENNEC_TEST="7" prove -Ilib -v t/FennecTest.t
+How many test blocks can be run in parallel. Default is 3. Set to 1 to fork for
+each test, but only run one at a time. Set to 0 to prevent forking.
 
-This will run only test 'foo'. The use of line numbers makes editor integration
-very easy. Most editors will let you bind a key to running the above command
-replacing t/FennecTest.t with the current file, and automatically inserting the
-current line into FENNEC_TEST.
+=item runner_class => 'Fennec::Runner'
 
-=head1 EDITOR INTEGRATION
+Specify the runner class. You probably don't need this.
 
-=head2 VI/VIM
+=item skip_without => [ 'Need::This', 'And::This' ]
 
-Insert this into your .vimrc file to bind the F8 key to running the current
-test in the current file:
+Tell Fennec to skip the test file if any of the specified modules are missing.
+
+=item test_sort => $SORT
+
+Options: 'random', 'sorted', 'ordered', or a code block.
+
+Code block accepts a list of Test::Workflow::Test objects.
+
+=item utils => [ 'Test::Foo', ... ]
+
+Load these modules instead of the default list.
+
+=item with_tests => [ 'Reusable::Tests', 'Common::Tests' ]
+
+Load these modules that have reusable tests. Reusable tests are tests that are
+common to multiple test files.
+
+=back
+
+=head1 EXPORTED FUNCTIONS
+
+=head2 FROM FENNEC
+
+=over 4
+
+=item run_tests()
+
+Should be called at the end of your test file to kick off the RSPEC tests.
+Always returns 1, so you can use it as the last statement of your module. You
+must only ever call this once per test file.
+
+=back
+
+=head2 FROM Test::Workflow
+
+See L<Test::Workflow> or L</EXAMPLES> for more details.
+
+=over 4
+
+=item with_tests 'Module::Name';
+
+Import tests from a module
+
+=item tests $name => sub { ... };
+
+=item tests $name => ( %params );
+
+=item it $name => sub { ... };
+
+=item it $name => ( %params );
+
+Define a test block
+
+=item describe $name => sub { ... };
+
+Describe a set of tests (group tests and setup/teardown functions)
+
+=item case $name => sub { ... };
+
+Used to run a set of tests against multiple conditions
+
+=item before_all $name => sub { ... };
+
+Setup, run once before any tests in the describe scope run.
+
+=item before_each $name => sub { ... };
+
+Setup, run once per test, just before it runs.
+
+=item around_each $name => sub { ... };
+
+Setup and/or teardown.
+
+=item after_each $name => sub { ... };
+
+Teardown, run once per test, after it finishes.
+
+=item after_all $name => sub { ... };
+
+Teardown, run once, after all tests in the describe scope complete.
+
+=back
+
+=head2 FROM Mock::Quick
+
+See L<Mock::Quick> or L</EXAMPLES> for more details.
+
+=over 4
+
+=item my $control = qclass $CLASS => ( %PARAMS, %OVERRIDES );
+
+=item my $control = qtakeover $CLASS => ( %PARAMS, %OVERRIDES );
+
+=item my $control = qimplement $CLASS => ( %PARAMS, %OVERRIDES );
+
+=item my $control = qcontrol $CLASS => ( %PARAMS, %OVERRIDES );
+
+Used to define, takeover, or override parts of other packages.
+
+=item my $obj = qobj( %PARAMS );
+
+=item my ( $obj, $control ) = qobjc( %PARAMS );
+
+=item my $obj = qstrict( %PARAMS );
+
+=item my ( $obj, $control ) = qstrictc( %PARAMS );
+
+Define an object specification, quickly.
+
+=item my $clear = qclear();
+
+Used to clear a field in a quick object.
+
+=item my $meth = qmeth { ... };
+
+=item my $meth = qmeth( sub { ... } );
+
+Used to define a method for a quick object.
+
+=back
+
+=head2 OTHER
+
+See L<Test::More>, L<Test::Warn>, and L<Test::Exception>
+
+=head1 EXAMPLES
+
+=head1 VIM INTEGRATION
+
+Insert this into your .vimrc file to bind the F8 key to running the test block
+directly under your cursor. You can be on any line of the test block (except in
+some cases the first or last line.
 
     function! RunFennecLine()
         let cur_line = line(".")
@@ -308,522 +533,34 @@ test in the current file:
     :map <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
     :imap <F8> <ESC>:w<cr>:call RunFennecLine()<cr>
 
-=head1 MODULES LOADED AUTOMATICALLY WITH FENNEC
+=head1 RUNNING FENNEC TEST FILES IN PARALLEL
 
-=over 4
+The best option is to use prove with the -j flag.
 
-=item L<Test::More>
+You can also create a custom runner using a single .t file to run all your
+Fennec tests. This has caveats though, such as not knowing which test file had
+problems without checking the failure messages.
 
-The standard perl test library.
+This will find all *.ft and/or *.pm moduls under the t/ directory. It will load
+and run any found. These will be run in parallel
 
-=item L<Test::Exception>
-
-One of the more useful test libraries, used to test code that throws exceptions
-(dies).
-
-=item L<Test::Warn>
-
-Test code that issues warnings.
-
-=item L<Test::Workflow>
-
-Provides RSPEC, and several other workflow related helpers. Also provides the
-test group encapsulation.
-
-=item L<Mock::Quick>
-
-Quick and effective mocking with no action at a distance side effects.
-
-=back
-
-=head1 MODULES FENNEC MAKES AN EFFORT TO SUPPORT
-
-=over 4
-
-=item L<Test::Builder>
-
-If Fennec did not support this who would use it?
-
-=back
-
-=head1 PARALLEL
-
-When tests run in parallel (default) the following notes should be observed.
-
-=over 4
-
-=item parallel => 1 means fork for test blocks, but only run 1 proc at a time.
-
-=item parallel => 0 turns forking off completely
-
-=item describe and cases run in the parent process
-
-    describe something => sub { ... }
-
-Blocks like the above run in the parent process, all will run BEFORE any test
-or state-building blocks.
-
-=item test blocks run in their own processes
-
-    tests foo => sub { ... };
-
-Test blocks like this will all run in their own process.
-
-=item before_each, after_each and around_each run in the test block process
-
-    before_each set_it => sub { ... };
-    tests test_it => sub { ... };
-
-C<XXX_each> will run in the same process as the test block, that is after the
-fork() call.
-
-=item before_all, after_all, and around_all run in the parent process
-
-    before_all set_once => sub { ... };
-    tests test_it => sub { ... };
-
-C<XXX_all> will run in the parent process, that is before fork() is called to
-run the test block.
-
-=item each case + test combination runs in its own process
-
-    case c1 { ... }
-    case c2 { ... }
-    test t1 { ... }
-    test t2 { ... }
-
-This effectively builds 4 combinations to run: c1+t1, c1+t2, c2+t1, c2+t2. Each
-of these 4 combinations will be run in their own process. The case will run
-first, followed by the test block.
-
-Be aware, it is easy to define an exponential number of tests using the
-case+test combiner.
-
-=back
-
-=head1 CONFIGURATION
-
-There are 2 ways to configure Fennec. One is to specify configuration options
-at import. The other is to subclass Fennec and override the defaults() method.
-
-Configuration options:
-
-=head3 utils => [ qw/ModuleA ModuleB .../ ]
-
-Provide a list of modules to load. They will be imported as if you typed
-C<use MODULE>.
-
-You can specify arguments for each class like so:
-
-    use Fennec utils => [ 'My::Util' ],
-          'My::Util' => [ 'Arg1', 'Arg2' ];
-
-=head3 parallel => $MAX
-
-Specify the maximum number of processes Fennec should use to run your tests.
-Set to 0 to never create a new process. Depedning on conditions 1 MAY fork for
-test groups while still only running 1 at a time, but this behavior is not
-guarenteed.
-
-Default: 3
-
-=head3 runner_class => $CLASS
-
-Specify the runner class. Default: L<Fennec::Runner>
-
-=head3 with_tests => \@CLASSES
-
-Load test_groups and workflows from another class. This allows you to put test
-groups common to many test files into a single place for re-use.
-
-=head3 test_sort => $SORT
-
-This sets the test sorting method for Test::Workflow test groups.  Accepts
-'random', 'sort', a codeblock, or 'ordered'. This uses a fuzzy matching, you
-can use the shorter versions 'rand', and 'ord'.
-
-Defaults to: 'rand'
-
-=head3 debug_long_running => $TIMEOUT
-
-This will cause a test block to abort after a specified timeout (value is
-passed directly to alaram).
-
-B<NOTE> This uses the C<alarm($timeout)> function. If your tests include alarms
-the behavior is not defined. One will certainly clobber the other, your will
-most likely come out on top, but that is not guarenteed in any way. Only use
-this while debugging and remove it afterwords.
-
-=over 4
-
-=item 'random'
-
-Will shuffle the order. Keep in mind Fennec sets the random seed using the date
-so that tests will be determinate on the day you write them, but random
-over time.
-
-=item 'sort'
-
-Sort the test groups by name. When multiple tests are wrapped in before_all or
-after_all the describe/cases block name will be used.
-
-=item 'ordered'
-
-Use the order in which the test groups were defined.
-
-=item sub { my @tests = @_; ...; return @new_tests }
-
-Specify a custom method of sorting. This is not the typical sort {} block, $a
-and $b will not be set.
-
-=back
-
-=head2 AT IMPORT
-
-    use Fennec parallel => 5,
-                  utils => [ 'My::Util' ],
-                  ... Other Options ...;
-
-=head2 BY SUBCLASS
-
-    package My::Fennec;
-    use base 'Fennec';
-
-    sub defaults {(
-        utils => [qw/
-            Test::More Test::Warn Test::Exception Test::Workflow
-        /],
-        utils_with_args => {
-            My::Util => [qw/function_x function_y/],
-        },
-        parallel => 5,
-        runner_class => 'Fennec::Runner',
-    )}
-
-    # Hook, called after import
-    sub init {
-        my $class = shift;
-        # All parameters passed to import(), as well as caller => [...] and meta => $meta
-        my %params = @_;
-
-        ...
-    }
-
-    1;
-
-=head1 MORE COMPLETE EXAMPLE
-
-This is a more complete example than that which is given in the synopsis. Most
-of this actually comes from L<Method::Workflow>, See those docs for more
-details. Significant sections are in separate headers, but all examples should
-be considered part of the same long test file.
-
-B<NOTE:> All blocks, including setup/teardown are methods, you can shift @_ to
-get $self.
-
-=head2 BASIC EXAMPLES
-
-    package MyTest;
+t/runner.t
+    #!/usr/bin/perl
     use strict;
     use warnings;
-    use Fennec parallel   => 2,
-               with_tests => [qw/ Test::TemplateA Test::TemplateB /],
-               test_sort  => 'rand';
 
-    # Tests can be at the package level
-    use_ok( 'MyClass' );
+    # Paths are optional, if none are specified it defaults to 't/'
+    use Fennec::Finder( 't/' );
 
-    tests loner => sub {
-        my $self = shift;
-        ok( 1, "1 is the loneliest number... " );
-    };
+    # The next lines are optional, if you have no custom configuration to apply
+    # you can jump right to 'run_tests'.
 
-    tests not_ready => (
-        todo => "Feature not implemented",
-        code => sub { ... },
-    );
+    # Get the runner (singleton)
+    my $runner = Fennec::Finder->new;
+    $runner->parallel( 3 );
 
-    tests very_not_ready => (
-        skip => "These tests will die if run"
-        code => sub { ... },
-    );
-
-=head2 RSPEC WORKFLOW
-
-Here setup/teardown methods are declared in the order in which they are run,
-but they can really be declared anywhere within the describe block and the
-behavior will be identical.
-
-    describe example => sub {
-        my $self = shift;
-        my $number = 0;
-        my $letter = 'A';
-
-        before_all setup => sub { $number = 1 };
-
-        before_each letter_up => sub { $letter++ };
-
-        # it() is an alias for tests()
-        it check => sub {
-            my $self = shift;
-            is( $letter, 'B', "Letter was incremented" );
-            is( $number, 2,   "number was incremented" );
-        };
-
-        after_each reset => sub { $number = 1 };
-
-        after_all teardown => sub {
-            is( $number, 1, "number is back to 1" );
-        };
-
-        describe nested => sub {
-            # This nested describe block will inherit before_each and
-            # after_each from the parent block.
-            ...
-        };
-
-        describe maybe_later => (
-            todo => "We might get to this",
-            code => { ... },
-        );
-    };
-
-=head3 FENNEC'S RSPEC IMPROVEMENT
-
-Fennec add's to the RSPEC toolset with the around keyword.
-
-    describe addon => sub {
-        my $self = shift;
-
-        around_each localize_env => sub {
-            my $self = shift;
-            my ( $inner ) = @_;
-
-            local %ENV = ( %ENV, foo => 'bar' );
-
-            $inner->();
-        };
-
-        tests foo => sub {
-            is( $ENV{foo}, 'bar', "in the localized environment" );
-        };
-    };
-
-=head2 CASE WORKFLOW
-
-Cases are used when you have a test that you wish to run under several r tests
-conditions. The following is a trivial example. Each test will be run once
-under each case. B<Beware!> this will run (cases x tests), with many tests and
-cases this can be a huge set of actual tests. In this example 8 in total will
-be run.
-
-B<Note:> The 'cases' keyword is an alias to describe. case blocks can go into
-any workflow and will work as expected.
-
-    cases check_several_numbers => sub {
-        my $number;
-        case one => sub { $number = 2 };
-        case one => sub { $number = 4 };
-        case one => sub { $number = 6 };
-        case one => sub { $number = 8 };
-
-        tests is_even => sub {
-            ok( !$number % 2, "number is even" );
-        };
-
-        tests only_digits => sub {
-            like( $number, qr/^\d+$/i, "number is all digits" );
-        };
-    };
-
-    1;
-
-=head1 MOCKING FROM MOCK::QUICK
-
-L<Mock::Quick> is imported by default. L<Mock::Quick> is a powerful mocking
-library with a very friendly syntax.
-
-=head2 MOCKING OBJECTS
-
-    use Mock::Quick;
-
-    my $obj = obj(
-        foo => 'bar',            # define attribute
-        do_it => qmeth { ... },  # define method
-        ...
-    );
-
-    is( $obj->foo, 'bar' );
-    $obj->foo( 'baz' );
-    is( $obj->foo, 'baz' );
-
-    $obj->do_it();
-
-    # define the new attribute automatically
-    $obj->bar( 'xxx' );
-
-    # define a new method on the fly
-    $obj->baz( qmeth { ... });
-
-    # remove an attribute or method
-    $obj->baz( qclear() );
-
-=head2 MOCKING CLASSES
-
-    use Mock::Quick;
-
-    my $control = qclass(
-        # Insert a generic new() method (blessed hash)
-        -with_new => 1,
-
-        # Inheritance
-        -subclass => 'Some::Class',
-        # Can also do
-        -subclass => [ 'Class::A', 'Class::B' ],
-
-        # generic get/set attribute methods.
-        -attributes => [ qw/a b c d/ ],
-
-        # Method that simply returns a value.
-        simple => 'value',
-
-        # Custom method.
-        method => sub { ... },
-    );
-
-    my $obj = $control->packahe->new;
-
-    # Override a method
-    $control->override( foo => sub { ... });
-
-    # Restore it to the original
-    $control->restore( 'foo' );
-
-    # Remove the anonymous namespace we created.
-    $control->undefine();
-
-=head2 TAKING OVER EXISTING CLASSES
-
-    use Mock::Quick;
-
-    my $control = qtakeover( 'Some::Package' );
-
-    # Override a method
-    $control->override( foo => sub { ... });
-
-    # Restore it to the original
-    $control->restore( 'foo' );
-
-    # Destroy the control object and completely restore the original class Some::Package.
-    $control = undef;
-
-=head2 MOCKING EXPORTS
-
-Mock-Quick uses L<Exporter::Declare>. This allows for exports to be prefixed or renamed.
-See L<Exporter::Declare/RENAMING IMPORTED ITEMS> for more information.
-
-=over 4
-
-=item $obj = qobj( attribute => value, ... )
-
-Create an object. Every possible attribute works fine as a get/set accessor.
-You can define other methods using qmeth {...} and assigning that to an
-attribute. You can clear a method using qclear() as an argument.
-
-See L<Mock::Quick::Object> for more.
-
-=item $control = qclass( -config => ..., name => $value || sub { ... }, ... )
-
-Define an anonymous package with the desired methods and specifications.
-
-See L<Mock::Quick::Class> for more.
-
-=item $control = qtakeover( $package )
-
-Take control over an existing class.
-
-See L<Mock::Quick::Class> for more.
-
-=item qclear()
-
-Returns a special reference that when used as an argument, will cause
-Mock::Quick::Object methods to be cleared.
-
-=item qmeth { my $self = shift; ... }
-
-Define a method for an L<Mock::Quick::Object> instance.
-
-=back
-
-=head1 ADDITIONAL USER DOCUMENTATION
-
-=over 4
-
-=item L<Fennec::Recipe::CustomFennec>
-
-=item L<Fennec::Recipe::CustomRunner>
-
-=back
-
-=head1 SEE ALSO
-
-=over 4
-
-=item L<Fennec::Lite>
-
-=item L<Test::Workflow>
-
-=item L<Fennec::Runner>
-
-=item L<Mock::Quick>
-
-=item L<Test::More>
-
-=item L<Test::Exception>
-
-=item L<Test::Warn>
-
-=item L<Test::Builder>
-
-=back
-
-=head1 NOTES
-
-When you C<use Fennec>, it will check to see if you called the file directly.
-If you directly called the file Fennec will restart Perl and run your test
-through L<Fennec::Runner>.
-
-=head1 CAVEATS
-
-When running a test group by line, Fennec takes it's best guess at which group
-the line number represents. There are 2 ways to get the line number of a
-codeblock:
-
-The first is to use the L<B> module. The L<B> module will return the
-line of the first statement within the codeblock.
-
-The other is to define the codeblock in a function call, such as
-C<tests foo =E<gt> sub {...}>, tests() can then use caller() which will return
-the last line of the statement.
-
-Combining these methods, we can get the approximate starting and ending lines
-for codeblocks defined through Fennec's keywords.
-
-This will break if you do something like:
-
-    tests foo => \&my_test;
-    sub my_test { ... }
-
-But might work just fine if you do:
-
-    tests foo => \&my_test;
-    sub my_test { ... }
-
-But might run both tests in this case when asking to run 'baz' by line number:
-
-    tests foo => \&my_test;
-    tests baz => sub {... }
-    sub my_test { ... }
+    # You must call this.
+    run();
 
 =head1 AUTHORS
 
