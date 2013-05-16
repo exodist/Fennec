@@ -10,6 +10,7 @@ sub set_runner {
 }
 
 END {
+    return if $?;
     return unless $RUNNER;
     return if $RUNNER->_skip_all;
 
