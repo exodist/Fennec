@@ -107,7 +107,7 @@ Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
 Fennec is free software; Standard perl license.
 

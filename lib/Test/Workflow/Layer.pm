@@ -83,7 +83,7 @@ Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
 Test-Workflow is free software; Standard perl license.
 

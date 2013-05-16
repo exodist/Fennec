@@ -537,6 +537,9 @@ some cases the first or last line.
 
 The best option is to use prove with the -j flag.
 
+B<Note: The following is no longer a recommended practice, it is however still
+supported>
+
 You can also create a custom runner using a single .t file to run all your
 Fennec tests. This has caveats though, such as not knowing which test file had
 problems without checking the failure messages.
@@ -568,7 +571,7 @@ Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
 Fennec is free software; Standard perl license.
 
