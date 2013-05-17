@@ -32,6 +32,15 @@ sub report {
     my $self   = shift;
     my %params = @_;
 
+    if ( $$ == $self->_pid ) {
+        for my $item ( @{$params{data}} ) {
+            for my $part ( split /\r?\n/, $item ) {
+                $self->render( $params{name}, $part );
+            }
+        }
+        return;
+    }
+
     my $handle;
     if ( $self->handles->{$$} ) {
         $handle = $self->handles->{$$};

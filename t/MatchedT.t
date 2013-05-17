@@ -9,10 +9,14 @@ use Test::More;
 my $found = grep { m/FinderTest/ } @{Fennec::Runner->new->test_classes};
 ok( $found, "Found test!" );
 
-run();
-
-my $ran = Fennec::Runner->new->collector->test_count;
-die "Not all tests ran ($ran)!"
-    unless $ran == 3;
+run(
+    sub {
+        my $runner = Fennec::Runner->new();
+        my $want   = 3;
+        my $got    = $runner->collector->test_count;
+        return if $runner->collector->ok( $got == $want, "Got expected test count" );
+        $runner->collector->diag("Got:  $got\nWant: $want");
+    }
+);
 
 1;

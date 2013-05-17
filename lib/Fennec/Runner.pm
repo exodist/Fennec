@@ -37,7 +37,7 @@ sub inject_run {
     my $self = shift;
     my ( $caller, $sub ) = @_;
 
-    $sub ||= sub { $self->run };
+    $sub ||= sub { $self->run(@_) };
 
     require Fennec::Util;
     Fennec::Util::inject_sub( $caller, 'run', $sub );
@@ -159,6 +159,7 @@ sub prunner {
 
 sub run {
     my $self = shift;
+    my ($follow_up) = @_;
 
     $self->_ran(1);
 
@@ -168,6 +169,9 @@ sub run {
     }
 
     $self->collector->collect;
+    $follow_up->() if $follow_up;
+    $self->collector->collect;
+
     $self->collector->finish();
 }
 

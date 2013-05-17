@@ -8,7 +8,6 @@ use Fennec::Util qw/accessors/;
 accessors qw/test_count test_failed/;
 
 my @PREFERENCE = qw{
-    Fennec::Collector::TB::SQLite
     Fennec::Collector::TB::TempFiles
 };
 

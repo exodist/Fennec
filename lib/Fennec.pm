@@ -130,7 +130,9 @@ sub import {
                 if $has_run++;
 
             Fennec::EndRunner->set_runner(undef);
-            $runner->run;
+
+            $runner->run(@_);
+
             1;
         };
     }

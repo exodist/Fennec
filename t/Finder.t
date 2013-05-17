@@ -28,9 +28,14 @@ is_deeply(
     "Found all test files"
 ) || print STDERR Dumper( Fennec::Finder->new->test_files );
 
-run();
-
-die "Did not run all tests"
-    unless Fennec::Finder->new->collector->test_count > 130;
+run(
+    sub {
+        my $runner = Fennec::Runner->new();
+        my $want   = 30;
+        my $got    = $runner->collector->test_count;
+        return if $runner->collector->ok( $got > $want, "Got expected test count" );
+        $runner->collector->diag("Got:  $got\nWant: $want");
+    },
+);
 
 1;
