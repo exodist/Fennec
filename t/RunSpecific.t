@@ -54,4 +54,4 @@ describe bar => sub {
     };
 };
 
-run_tests;
+done_testing;

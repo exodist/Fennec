@@ -48,9 +48,15 @@ sub initialize {
 sub render {
     my $self = shift;
     my ( $handle, $part ) = @_;
-    $self->inc_test_count
-        if $handle eq 'STDOUT'
-        && $part =~ m/^\s*(not\s+)?ok(\s|$)/;
+
+    if ( $handle eq 'STDOUT' && $part =~ m/^\s*(?:(not)\s+)?ok(\s|$)/ ) {
+        my $fail = $1 && $1 eq 'not' ? 1 : 0;
+        my ( $mod, $reason ) = $part =~ m/ # (TODO|skip) (.*)$/;
+        no warnings;
+        print STDOUT "DEBUG: $fail, $mod, $reason\n" if $fail;
+        $self->inc_test_failed if $fail && !$mod;
+        $self->inc_test_count;
+    }
 
     if ( $ENV{HARNESS_IS_VERBOSE} || $handle eq 'STDOUT' ) {
         print STDOUT "$part\n";

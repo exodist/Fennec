@@ -8,4 +8,4 @@ tests something => sub {
     ok( 1, "generic test" );
 };
 
-run_tests;
+done_testing;

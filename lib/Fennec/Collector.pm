@@ -5,11 +5,10 @@ use warnings;
 use Carp qw/confess/;
 use Fennec::Util qw/accessors/;
 
-accessors qw/test_count/;
+accessors qw/test_count test_failed/;
 
-# Do not use TB::SQLite, performance sucks!
-# Fennec::Collector::TB::SQLite
 my @PREFERENCE = qw{
+    Fennec::Collector::TB::SQLite
     Fennec::Collector::TB::TempFiles
 };
 
@@ -49,6 +48,12 @@ sub inc_test_count {
     my $self = shift;
     my $count = $self->test_count || 0;
     $self->test_count( $count + 1 );
+}
+
+sub inc_test_failed {
+    my $self = shift;
+    my $count = $self->test_failed || 0;
+    $self->test_failed( $count + 1 );
 }
 
 1;

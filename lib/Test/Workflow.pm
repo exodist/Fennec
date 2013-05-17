@@ -216,7 +216,8 @@ sub get_tests {
             my $name  = $_->name;
             my $start = $_->start_line;
             my $end   = $_->end_line;
-            warn "No tests in block '$name' approx lines $start -> $end\n";
+            warn "No tests in block '$name' approx lines $start -> $end\n"
+                unless $ENV{FENNEC_TEST};
         }
 
         @tests;

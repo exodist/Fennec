@@ -6,9 +6,9 @@ use warnings;
 use Fennec;
 
 BEGIN {
-    require_ok( 'Mock::Quick' );
+    require_ok('Mock::Quick');
     Mock::Quick->import();
-    can_ok( __PACKAGE__, qw/ qobj qclass qtakeover qclear qmeth /);
+    can_ok( __PACKAGE__, qw/ qobj qclass qtakeover qclear qmeth / );
 
     package Foo;
 }
@@ -35,9 +35,9 @@ tests class => sub {
     isa_ok( $one, 'Mock::Quick::Class' );
     can_ok( $one->package, 'foo' );
 
-    my $two = qtakeover( 'Foo' );
+    my $two = qtakeover('Foo');
     isa_ok( $two, 'Mock::Quick::Class' );
     is( $two->package, 'Foo', "took over Foo" );
 };
 
-run_tests;
+done_testing;

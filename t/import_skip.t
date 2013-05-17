@@ -6,4 +6,4 @@ use Fennec skip_without => [qw/ Some::Fake::Class:You::Better::Not::Have /];
 
 ok( 0, "Should not see this." );
 
-run_tests;
+done_testing;

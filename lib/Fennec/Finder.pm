@@ -3,12 +3,27 @@ use strict;
 use warnings;
 
 use base 'Fennec::Runner';
+
 use File::Find qw/find/;
+use Fennec::Util qw/accessors/;
+use List::Util qw/shuffle/;
+
+accessors qw/test_files parallel/;
 
 sub import {
     my $self = shift->new;
     $self->find_files(@_);
     $self->inject_run( scalar caller );
+}
+
+sub init {
+    my $self = shift;
+    my (%params) = @_;
+
+    $self->test_files( [] );
+    $self->parallel( defined $params{parallel} ? $params{parallel} : 2 );
+
+    return $self;
 }
 
 sub find_files {
@@ -20,7 +35,7 @@ sub find_files {
             wanted => sub {
                 my $file = $File::Find::name;
                 return unless $self->validate_file($file);
-                push @{$self->test_classes} => $file;
+                push @{$self->test_files} => $file;
             },
             no_chdir => 1,
         },
@@ -33,6 +48,104 @@ sub validate_file {
     my ($file) = @_;
     return unless $file =~ m/\.(pm|ft)$/;
     return 1;
+}
+
+sub run {
+    my $self = shift;
+
+    $self->_ran(1);
+
+    my $frunner = $self->prunner( $self->parallel );
+
+    for my $file ( @{$self->test_files} ) {
+        $frunner->run(
+            sub {
+                $self->pid($$);
+
+                $self->load_file($file);
+
+                for my $class ( shuffle @{$self->test_classes} ) {
+                    next unless $class;
+                    $self->run_test_class($class);
+                }
+            },
+            1
+        );
+    }
+
+    $frunner->finish();
+
+    $self->collector->collect;
+    $self->collector->finish();
+}
+
+1;
+
+__END__
+
+sub _to_run {
+    my $self = shift;
+    my ($class) = @_;
+
+    return sub {
+        my $instance = $class->can('new') ? $class->new : bless( {}, $class );
+        my $ptests   = Parallel::Runner->new( $class->FENNEC->parallel );
+        my $pforce   = $class->FENNEC->parallel ? 1 : 0;
+        my $meta     = $instance->TEST_WORKFLOW;
+
+        $meta->test_wait( sub { $ptests->finish } );
+        $meta->test_run(
+            sub {
+                my ($run) = @_;
+                $ptests->run(
+                    sub {
+                        $run->();
+                        $self->collector->end_pid();
+                    },
+                    $pforce
+                );
+            }
+        );
+
+        Test::Workflow::run_tests($instance);
+        $ptests->finish;
+        $self->check_pid;
+    };
+}
+
+sub to_run_loaded {
+    my $self = shift;
+    my ($class) = @_;
+
+    return unless $class && $class->can('TEST_WORKFLOW');
+
+    my $inner = $self->_to_run($class);
+    return sub {
+        local $self->{pid} = $$;
+        print "# Running: $class ($$)\n";
+        $inner->();
+    };
+}
+
+sub to_run_load {
+    my $self = shift;
+    my ($item) = @_;
+
+    return sub {
+        local $self->{pid} = $$;
+
+        my %loaded = map { $_ => 1 } @{$self->test_classes};
+        $self->_load_guess($item);
+        my @new = grep { !$loaded{$_} } @{$self->test_classes};
+
+        for my $class (@new) {
+            my $inner = $self->_to_run($class);
+
+            next unless $class && $class->can('TEST_WORKFLOW');
+            print "# Running: $class ($$)\n";
+            $inner->();
+        }
+    };
 }
 
 1;

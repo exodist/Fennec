@@ -4,14 +4,33 @@ use warnings;
 
 use Fennec::Finder;
 use Test::More;
+use Data::Dumper;
 
-my $found = grep { m/FinderTest/ } @{Fennec::Finder->new->test_classes};
-ok( $found, "Found test!" );
+is_deeply(
+    [sort map { m{^.*/([^/]+$)}; $1 } @{Fennec::Finder->new->test_files}],
+    [
+        sort qw{
+            CantFindLayer.ft
+            Case-Scoping.ft
+            FinderTest.pm
+            Mock.ft
+            RunSpecific.ft
+            Todo.ft
+            WorkflowTest.pm
+            Workflow_Fennec.ft
+            hash_warning.ft
+            import_skip.ft
+            inner_todo.ft
+            order.ft
+            procs.ft
+            },
+    ],
+    "Found all test files"
+) || print STDERR Dumper( Fennec::Finder->new->test_files );
 
 run();
 
-my $ran = Fennec::Finder->new->collector->test_count;
-die "Not all tests ran ($ran)!"
-    unless $ran == 3;
+die "Did not run all tests"
+    unless Fennec::Finder->new->collector->test_count > 130;
 
 1;

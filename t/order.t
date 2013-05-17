@@ -18,4 +18,4 @@ for my $num ( 1 .. 20 ) {
     };
 }
 
-run_tests;
+done_testing;

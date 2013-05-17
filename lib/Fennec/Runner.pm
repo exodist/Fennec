@@ -20,7 +20,7 @@ use Fennec::Util qw/accessors/;
 use Fennec::Collector;
 use Parallel::Runner;
 
-accessors qw/pid test_classes loaded_classes parallel collector _ran _skip_all/;
+accessors qw/pid test_classes collector _ran _skip_all/;
 
 my $SINGLETON;
 sub is_initialized { $SINGLETON ? 1 : 0 }
@@ -44,7 +44,8 @@ sub inject_run {
 }
 
 sub new {
-    my $class = shift;
+    my $class  = shift;
+    my @caller = caller;
 
     croak "listener_class is deprecated, it was thought nobody used it... sorry. See Fennec::Collector now"
         if $class->can('listener_class');
@@ -63,11 +64,9 @@ sub new {
 
     $SINGLETON = bless(
         {
-            test_classes   => [],
-            loaded_classes => [],
-            pid            => $$,
-            collector      => $collector,
-            parallel       => $params{parallel} || 3,
+            test_classes => [],
+            pid          => $$,
+            collector    => $collector,
         },
         $class
     );
@@ -87,7 +86,7 @@ sub _load_guess {
     }
 
     return $self->load_file($item)
-        if $item =~ m/\.(pm|t|pl)$/i
+        if $item =~ m/\.(pm|t|pl|ft)$/i
         || $item =~ m{/};
 
     return $self->load_module($item)
@@ -100,15 +99,9 @@ sub _load_guess {
 sub load_file {
     my $self = shift;
     my ($file) = @_;
-    print "Loading: $file ($$)\n";
+    print "Loading: $file\n";
     eval { require $file; 1 } || $self->exception( $file, $@ );
     $self->check_pid();
-}
-
-sub check_pid {
-    my $self = shift;
-    return unless $self->pid != $$;
-    die "PID has changed! Did you forget to exit a child process?\n";
 }
 
 sub load_module {
@@ -117,6 +110,12 @@ sub load_module {
     print "Loading: $module\n";
     eval "require $module" || $self->exception( $module, $@ );
     $self->check_pid();
+}
+
+sub check_pid {
+    my $self = shift;
+    return unless $self->pid != $$;
+    die "PID has changed! Did you forget to exit a child process?\n";
 }
 
 sub exception {
@@ -131,99 +130,6 @@ sub exception {
         $self->collector->ok( 0, $name );
         $self->collector->diag($exception);
     }
-}
-
-sub run {
-    my $self = shift;
-
-    $self->_ran(1);
-
-    my @to_run;
-
-    for my $class ( @{$self->loaded_classes} ) {
-        next unless $class && $class->can('TEST_WORKFLOW');
-        push @to_run => $self->to_run_loaded($class);
-    }
-
-    for my $class ( @{$self->test_classes} ) {
-        push @to_run => $self->to_run_load($class);
-    }
-
-    my $pfiles = $self->prunner( $self->parallel );
-    my $force_fork = $self->parallel ? 1 : 0;
-
-    for my $file ( shuffle @to_run ) {
-        $pfiles->run( $file, $force_fork );
-    }
-
-    $pfiles->finish();
-    $self->collector->collect;
-    $self->collector->finish();
-}
-
-sub _to_run {
-    my $self = shift;
-    my ($class) = @_;
-
-    return sub {
-        my $instance = $class->can('new') ? $class->new : bless( {}, $class );
-        my $ptests   = Parallel::Runner->new( $class->FENNEC->parallel );
-        my $pforce   = $class->FENNEC->parallel ? 1 : 0;
-        my $meta     = $instance->TEST_WORKFLOW;
-
-        $meta->test_wait( sub { $ptests->finish } );
-        $meta->test_run(
-            sub {
-                my ($run) = @_;
-                $ptests->run(
-                    sub {
-                        $run->();
-                        $self->collector->end_pid();
-                    },
-                    $pforce
-                );
-            }
-        );
-
-        Test::Workflow::run_tests($instance);
-        $ptests->finish;
-        $self->check_pid;
-    };
-}
-
-sub to_run_loaded {
-    my $self = shift;
-    my ($class) = @_;
-
-    return unless $class && $class->can('TEST_WORKFLOW');
-
-    my $inner = $self->_to_run($class);
-    return sub {
-        local $self->{pid} = $$;
-        print "# Running: $class ($$)\n";
-        $inner->();
-    };
-}
-
-sub to_run_load {
-    my $self = shift;
-    my ($item) = @_;
-
-    return sub {
-        local $self->{pid} = $$;
-
-        my %loaded = map { $_ => 1 } @{$self->loaded_classes};
-        $self->_load_guess($item);
-        my @new = grep { !$loaded{$_} } @{$self->loaded_classes};
-
-        for my $class (@new) {
-            my $inner = $self->_to_run($class);
-
-            next unless $class && $class->can('TEST_WORKFLOW');
-            print "# Running: $class ($$)\n";
-            $inner->();
-        }
-    };
 }
 
 sub prunner {
@@ -251,22 +157,71 @@ sub prunner {
     return $self->{prunner};
 }
 
+sub run {
+    my $self = shift;
+
+    $self->_ran(1);
+
+    for my $class ( shuffle @{$self->test_classes} ) {
+        next unless $class;
+        $self->run_test_class($class);
+    }
+
+    $self->collector->collect;
+    $self->collector->finish();
+}
+
+sub run_test_class {
+    my $self = shift;
+    my ($class) = @_;
+
+    return unless $class;
+
+    print "# Running: $class\n";
+    return unless $class->can('TEST_WORKFLOW');
+
+    my $instance = $class->can('new') ? $class->new : bless( {}, $class );
+    my $ptests   = Parallel::Runner->new( $class->FENNEC->parallel );
+    my $pforce   = $class->FENNEC->parallel ? 1 : 0;
+    my $meta     = $instance->TEST_WORKFLOW;
+
+    $meta->test_wait( sub { $ptests->finish } );
+    $meta->test_run(
+        sub {
+            my ($run) = @_;
+            $ptests->run(
+                sub {
+                    $run->();
+                    $self->collector->end_pid();
+                },
+                $pforce
+            );
+        }
+    );
+
+    Test::Workflow::run_tests($instance);
+    $ptests->finish;
+    $self->check_pid;
+}
+
 sub DESTROY {
     my $self = shift;
-    return if $self->_ran || $self->_skip_all;
+    return unless $self->pid == $$;
+    return if $self->_ran;
+    return if $self->_skip_all;
 
-    my $tests = join "\n" => map { "#   * $_" } @{$self->loaded_classes};
+    my $tests = join "\n" => map { "#   * $_" } @{$self->test_classes};
 
     print STDERR <<"    EOT";
 
 # *****************************************************************************
-# ERROR: run_tests() was never called!
+# ERROR: done_testing() was never called!
 #
 # This usually means you ran a Fennec test file directly with prove or perl,
-# but the file does not call run_tests at the end.
+# but the file does not call done_testing at the end.
 #
 # This is new behavior as of Fennec 2.000. Old versions used a couple of evil
-# hacks to make it work without calling run_tests. These resulted in things
+# hacks to make it work without calling done_testing. These resulted in things
 # such as broken coverage tests, broken Win32 (who cares right?), and other
 # strange and hard to debug behavior.
 #
@@ -277,6 +232,18 @@ $tests
 
     EOT
     exit(1);
+}
+
+# Set exit code to failed tests
+my $PID = $$;
+
+END {
+    return if $?;
+    return unless $SINGLETON;
+    return unless $PID == $$;
+    my $failed = $SINGLETON->collector->test_failed;
+    return unless $failed;
+    $? = $failed;
 }
 
 1;

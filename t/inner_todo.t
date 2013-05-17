@@ -35,4 +35,4 @@ tests not_todo => sub {
     ok( 1, "Not todo" );
 };
 
-run_tests;
+done_testing;

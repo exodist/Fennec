@@ -3,13 +3,20 @@ use strict;
 use warnings;
 
 my $RUNNER;
+my $PID;
 
 sub set_runner {
     $RUNNER = pop if @_;
     return $RUNNER;
 }
 
+sub set_pid {
+    $PID = pop if @_;
+    return $PID;
+}
+
 END {
+    return unless $PID && $PID == $$;
     return if $?;
     return unless $RUNNER;
     return if $RUNNER->_skip_all;
@@ -17,7 +24,7 @@ END {
     print STDERR <<"    EOT";
 
 ###############################################################################
-#       **** It does not look like run_tests() was ever called! ****          #
+#      **** It does not look like done_testing() was ever called! ****        #
 #                                                                             #
 #   As of Fennec 2 automatically-running standalone fennect tests are         #
 #   deprecated. This descision was made because all run after run-time        #
@@ -36,6 +43,10 @@ END {
     EOT
 
     $RUNNER->run();
+
+    my $failed = $RUNNER->collector->test_failed;
+    return unless $failed;
+    $? = $failed;
 }
 
 1;

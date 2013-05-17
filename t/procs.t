@@ -122,4 +122,4 @@ INNER TEST
     EOT
 };
 
-run_tests;
+done_testing;

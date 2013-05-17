@@ -6,7 +6,7 @@ use lib 't/lib';
 use Fennec::Runner qw/FinderTest/;
 use Test::More;
 
-my $found = grep { m/FinderTest/ } @{Fennec::Runner->new->loaded_classes};
+my $found = grep { m/FinderTest/ } @{Fennec::Runner->new->test_classes};
 ok( $found, "Found test!" );
 
 run();
