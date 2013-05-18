@@ -3,7 +3,7 @@ package Test::Procs;
 use strict;
 use warnings;
 
-use Fennec parallel => 3, test_sort => 'ordered';
+use Fennec parallel => 1, test_sort => 'ordered';
 
 use File::Temp qw/tempfile/;
 
