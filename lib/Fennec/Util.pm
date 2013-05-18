@@ -5,7 +5,7 @@ use Exporter::Declare;
 use Carp qw/croak/;
 use Scalar::Util qw/blessed/;
 
-exports qw/inject_sub accessors get_test_call/;
+exports qw/inject_sub accessors get_test_call require_module/;
 
 sub inject_sub {
     my ( $package, $name, $code ) = @_;
@@ -22,6 +22,36 @@ sub inject_sub {
 sub accessors {
     my $caller = caller;
     _accessor( $caller, $_ ) for @_;
+}
+
+sub require_module {
+    my $module = shift;
+
+    # Is it defined?
+    croak "No module specified"
+        unless defined $module;
+
+    # Is the caller using utf8?
+    require utf8;
+    my $with_utf8 = ( caller(0) )[8] & $utf8::hint_bits;
+
+    # Are Unicode package names ok?
+    my $check =
+        $with_utf8
+        ? qr{\A [[:alpha:]_] [[:word:]]*    (?: :: [[:word:]]+ )* \z}x
+        : qr{\A [A-Z_a-z]    [0-9A-Z_a-z]*  (?: :: [0-9A-Z_a-z]+  )* \z}x;
+
+    # Is it a syntactically valid module name?
+    croak "Invalid Module '$module'"
+        unless $module =~ $check;
+
+    # Transform to a pm file path
+    my $file = $module;
+    $file .= ".pm";
+    $file =~ s{::}{/}g;
+
+    # What were we doing again?
+    return require $file;
 }
 
 sub _accessor {

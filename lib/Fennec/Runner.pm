@@ -16,7 +16,7 @@ BEGIN {
 use Carp qw/carp croak confess/;
 use List::Util qw/shuffle/;
 use Scalar::Util qw/blessed/;
-use Fennec::Util qw/accessors/;
+use Fennec::Util qw/accessors require_module/;
 use Fennec::Collector;
 use Parallel::Runner;
 
@@ -108,7 +108,7 @@ sub load_module {
     my $self   = shift;
     my $module = shift;
     print "Loading: $module\n";
-    eval "require $module" || $self->exception( $module, $@ );
+    eval { require_module $module } || $self->exception( $module, $@ );
     $self->check_pid();
 }
 

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Fennec::Test;
-use Fennec::Util qw/inject_sub/;
+use Fennec::Util qw/inject_sub require_module/;
 use Carp qw/croak carp/;
 our $VERSION = '2.000';
 
@@ -50,10 +50,10 @@ sub import {
     my %params = ( %defaults, @_ );
     my $importer = $caller[0];
 
-    eval "require $params{runner_class}; 1" || die $@;
+    require_module $params{runner_class};
     my $runner_init = $params{runner_class}->is_initialized;
 
-    die "Fennec cannot be used in package 'main' when the test is used with Fennec::Finder"
+    croak "Fennec cannot be used in package 'main' when the test is used with Fennec::Finder"
         if $runner_init && $caller[0] eq 'main';
 
     my $runner;
@@ -79,7 +79,7 @@ sub import {
     push @{$runner->test_classes} => $importer;
 
     for my $require ( @{$params{skip_without} || []} ) {
-        unless ( eval "require $require; 1" ) {
+        unless ( eval { require_module $require; 1 } ) {
             $runner->_skip_all(1);
             $runner->collector->skip("'$require' is not installed");
             $runner->collector->finish;
@@ -99,7 +99,7 @@ sub import {
     for my $base ( 'Fennec::Test', $meta->base ) {
         next unless $base;
         no strict 'refs';
-        eval "require $base" || die $@;
+        require_module $base;
         push @{"$importer\::ISA"} => $base
             unless grep { $_ eq $base } @{"$importer\::ISA"};
     }

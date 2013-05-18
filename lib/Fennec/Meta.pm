@@ -4,15 +4,18 @@ use warnings;
 
 use Fennec::Util qw/accessors/;
 
-accessors qw/parallel class fennec base test_sort with_tests debug_long_running/;
+accessors qw/parallel class fennec base test_sort with_tests/;
 
 sub new {
     my $class = shift;
     my %proto = @_;
-    bless({
-        $proto{fennec}->defaults(),
-        %proto,
-    }, $class);
+    bless(
+        {
+            $proto{fennec}->defaults(),
+            %proto,
+        },
+        $class
+    );
 }
 
 1;

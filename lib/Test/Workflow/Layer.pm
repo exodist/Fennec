@@ -4,7 +4,7 @@ use warnings;
 
 use Test::Workflow::Block;
 
-use Fennec::Util qw/accessors/;
+use Fennec::Util qw/accessors require_module/;
 use Scalar::Util qw/blessed/;
 use Carp qw/croak/;
 
@@ -26,18 +26,11 @@ sub new {
     bless( {map { ( $_ => [] ) } @ATTRIBUTES}, shift );
 }
 
-sub clone {
-    my $self  = shift;
-    my $class = blessed($self);
-    my $new   = bless( {%{$self}}, $class );
-    return $new;
-}
-
 sub merge_in {
     my $self = shift;
     my ( $caller, @classes ) = @_;
     for my $class (@classes) {
-        eval "require $class; 1" || die $@;
+        require_module $class;
         push @{$self->$_} => @{$class->TEST_WORKFLOW->root_layer->$_} for @ATTRIBUTES;
     }
 }
@@ -58,15 +51,6 @@ for my $type (qw/after_each after_all/) {
     };
     no strict 'refs';
     *{"add_$type"} = $add;
-}
-
-sub get_all {
-    my $self = shift;
-    my ($type) = @_;
-    return @{$self->$type}
-        if $self->can($type);
-
-    croak "No such type: $type";
 }
 
 1;
