@@ -4,15 +4,18 @@ use warnings;
 
 use Fennec::Util qw/accessors/;
 
-accessors qw/parallel class fennec base test_sort with_tests debug_long_running/;
+accessors qw/parallel class fennec base test_sort with_tests/;
 
 sub new {
     my $class = shift;
     my %proto = @_;
-    bless({
-        $proto{fennec}->defaults(),
-        %proto,
-    }, $class);
+    bless(
+        {
+            $proto{fennec}->defaults(),
+            %proto,
+        },
+        $class
+    );
 }
 
 1;
@@ -58,22 +61,15 @@ List of test templates loaded into your class.
 
 =back
 
-=head1 API STABILITY
-
-Fennec versions below 1.000 were considered experimental, and the API was
-subject to change. As of version 1.0 the API is considered stabalized. New
-versions may add functionality, but not remove or significantly alter existing
-functionality.
-
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
-Fennec is free software; Standard perl licence.
+Fennec is free software; Standard perl license.
 
 Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS

@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+package Fennec::Test::SelfRunning;
 use strict;
 use warnings;
 
@@ -32,6 +33,4 @@ tests skip_group => (
     code => sub { ok( 0, "You should not see this!" ) },
 );
 
-done_testing;
-
-1;
+1

@@ -5,15 +5,15 @@ use Exporter::Declare;
 use Carp qw/croak/;
 use Scalar::Util qw/blessed/;
 
-exports qw/inject_sub accessors get_test_call/;
+exports qw/inject_sub accessors get_test_call require_module/;
 
 sub inject_sub {
     my ( $package, $name, $code ) = @_;
     croak "inject_sub() takes a package, a name, and a coderef"
         unless $package
-            && $name
-            && $code
-            && $code =~ /CODE/;
+        && $name
+        && $code
+        && $code =~ /CODE/;
 
     no strict 'refs';
     *{"$package\::$name"} = $code;
@@ -24,34 +24,68 @@ sub accessors {
     _accessor( $caller, $_ ) for @_;
 }
 
+sub require_module {
+    my $module = shift;
+
+    # Is it defined?
+    croak "No module specified"
+        unless defined $module;
+
+    # Is the caller using utf8?
+    require utf8;
+    my $with_utf8 = ( caller(0) )[8] & $utf8::hint_bits;
+
+    # Are Unicode package names ok?
+    my $check =
+        $with_utf8
+        ? qr{\A [[:alpha:]_] [[:word:]]*    (?: :: [[:word:]]+ )* \z}x
+        : qr{\A [A-Z_a-z]    [0-9A-Z_a-z]*  (?: :: [0-9A-Z_a-z]+  )* \z}x;
+
+    # Is it a syntactically valid module name?
+    croak "Invalid Module '$module'"
+        unless $module =~ $check;
+
+    # Transform to a pm file path
+    my $file = $module;
+    $file .= ".pm";
+    $file =~ s{::}{/}g;
+
+    # What were we doing again?
+    return require $file;
+}
+
 sub _accessor {
     my ( $caller, $attribute ) = @_;
-    inject_sub( $caller, $attribute, sub {
-        my $self = shift;
-        croak "$attribute() called on '$self' instead of an instance"
-            unless blessed( $self );
-        ( $self->{$attribute} ) = @_ if @_;
-        return $self->{$attribute};
-    });
+    inject_sub(
+        $caller,
+        $attribute,
+        sub {
+            my $self = shift;
+            croak "$attribute() called on '$self' instead of an instance"
+                unless blessed($self);
+            ( $self->{$attribute} ) = @_ if @_;
+            return $self->{$attribute};
+        }
+    );
 }
 
 sub get_test_call {
     my $runner;
     my $i = 1;
 
-    while ( my @call = caller( $i++ )) {
+    while ( my @call = caller( $i++ ) ) {
         $runner = \@call if !$runner && $call[0]->isa('Fennec::Runner');
         return @call if $call[0]->can('FENNEC');
     }
 
-    return( $runner ? @$runner : ( "UNKNOWN", "UNKNOWN", 0 ) );
+    return ( $runner ? @$runner : ( "UNKNOWN", "UNKNOWN", 0 ) );
 }
 
-sub tb_ok         { Test::Builder->new->ok( @_ )        }
-sub tb_diag       { Test::Builder->new->diag( @_ )      }
-sub tb_skip       { Test::Builder->new->skip( @_ )      }
-sub tb_todo_start { Test::Builder->new->todo_start( @_ )}
-sub tb_todo_end   { Test::Builder->new->todo_end        }
+sub tb_ok         { Test::Builder->new->ok(@_) }
+sub tb_diag       { Test::Builder->new->diag(@_) }
+sub tb_skip       { Test::Builder->new->skip(@_) }
+sub tb_todo_start { Test::Builder->new->todo_start(@_) }
+sub tb_todo_end   { Test::Builder->new->todo_end }
 
 1;
 
@@ -68,6 +102,10 @@ This class provides useful utility functions used all over Fennec.
 =head1 EXPORTS
 
 =over 4
+
+=item require_module( 'Some::Module' )
+
+Can be used to load modules stored in strings.
 
 =item inject_sub( $package, $name, $code )
 
@@ -97,9 +135,9 @@ Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
-Fennec is free software; Standard perl licence.
+Fennec is free software; Standard perl license.
 
 Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS

@@ -3,13 +3,6 @@ package Test::Procs;
 use strict;
 use warnings;
 
-BEGIN {
-    if ( $^O eq 'MSWin32' ) {
-        require Test::More;
-        Test::More->import( skip_all => 'Win32 does not fork' );
-    }
-}
-
 use Fennec parallel => 3, test_sort => 'ordered';
 
 use File::Temp qw/tempfile/;
@@ -129,4 +122,4 @@ INNER TEST
     EOT
 };
 
-1;
+done_testing;

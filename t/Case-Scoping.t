@@ -31,4 +31,4 @@ tests check_before_all => sub {
     is( $before_all, undef );
 };
 
-1;
+done_testing;

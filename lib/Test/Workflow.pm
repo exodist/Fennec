@@ -8,6 +8,7 @@ use Test::Workflow::Test;
 use Test::Workflow::Layer;
 use List::Util qw/shuffle/;
 use Carp qw/croak/;
+use Scalar::Util qw/blessed/;
 
 our @CARP_NOT = qw/ Test::Workflow Test::Workflow::Test /;
 
@@ -30,26 +31,19 @@ gen_default_export TEST_WORKFLOW => sub {
 { no warnings 'once'; @DB::CARP_NOT = qw/ DB Test::Workflow / }
 
 sub _get_layer {
-
-    package DB;
-    use Carp qw/croak/;
-    use Scalar::Util qw/blessed/;
-
     my ( $offset, $sub, $caller ) = @_;
 
-    my @parent = caller( 2 + $offset );
-    my @pargs  = @DB::args;
-    my $layer  = $pargs[-1];
+    my $meta = $caller->[0]->TEST_WORKFLOW;
+    croak "$sub() can only be used within a describe or case block, or at the package level."
+        if $meta->build_complete;
+
+    my $layer = $meta->peek_layer;
 
     if ( blessed($layer) && blessed($layer)->isa('Test::Workflow::Layer') ) {
         croak "Layer has already been finalized!"
             if $layer->finalized;
         return $layer;
     }
-
-    my $meta = $caller->[0]->TEST_WORKFLOW;
-    croak "$sub() can only be used within a describe or case block, or at the package level. (Could not find layer, did you modify \@_?)"
-        if $meta->build_complete;
 
     return $meta->root_layer;
 }
@@ -111,8 +105,8 @@ sub run_tests {
         $instance ||= bless( {}, $caller );
     }
     my $layer = $instance->TEST_WORKFLOW->root_layer;
-    $instance->TEST_WORKFLOW->build_complete(1);
     my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [] );
+    $instance->TEST_WORKFLOW->build_complete(1);
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
     @tests = order_tests( $sort, @tests );
     $_->run($instance) for @tests;
@@ -202,6 +196,7 @@ sub get_tests {
     push @tests => map {
         my $layer = Test::Workflow::Layer->new;
 
+        $instance->TEST_WORKFLOW->push_layer( $layer );
         $_->todo( $todo ) if $todo;
         $_->run( $instance, $layer );
 
@@ -215,11 +210,14 @@ sub get_tests {
             $_->todo,
         );
 
+        $instance->TEST_WORKFLOW->pop_layer( $layer );
+
         unless (@tests) {
             my $name  = $_->name;
             my $start = $_->start_line;
             my $end   = $_->end_line;
-            warn "No tests in block '$name' approx lines $start -> $end\n";
+            warn "No tests in block '$name' approx lines $start -> $end\n"
+                unless $ENV{FENNEC_TEST};
         }
 
         @tests;
@@ -477,9 +475,9 @@ Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
-Test-Workflow is free software; Standard perl licence.
+Test-Workflow is free software; Standard perl license.
 
 Test-Workflow is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS

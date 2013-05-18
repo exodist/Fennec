@@ -40,4 +40,4 @@ tests 'code param' => (
     baz  => 'bar',
 );
 
-1;
+done_testing;

@@ -11,14 +11,16 @@ my $build = Module::Build->new(
     requires => {
         'Carp'              => 0,
         'Exporter::Declare' => 0,
-        'Mock::Quick'     => '1.000',
+        'Mock::Quick'       => '1.000',
         'Parallel::Runner'  => '0.013',
         'Scalar::Util'      => 0,
         'List::Util'        => 0,
-        'TAP::Parser'       => 0,
         'Test::Exception'   => '0.29',
         'Test::Simple'      => '0.88',
         'Test::Warn'        => 0,
+    },
+    recommends => {
+        'Fennec::Declare'   => '1.001',
     },
     build_requires => {
     },
@@ -28,7 +30,7 @@ my $build = Module::Build->new(
             bugtracker  => 'http://github.com/exodist/Fennec/issues',
             homepage    => 'http://open-exodus.net/projects/Fennec'
         },
-    }
+    },
 );
 
 $build->create_build_script;

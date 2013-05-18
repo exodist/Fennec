@@ -4,7 +4,7 @@ use warnings;
 
 use Test::Workflow::Block;
 
-use Fennec::Util qw/accessors/;
+use Fennec::Util qw/accessors require_module/;
 use Scalar::Util qw/blessed/;
 use Carp qw/croak/;
 
@@ -26,18 +26,11 @@ sub new {
     bless( {map { ( $_ => [] ) } @ATTRIBUTES}, shift );
 }
 
-sub clone {
-    my $self  = shift;
-    my $class = blessed($self);
-    my $new   = bless( {%{$self}}, $class );
-    return $new;
-}
-
 sub merge_in {
     my $self = shift;
     my ( $caller, @classes ) = @_;
     for my $class (@classes) {
-        eval "require $class; 1" || die $@;
+        require_module $class;
         push @{$self->$_} => @{$class->TEST_WORKFLOW->root_layer->$_} for @ATTRIBUTES;
     }
 }
@@ -60,15 +53,6 @@ for my $type (qw/after_each after_all/) {
     *{"add_$type"} = $add;
 }
 
-sub get_all {
-    my $self = shift;
-    my ($type) = @_;
-    return @{$self->$type}
-        if $self->can($type);
-
-    croak "No such type: $type";
-}
-
 1;
 
 __END__
@@ -83,9 +67,9 @@ Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
-Test-Workflow is free software; Standard perl licence.
+Test-Workflow is free software; Standard perl license.
 
 Test-Workflow is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS

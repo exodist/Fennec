@@ -32,36 +32,6 @@ sub name {
     return $self->block_name;
 }
 
-sub debug_handler {
-    my $self = shift;
-    my ( $timeout, $instance ) = @_;
-
-    my $data = {
-        instance => $instance,
-        test     => $self,
-    };
-
-    return sub {
-        require Data::Dumper;
-
-        my $meta = $instance->TEST_WORKFLOW;
-        $meta->ok->( 0, "Long running process timeout" );
-
-        my $out = "Long running process timeout\n";
-
-        $out .= "\ttimeout - $timeout\n\ttest - " . $self->name . "\n\n";
-
-        {
-            local $Data::Dumper::Maxdepth = 3;
-            $out .= "Brief Dump: " . Data::Dumper::Dumper($data);
-        }
-
-        $out .= "Full Dump: " . Data::Dumper::Dumper($data);
-
-        die $out;
-        }
-}
-
 sub run {
     my $self = shift;
 
@@ -79,24 +49,6 @@ sub run {
     $run->();
 }
 
-sub _timeout_wrap {
-    my $self = shift;
-    my ( $instance, $inner ) = @_;
-
-    my $timeout = $instance->TEST_WORKFLOW->debug_long_running;
-    return $inner unless $timeout;
-
-    return sub {
-        no warnings 'uninitialized';
-        $SIG{ALRM} = $self->debug_handler( $timeout, $instance );
-        alarm $timeout;
-        $inner->();
-        alarm 0;
-        # At this point we have screwed up any other alarms, clear the handler
-        $SIG{ALRM} = undef;
-    };
-}
-
 sub _wrap_tests {
     my $self = shift;
     my ($instance) = @_;
@@ -111,7 +63,6 @@ sub _wrap_tests {
         $_->run($instance) for @{$self->setup};
         for my $test (@tests) {
             my $outer = sub { $test->run($instance) };
-            $outer = $self->_timeout_wrap( $instance, $outer );
             for my $around ( @{$self->around} ) {
                 my $inner = $outer;
                 $outer = sub { $around->run( $instance, $inner ) };
@@ -139,9 +90,9 @@ Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
-Test-Workflow is free software; Standard perl licence.
+Test-Workflow is free software; Standard perl license.
 
 Test-Workflow is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS

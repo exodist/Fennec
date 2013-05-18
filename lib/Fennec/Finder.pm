@@ -3,28 +3,39 @@ use strict;
 use warnings;
 
 use base 'Fennec::Runner';
+
 use File::Find qw/find/;
+use Fennec::Util qw/accessors/;
+use List::Util qw/shuffle/;
+
+accessors qw/test_files parallel/;
 
 sub import {
     my $self = shift->new;
-    $self->find_files( @_ );
-    $self->inject_run( scalar caller )
+    $self->find_files(@_);
+    $self->inject_run( scalar caller );
+}
+
+sub init {
+    my $self = shift;
+    my (%params) = @_;
+
+    $self->test_files( [] );
+    $self->parallel( defined $params{parallel} ? $params{parallel} : 2 );
+
+    return $self;
 }
 
 sub find_files {
     my $self = shift;
-    my @paths = @_;
-
-    unless( @paths ) {
-        @paths = -d './t' ? ( './t' ) : ( './' );
-    }
+    my @paths = @_ ? @_ : -d './t' ? ('./t') : ('./');
 
     find(
         {
             wanted => sub {
                 my $file = $File::Find::name;
-                return unless $self->validate_file( $file );
-                $self->load_file( $file );
+                return unless $self->validate_file($file);
+                push @{$self->test_files} => $file;
             },
             no_chdir => 1,
         },
@@ -35,8 +46,37 @@ sub find_files {
 sub validate_file {
     my $self = shift;
     my ($file) = @_;
-    return unless $file =~ m{\.pm$};
+    return unless $file =~ m/\.(pm|ft)$/;
     return 1;
+}
+
+sub run {
+    my $self = shift;
+
+    $self->_ran(1);
+
+    my $frunner = $self->prunner( $self->parallel );
+
+    for my $file ( @{$self->test_files} ) {
+        $frunner->run(
+            sub {
+                $self->pid($$);
+
+                $self->load_file($file);
+
+                for my $class ( shuffle @{$self->test_classes} ) {
+                    next unless $class;
+                    $self->run_test_class($class);
+                }
+            },
+            1
+        );
+    }
+
+    $frunner->finish();
+
+    $self->collector->collect;
+    $self->collector->finish();
 }
 
 1;
@@ -67,12 +107,12 @@ Fennec.t:
 
     run();
 
-This will find all .pm files under t/ and load them. Any that contain Fennec
-tests will register themselves to be run once run() is called.
+This will find all .pm and .ft files under t/ and load them. Any that contain
+Fennec tests will register themselves to be run once run() is called.
 
-B<Warning, if you have .pm files that are not tests they will also be loaded,
-if any of these have interactions with the packages you are testing you must
-account for them.>
+B<Warning, if you have .pm files in t/ that are not tests they will also be
+loaded, if any of these have interactions with the packages you are testing you
+must account for them.>
 
 =head1 CUSTOMISATIONS
 
@@ -98,22 +138,15 @@ the filename to verify as an argument. Return true if the file should be
 loaded, false if it should not. Currently the only check is that the filename
 ends with a C<.pm>.
 
-=head2 FILE LOADING
-
-If you wish to customize which files are loaded you may subclass
-L<Fennec::Finder> and override the C<load_file( $file )> method. Currently this
-method simply calles C<require $file.> with some extra debugging code wrapped
-around it.
-
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2011 Chad Granum
+Copyright (C) 2013 Chad Granum
 
-Fennec is free software; Standard perl licence.
+Fennec is free software; Standard perl license.
 
 Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
