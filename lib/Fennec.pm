@@ -24,10 +24,41 @@ sub defaults {
     );
 }
 
+sub import {
+    my $class    = shift;
+    my $importer = caller;
+
+    my %defaults = $class->defaults;
+    $defaults{runner_class} ||= 'Fennec::Runner';
+    my %params = ( %defaults, @_ );
+
+    my ( $runner, $runner_init ) = $class->_get_runner(
+        $importer,
+        $defaults{runner_class},
+        $defaults{runner_params},
+    );
+
+    push @{$runner->test_classes} => $importer;
+
+    my $meta = $class->_init_meta( $importer, %params );
+
+    $class->_process_deps( $runner, $params{skip_without} );
+    $class->_set_isa( $importer, 'Fennec::Test', $meta->base );
+    $class->_load_utils( $importer, %params );
+    $class->_with_tests( $importer, $params{with_tests} );
+    $class->init( %params, importer => $importer, meta => $meta );
+
+    $class->_export_done_testing(
+        $importer,
+        $runner,
+        $runner_init,
+    );
+}
+
 sub init {
     my $class    = shift;
     my %params   = @_;
-    my $importer = $params{caller}->[0];
+    my $importer = $params{importer};
     my $meta     = $params{meta};
 
     my $wfmeta = $importer->TEST_WORKFLOW;
@@ -41,44 +72,46 @@ sub init {
     delete $stash->{$_} for qw/run_tests done_testing/;
 }
 
-sub import {
-    my $class  = shift;
-    my @caller = caller;
+sub _get_runner {
+    my $class = shift;
+    my ( $importer, $runner_class, $runner_params ) = @_;
 
-    my %defaults = $class->defaults;
-    $defaults{runner_class} ||= 'Fennec::Runner';
-    my %params = ( %defaults, @_ );
-    my $importer = $caller[0];
-
-    require_module $params{runner_class};
-    my $runner_init = $params{runner_class}->is_initialized;
+    require_module $runner_class;
+    my $runner_init = $runner_class->is_initialized;
 
     croak "Fennec cannot be used in package 'main' when the test is used with Fennec::Finder"
-        if $runner_init && $caller[0] eq 'main';
-
-    my $runner;
+        if $runner_init && $importer eq 'main';
 
     if ($runner_init) {
-        $runner = $params{runner_class}->new;
-        croak "Runner is already initialized, but it is not a $params{runner_class}"
-            unless $runner->isa( $params{runner_class} );
+        my $runner = $runner_class->new;
+        croak "Runner is already initialized, but it is not a $runner_class"
+            unless $runner->isa($runner_class);
 
         carp "Runner is already initialized, ignoring 'runner_params'"
-            if $params{runner_params};
-    }
-    else {
-        $runner = $params{runner_class}->new(
-            parallel => 0,
-            %{$params{runner_params} || {}},
-        );
-        require Fennec::EndRunner;
-        Fennec::EndRunner->set_pid($$);
-        Fennec::EndRunner->set_runner($runner);
+            if $runner_params;
+
+        return ( $runner, $runner_init );
     }
 
-    push @{$runner->test_classes} => $importer;
+    my $runner = $runner_class->new(
+        parallel => 0,
+        $runner_params ? (%$runner_params) : (),
+    );
 
-    for my $require ( @{$params{skip_without} || []} ) {
+    require Fennec::EndRunner;
+    Fennec::EndRunner->set_pid($$);
+    Fennec::EndRunner->set_runner($runner);
+
+    return ( $runner, $runner_init );
+}
+
+sub _process_deps {
+    my $class = shift;
+    my ( $runner, $deps ) = @_;
+
+    return unless $deps && @$deps;
+
+    for my $require (@$deps) {
         unless ( eval { require_module $require; 1 } ) {
             $runner->_skip_all(1);
             $runner->collector->skip("'$require' is not installed");
@@ -86,34 +119,67 @@ sub import {
             exit 0;
         }
     }
+}
+
+sub _init_meta {
+    my $class = shift;
+    my ( $importer, %params ) = @_;
 
     require Fennec::Meta;
+
     my $meta = Fennec::Meta->new(
         %params,
+
+        # Well, this is confusing.
         fennec => $class,
         class  => $importer,
     );
 
     inject_sub( $importer, 'FENNEC', sub { $meta } );
 
-    for my $base ( 'Fennec::Test', $meta->base ) {
+    return $meta;
+}
+
+sub _set_isa {
+    my $class = shift;
+    my ( $importer, @bases ) = @_;
+
+    for my $base (@bases) {
         next unless $base;
         no strict 'refs';
         require_module $base;
         push @{"$importer\::ISA"} => $base
             unless grep { $_ eq $base } @{"$importer\::ISA"};
     }
+}
 
-    for my $util ( @{$params{utils} || []} ) {
-        my $code = "package $importer; require $util; $util\->import(\@{\$params{'$util'}}); 1";
+sub _load_utils {
+    my $class = shift;
+    my ( $importer, %params ) = @_;
+
+    my $utils = $params{utils};
+    return unless $utils && @$utils;
+
+    for my $util (@$utils) {
+        require_module $util;
+        my $args = $params{$util} || [];
+        my $code = "package $importer; $util\->import(\@\$args); 1";
         eval $code || die $@;
     }
+}
 
-    for my $template ( @{$params{with_tests} || []} ) {
-        eval "package $importer; with_tests '$template'; 1" || die $@;
-    }
+sub _with_tests {
+    my $class = shift;
+    my ( $importer, $classes ) = @_;
 
-    $class->init( %params, caller => \@caller, meta => $meta );
+    return unless $classes && @$classes;
+
+    $importer->TEST_WORKFLOW->root_layer->merge_in( undef, @$classes );
+}
+
+sub _export_done_testing {
+    my $class = shift;
+    my ( $importer, $runner, $runner_init ) = @_;
 
     if ($runner_init) {
         no strict 'refs';
@@ -121,7 +187,6 @@ sub import {
         *{"$importer\::done_testing"} = sub { 1 };
     }
     else {
-        my $runner = $params{runner_class}->new;
         no strict 'refs';
         no warnings 'redefine';
         my $has_run = 0;
