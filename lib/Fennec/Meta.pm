@@ -61,13 +61,6 @@ List of test templates loaded into your class.
 
 =back
 
-=head1 API STABILITY
-
-Fennec versions below 1.000 were considered experimental, and the API was
-subject to change. As of version 1.0 the API is considered stabalized. New
-versions may add functionality, but not remove or significantly alter existing
-functionality.
-
 =head1 AUTHORS
 
 Chad Granum L<exodist7@gmail.com>

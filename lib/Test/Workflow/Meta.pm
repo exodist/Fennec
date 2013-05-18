@@ -67,7 +67,7 @@ Test::Workflow::Meta - The meta-object added to all Test-Workflow test classes.
 
 =head1 DESCRIPTION
 
-When you C<use Test::Workflow;> a function is added to you class named
+When you C<use Test::Workflow> a function is added to you class named
 'TEST_WORKFLOW' that returns the single Test-Workflow meta-object that tracks
 information about your class.
 

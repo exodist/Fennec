@@ -29,6 +29,7 @@ sub init { }
 
 sub import {
     my $self = shift->new();
+    return unless @_;
     $self->_load_guess($_) for @_;
     $self->inject_run( scalar caller );
 }
@@ -256,80 +257,12 @@ __END__
 
 =head1 NAME
 
-Fennec::Runner - The runner class that loads test files/classes and runs them.
+Fennec::Runner - Responsible for Test::Workflow interaction
 
 =head1 DESCRIPTION
 
-Loads test classes and files, processes them, then runs the tests. This class
-is a singleton instantiated by import() or new(), whichever comes first.
-
-=head1 USING THE RUNNER
-
-If you directly run a file that has C<use Fennec> it will re-execute perl and
-call the test file from within the runner. In most cases you will not need to
-use the runner directly. However you may want to create a runner script or
-module that loads multiple test files at once before running the test groups.
-This section tells you how to do that.
-
-The simplest way to load modules and files is to simply use Fennec::Runner with
-filenames and/or module names as arguments.
-
-    #!/usr/bin/env perl
-    use strict;
-    use warnings;
-    use Fennec::Runner qw{
-        Some::Test::Module
-        a_test_file.t
-        /path/to/file.pl
-        Other::Module
-    };
-
-    run();
-
-This will attempt to guess weather each item is a module or a file, then
-attempt to load it. Once all the files are loaded, C<run()> will be
-exported into your namespace for you to call.
-
-You can also provide coderefs to generate lists of modules and files:
-
-    #!/usr/bin/env perl
-    use strict;
-    use warnings;
-    use Fennec::Runner sub {
-        my $runner = shift;
-        ...
-        return ( 'Some::Module', 'a_file.pl' );
-    };
-    run();
-
-If you want to have more control over what is loaded, and do not want C<run()>
-to be run until you run it yourself you can do this:
-
-    #!/usr/bin/env perl
-    use strict;
-    use warnings;
-    use Fennec::Runner;
-
-    our $runner = Fennec::Runner->new(); # Get the singleton
-    $runner->load_file( 'some_file.t' );
-    $runner->load_module( 'Some::Module' );
-    ...
-    $runner->run();
-
-=head1 CUSTOM RUNNER CLASS
-
-If you use a test framework that is not based on L<Test::Builder> it may be
-useful to subclass the runner and override the collector_class() and init()
-methods.
-
-For more information see L<Fennec::Recipe::CustomRunner>.
-
-=head1 API STABILITY
-
-Fennec versions below 1.000 were considered experimental, and the API was
-subject to change. As of version 1.0 the API is considered stabalized. New
-versions may add functionality, but not remove or significantly alter existing
-functionality.
+Handles L<Test::Workflow> processing and concurrency. This class is a singleton
+instantiated by import() or new(), whichever comes first.
 
 =head1 AUTHORS
 

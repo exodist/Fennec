@@ -135,3 +135,19 @@ sub DESTROY {
 }
 
 1;
+
+__END__
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2013 Chad Granum
+
+Fennec is free software; Standard perl license (GPL and Artistic).
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the license for more details.

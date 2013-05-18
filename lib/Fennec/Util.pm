@@ -103,6 +103,10 @@ This class provides useful utility functions used all over Fennec.
 
 =over 4
 
+=item require_module( 'Some::Module' )
+
+Can be used to load modules stored in strings.
+
 =item inject_sub( $package, $name, $code )
 
 Inject a sub into a package.

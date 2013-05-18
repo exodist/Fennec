@@ -1,0 +1,31 @@
+=head1 NAME
+
+Fennec::Manual::CustomFennec - Customizing Fennec for you project.
+
+=head1 DESCRIPTION
+
+L<Fennec> autmatically loads several utlities for you. In addition it assumes you
+want to use L<Test::Builder>. Subclassing Fennec will let you specify exactly
+what utilities you want, and what collector to use. This way you can use your
+subclass in each test file instead of copying C<use Fennec ( YOUR CONFIG
+OPTIONS )> into each file.
+
+=head1 FENNEC SUBCLASS
+
+=head1 RUNNER SUBCLASS
+
+=head1 CUSTOM COLLECTOR
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2013 Chad Granum
+
+Fennec is free software; Standard perl license (GPL and Artistic).
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the license for more details.

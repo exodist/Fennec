@@ -159,63 +159,7 @@ testing easier, and more useful.
 There are 2 ways to use Fennec. You can use Fennec directly, or you can use the
 shiny sugar-coated interface provided by the add-on module L<Fennec::Declare>.
 
-=head2 DECLARATIVE INTERFACE
-
-B<Note:> In order to use this you B<MUST> install L<Fennec::Declare> which is a
-seperate distribution on cpan. This module is seperate because it uses the
-controversial L<Devel::Declare> module.
-
-t/some_test.t:
-    package TEST::SomeTest;
-    use strict;
-    use warnings;
-
-    use Fennec::Declare(
-        parallel  => 3,
-        test_sort => 'random',
-    );
-
-    # This is optional, there is a default 'new' if you do not override it.
-    sub new { ... }
-
-    # Test blocks are called as methods on an instance of your test package.
-    tests group_1 {
-        # Note: $self is automatically shifted for you.
-        ok( $self, "Got self automatically" );
-    };
-
-    test group_2 ( todo => 'This is not ready yet' ) {
-        # Note: $self is automatically shifted for you.
-        ok( 0, "Not ready" );
-    }
-
-    # This has one test that gets run twice, once for each case.
-    # The letter is uppercased before each test is run, but restored to
-    # lowercase after each test is run.
-    describe complex {
-        # Note: $self is automatically shifted for you.
-
-        my $letter;
-        case a { $letter => 'a' }
-        case b { $letter => 'b' }
-
-        before_each uppercase { $letter = uc $letter }
-        after_each  restore   { $letter = lc $letter }
-
-        tests is_letter {
-            like( $letter, qr/^[A-Z]$/, "Got a letter" );
-        }
-
-        # You can nest describe blocks, test blocks inside will inherit cases
-        # and before/after blocks from the parent, and can add additional ones.
-        describe inner { ... }
-    }
-
-    # It is important to always end a Fennec test with this function call.
-    done_testing;
-
-
-=head2 PURE INTERFACE
+=head2 VANILLA SYNTAX
 
 If L<Devel::Declare> and its awesome power of syntax specification scares you,
 you can always write your Fennec tests in the stone age like this... just don't
@@ -248,29 +192,41 @@ t/some_test.t:
         }
     );
 
-    # This has one test that gets run twice, once for each case.
-    # The letter is uppercased before each test is run, but restored to
-    # lowercase after each test is run.
-    describe complex => sub {
-        my $self = shift;
-        my $letter;
-        case a => sub { $letter => 'a' };
-        case b => sub { $letter => 'b' };
-
-        before_each uppercase => sub { $letter = uc $letter };
-        after_each  restore   => sub { $letter = lc $letter };
-
-        tests is_letter => sub {
-            like( $letter, qr/^[A-Z]$/, "Got a letter" );
-        };
-
-        # You can nest describe blocks, test blocks inside will inherit cases
-        # and before/after blocks from the parent, and can add additional ones.
-        describe inner => sub { ... };
-    };
-
     # It is important to always end a Fennec test with this function call.
     done_testing();
+
+=head2 DECLARE SYNTAX
+
+B<Note:> In order to use this you B<MUST> install L<Fennec::Declare> which is a
+seperate distribution on cpan. This module is seperate because it uses the
+controversial L<Devel::Declare> module.
+
+t/some_test.t:
+    package TEST::SomeTest;
+    use strict;
+    use warnings;
+
+    use Fennec::Declare(
+        parallel  => 3,
+        test_sort => 'random',
+    );
+
+    # This is optional, there is a default 'new' if you do not override it.
+    sub new { ... }
+
+    # Test blocks are called as methods on an instance of your test package.
+    tests group_1 {
+        # Note: $self is automatically shifted for you.
+        ok( $self, "Got self automatically" );
+    };
+
+    test group_2 ( todo => 'This is not ready yet' ) {
+        # Note: $self is automatically shifted for you.
+        ok( 0, "Not ready" );
+    }
+
+    # It is important to always end a Fennec test with this function call.
+    done_testing;
 
 =head1 FEATURES
 
@@ -391,7 +347,8 @@ B<Note:> These can be overriden either on import, or by subclassing Fennec.
 
 =item Child - Forking for dummies
 
-
+Child is an OO interface to forking that removes all the boilderplate such as
+checking if the pid changed, and making sure you exit the child process.
 
 =item Mock::Quick - Mocking without the eye gouging
 
@@ -470,9 +427,19 @@ common to multiple test files.
 
 =item done_testing()
 
+=item done_testing(sub { ... })
+
 Should be called at the end of your test file to kick off the RSPEC tests.
 Always returns 1, so you can use it as the last statement of your module. You
 must only ever call this once per test file.
+
+B<Never> put tests below the done_testing call. If you want tests to run AFTER
+the RSPEC workflow completes, you can pass done_testing a coderef with the
+tests.
+
+    done_testing( sub {
+        ok( 1, "This runs after the RSPEC workflow" );
+    });
 
 =back
 
@@ -570,6 +537,372 @@ See L<Test::More>, L<Test::Warn>, and L<Test::Exception>
 
 =head1 EXAMPLES
 
+Examples can be the best form of documentation.
+
+=head2 SIMPLE
+
+=head3 VANILLA SYNTAX
+
+t/simple.t
+    use strict;
+    use warnings;
+
+    use Fennec;
+
+    use_ok 'Data::Dumper';
+
+    tests dumper => sub {
+        my $VAR1;
+        is_deeply(
+            eval Dumper({ a => 1 }),
+            { a => 1 },
+            "Serialize and De-Serialize"
+        );
+    };
+
+    tests future => (
+        todo => "Not ready yet",
+        code => sub {
+            ok( 0, "I still have to write these" );
+        },
+    );
+
+    done_testing;
+
+=head3 DECLARE SYNTAX
+
+t/simple.t
+    use strict;
+    use warnings;
+
+    use Fennec::Declare;
+
+    use_ok 'Data::Dumper';
+
+    tests dumper {
+        my $VAR1;
+        is_deeply(
+            eval Dumper({ a => 1 }),
+            { a => 1 },
+            "Serialize and De-Serialize"
+        );
+
+        is(
+            eval { no strict; Dumper( { a => 1 } ) },
+            { a => 1 },
+            "Serialize and De-Serialize"
+        );
+    }
+
+    tests future( todo => "Not ready yet" ) {
+        ok( 0, "I still have to write these" );
+    }
+
+    done_testing;
+
+=head2 RUN TESTS UNDER DIFFERENT CONDITIONS
+
+This example shows 4 conditions (C<$letter> as 'a', 'b', 'c', and 'd'). It also
+has 2 test blocks, one that verifies C<$letter> is a letter, the other verifies
+it is lowercase. Each test block will be run once for each condition, 2*4=8, so
+in total 8 tests will be run.
+
+=head3 VANILLA
+
+sample.t:
+    use strict;
+    use warnings;
+
+    use Fennec;
+
+    my $letter;
+    case a => sub { $letter = 'a' };
+    case b => sub { $letter = 'b' };
+    case c => sub { $letter = 'c' };
+    case d => sub { $letter = 'd' };
+
+    tests is_letter => sub {
+        like( $letter, qr/^[a-z]$/i, "Got a letter" );
+    };
+
+    tests is_lowercase => sub {
+        is( $letter, lc( $letter ), "Letter is lowercase" );
+    };
+
+    done_testing;
+
+=head3 OBJECT ORIENTED
+
+sample.t
+    use strict;
+    use warnings;
+
+    use Fennec;
+
+    sub letter {
+        my $self = shift;
+        ( $self->{letter} ) = @_ if @_;
+        return $self->{letter};
+    }
+
+    describe letters => sub {
+        case a => sub { shift->letter('a') };
+        case b => sub { shift->letter('b') };
+        case c => sub { shift->letter('c') };
+        case d => sub { shift->letter('d') };
+
+        tests is_letter => sub {
+            my $self = shift;
+            like( $self->letter, qr/^[a-z]$/i, "Got a letter" );
+        };
+
+        tests is_lowercase => sub {
+            my $self = shift;
+            is( $self->letter, lc( $self->letter ), "Letter is lowercase" );
+        };
+    };
+
+    done_testing;
+
+=head3 DECLARE
+
+B<Note:> no need to shift $self, it is done for you!
+
+sample.t
+    use strict;
+    use warnings;
+
+    use Fennec::Declare;
+
+    sub letter {
+        my $self = shift;
+        ( $self->{letter} ) = @_ if @_;
+        return $self->{letter};
+    }
+
+    describe letters {
+        case a { $self->letter('a') }
+
+        case b { $self->letter('b') }
+
+        case c { $self->letter('c') }
+
+        case d { $self->letter('d') }
+
+        tests is_letter {
+            like( $self->letter, qr/^[a-z]$/i, "Got a letter" );
+        }
+
+        tests is_lowercase {
+            is( $self->letter, lc( $self->letter ), "Letter is lowercase" );
+        }
+    }
+
+    done_testing;
+
+=head2 MOCKING
+
+See L<Mock::Quick> for more details
+
+=head3 OBJECT ON THE FLY
+
+    my $obj = qobj(
+        foo => 'foo',
+        bar => qmeth { 'bar' },
+        baz => sub { 'baz' },
+    );
+
+    is( $obj->foo, 'foo' );
+    is( $obj->bar, 'bar' );
+    is( ref $obj->baz, 'CODE', "baz is a method that returns a coderef" );
+
+    # All methods autovivify as read/write accessors:
+    lives_ok { $obj->blah( 'x' ) };
+
+    # use qstrict() to make an object that does not autovivify accessors.
+
+=head3 TAKEOVER AN EXISTING CLASS
+
+    require Some::Class;
+    my $control = qtakeover 'Some::Class' => (
+        # Override some methods:
+        foo => sub { 'foo' },
+        bar => sub { 'bar' },
+
+        # For methods that return a simple value you don't actually need to
+        # wrap them in a sub.
+        baz => 'bat',
+    );
+
+    is( Some::Class->foo, 'foo' );
+    is( Some::Class->bar, 'bar' );
+
+    # Use the control object to make another override
+    $control->override( foo => 'FOO' );
+    is( Some::Class->foo, 'FOO' );
+
+    # Original class is restored when $control falls out of scope.
+    $control = undef;
+
+=head3 MOCK A CLASS INSTEAD OF LOADING THE REAL ONE
+
+This will prevent the real class from loading if code tries to C<require> or
+C<use> it. However when the control object falls out of scope you will be able
+to load the real one again.
+
+    my $control = qimplement 'Some::Class' => (
+        my_method => sub { ... }
+        simple    => 'foo',
+    );
+
+=head3 MOCK AN ANONYMOUS CLASS
+
+    my $control = qclass(
+        -with_new => 1, # Make a constructor for us
+        method => sub { ... },
+        simple => 'foo',
+    );
+
+    my $obj = $control->package->new;
+
+=head2 REUSABLE TEST LIBRARIES
+
+This is a test library that verifies your test file uses strict in the first 3 lines.
+You can also pass C<with_tests =E<gt> [ 'Some::Test::Lib' ]> as an import
+argument to Fennec. This matters because you can subclass Fennec to always
+include this library.
+
+t/test.t
+    use strict;
+    use warnings;
+    use Fennec;
+
+    with_tests 'Some::Test::Lib';
+
+    done_testing;
+
+lib/Some/Test/Lib.pm
+    package Some::Test::Lib;
+    use Test::Workflow;
+    use Test::More;
+    use Scalar::Util qw/blessed/;
+
+    tests check_use_strict => sub {
+        my $self  = shift;
+        my $class = blessed $self;
+
+        my $file = $class;
+        $file =~ s{::}{/}g;
+        $file .= '.pm';
+
+        my $full = $INC{$file};
+        ok( -e $full, "Found path and filename for $class" );
+        open( my $fh, '<', $full ) || die $!;
+        my $found = 0;
+
+        for ( 1 .. 3 ) {
+            $found = <$fh> =~ m/^\s*use strict;\s*$/;
+            last if $found;
+        }
+        close($fh);
+        ok( $found, "'use strict;' is in the first 3 lines of the test file" );
+    }
+
+    1;
+
+=head2 POST TESTS
+
+You cannot put any tests under C<done_testing()> Doing so will cause problems.
+However you can put tests IN done_testing.
+
+    use strict;
+    use warnings;
+
+    use Fennec;
+
+    my $foo = 1;
+
+    is( $foo, 1, "foo is 1" );
+
+    done_testing(
+        sub {
+            is( $foo, 1, "foo is still 1" );
+        }
+    );
+
+=head2 RSPEC
+
+The following test will produce output similar to the following. Keep in mind
+that the concurrent nature of Fennec means that the lines for each process may
+appear out of order relative to lines from other processes. Lines for any given
+process will always be in the correct order though.
+
+Spacing has been added, and process output has been grouped together, except
+for the main process to demonstrate that after_all really does come last.
+
+    # PID          OUTPUT
+    #---------------------------------------------
+    7253 describe runs long before everything else
+    7253 before_all runs first
+
+    7254 Case runs between before_all and before_each
+    7254 before_each runs just before tests
+    7254 tests run in the middle
+    7254 after_each runs just after tests
+
+    7255 before_each runs just before tests
+    7255 This test inherits the before and after blocks from the parent describe.
+    7255 after_each runs just after tests
+
+    7253 after_all runs last.
+
+sample.t
+    use strict;
+    use warnings;
+
+    use Fennec;
+
+    describe order => sub {
+        print "$$ describe runs long before everything else\n";
+
+        before_all setup_a => sub {
+            print "$$ before_all runs first\n";
+        };
+
+        case a_case => sub {
+            print "$$ Case runs between before_all and before_each\n";
+        };
+
+        before_each setup_b => sub {
+            print "$$ before_each runs just before tests\n";
+        };
+
+        tests a_test => sub {
+            print "$$ tests run in the middle\n";
+        };
+
+        after_each teardown_b => sub {
+            print "$$ after_each runs just after tests\n";
+        };
+
+        after_all teardown_a => sub {
+            print "$$ after_all runs last.\n";
+        };
+
+        describe nested => sub {
+            tests b_test => sub {
+                print "$$ This test inherits the before/after/case blocks from the parent describe.\n";
+            };
+        };
+    };
+
+    done_testing;
+
+=head1 MANUAL
+
+The manual can be found here: L<Fennec::Manual> it is a sort of Nexus for
+documentation, including this document.
+
 =head1 VIM INTEGRATION
 
 Insert this into your .vimrc file to bind the F8 key to running the test block
@@ -625,7 +958,7 @@ Chad Granum L<exodist7@gmail.com>
 
 Copyright (C) 2013 Chad Granum
 
-Fennec is free software; Standard perl license.
+Fennec is free software; Standard perl license (GPL and Artistic).
 
 Fennec is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS

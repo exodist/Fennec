@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Carp qw/confess/;
-use Fennec::Util qw/accessors/;
+use Fennec::Util qw/accessors require_module/;
 
 accessors qw/test_count test_failed/;
 
@@ -29,10 +29,7 @@ sub new {
     my @preference = @_ ? @_ : @PREFERENCE;
 
     for my $module (@preference) {
-        my $file = $module;
-        $file =~ s{::}{/}g;
-        $file .= '.pm';
-        require $file;
+        require_module $module;
 
         next unless $module->validate_env;
         my $collector = $module->new;
@@ -56,3 +53,19 @@ sub inc_test_failed {
 }
 
 1;
+
+__END__
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2013 Chad Granum
+
+Fennec is free software; Standard perl license (GPL and Artistic).
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the license for more details.

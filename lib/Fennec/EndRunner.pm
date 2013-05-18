@@ -50,3 +50,29 @@ END {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Fennec::EndRunner - Used to run Fennec test when legacy code does not call
+done_testing().
+
+=head1 DESCRIPTION
+
+Fennec::EndRunner - Used to run Fennec test when legacy code does not call
+done_testing(). Basically a big ugly deprecated END block.
+
+=head1 AUTHORS
+
+Chad Granum L<exodist7@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2013 Chad Granum
+
+Fennec is free software; Standard perl license.
+
+Fennec is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the license for more details.

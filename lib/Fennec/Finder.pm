@@ -83,75 +83,6 @@ sub run {
 
 __END__
 
-sub _to_run {
-    my $self = shift;
-    my ($class) = @_;
-
-    return sub {
-        my $instance = $class->can('new') ? $class->new : bless( {}, $class );
-        my $ptests   = Parallel::Runner->new( $class->FENNEC->parallel );
-        my $pforce   = $class->FENNEC->parallel ? 1 : 0;
-        my $meta     = $instance->TEST_WORKFLOW;
-
-        $meta->test_wait( sub { $ptests->finish } );
-        $meta->test_run(
-            sub {
-                my ($run) = @_;
-                $ptests->run(
-                    sub {
-                        $run->();
-                        $self->collector->end_pid();
-                    },
-                    $pforce
-                );
-            }
-        );
-
-        Test::Workflow::run_tests($instance);
-        $ptests->finish;
-        $self->check_pid;
-    };
-}
-
-sub to_run_loaded {
-    my $self = shift;
-    my ($class) = @_;
-
-    return unless $class && $class->can('TEST_WORKFLOW');
-
-    my $inner = $self->_to_run($class);
-    return sub {
-        local $self->{pid} = $$;
-        print "# Running: $class ($$)\n";
-        $inner->();
-    };
-}
-
-sub to_run_load {
-    my $self = shift;
-    my ($item) = @_;
-
-    return sub {
-        local $self->{pid} = $$;
-
-        my %loaded = map { $_ => 1 } @{$self->test_classes};
-        $self->_load_guess($item);
-        my @new = grep { !$loaded{$_} } @{$self->test_classes};
-
-        for my $class (@new) {
-            my $inner = $self->_to_run($class);
-
-            next unless $class && $class->can('TEST_WORKFLOW');
-            print "# Running: $class ($$)\n";
-            $inner->();
-        }
-    };
-}
-
-1;
-
-__END__
-
 =pod
 
 =head1 NAME
@@ -176,12 +107,12 @@ Fennec.t:
 
     run();
 
-This will find all .pm files under t/ and load them. Any that contain Fennec
-tests will register themselves to be run once run() is called.
+This will find all .pm and .ft files under t/ and load them. Any that contain
+Fennec tests will register themselves to be run once run() is called.
 
-B<Warning, if you have .pm files that are not tests they will also be loaded,
-if any of these have interactions with the packages you are testing you must
-account for them.>
+B<Warning, if you have .pm files in t/ that are not tests they will also be
+loaded, if any of these have interactions with the packages you are testing you
+must account for them.>
 
 =head1 CUSTOMISATIONS
 
@@ -206,13 +137,6 @@ L<Fennec::Finder> and override the C<validate_file( $file )> method. This method
 the filename to verify as an argument. Return true if the file should be
 loaded, false if it should not. Currently the only check is that the filename
 ends with a C<.pm>.
-
-=head2 FILE LOADING
-
-If you wish to customize which files are loaded you may subclass
-L<Fennec::Finder> and override the C<load_file( $file )> method. Currently this
-method simply calles C<require $file.> with some extra debugging code wrapped
-around it.
 
 =head1 AUTHORS
 
