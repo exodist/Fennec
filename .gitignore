@@ -8,3 +8,7 @@ old
 .build
 /_\d+
 subprojects
+MANIFEST
+MANIFEST.bak
+META.json
+META.yml
