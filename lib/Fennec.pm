@@ -82,7 +82,7 @@ sub _get_runner {
 
     if ($runner_init) {
         my $runner = $runner_class->new;
-        croak "Runner is already initialized, but it is not a $runner_class"
+        carp "Runner is already initialized, but it is not a $runner_class"
             unless $runner->isa($runner_class);
 
         carp "Runner is already initialized, ignoring 'runner_params'"
