@@ -1,0 +1,93 @@
+<dl class="listnav">
+    <dt id="concept">Features</dt>
+    <dd>
+        <h2>These are the key features of Fennec</h2>
+        <ul>
+            <li>Concurrency</li>
+            <li>Predictability</li>
+            <li>Better Mocking</li>
+            <li>State Management</li>
+            <li>RSPEC and Workflows</li>
+            <li>Customizability</li>
+            <li>Supports OOP better</li>
+            <li>No need to manage test count</li>
+        </ul>
+
+        Fennec also does the work of tying together several popular test
+        modules reducing your boilerplate code.
+    </dd>
+
+    <dt id="features">Modules</dt>
+    <dd>
+        <h2>Automatically loaded and imported</h2>
+        <dl>
+            <dt>Test::More</dt>
+            <dd>The most popular testing module</dd>
+            <dt>Test::Exception</dt>
+            <dd>Used to test code that throws exceptions</dd>
+            <dt>Test::Warn</dt>
+            <dd>Test code that issues warnings</dd>
+            <dt>Test::Workflow</dt>
+            <dd>RSPEC and other workflow/state tools</dd>
+            <dt>Mock::Quick</dt>
+            <dd>Mocking that doesn't make you want to gauge your eyes out</dd>
+            <dt>Child</dt>
+            <dd>Forking at a higher level</dd>
+        </dl>
+    </dd>
+
+    <dt id="simpleexample">Example</dt>
+    <dd>
+        <div class="code" src="simpleexample.pl"></div>
+        
+    </dd>
+
+    <dt id="predictability">Predictability</dt>
+    <dd>
+        <h2>Predictability and randomness</h2>
+
+        There are 2 conflicting approaches to unit testing:
+        <dl>
+            <dt>Consistant</dt>
+            <dd>
+                Every run of the unit test should be the same so that any
+                failure or success is reproducable.
+            </dd>
+            <dt>Randomized</dt>
+            <dd>
+                The unit test should check for bad interactions by running in a
+                random order.
+            </dd>
+        </dl>
+
+        Both these policies have disadvantages, and if you must pick one I
+        recommend 'Consistant'.
+
+        <h3>Fennec gives you both!</h3>
+
+        <ul>
+            <li>Test blocks run in random order by default</li>
+            <li>srand() is always set with the current date</li>
+            <li>You can specify the FENNEC_SEED environment variable to set the seed</li>
+            <li>You can tell Fennec that a specific file should run in a specific order</li>
+        </ul>
+
+        This mean that you can test interactions with a random run order.
+        However the 'date as seed' policy means that on a given day the order
+        will always be the same. Finally the ability to specify the seed lets
+        you reproduce a success or failure from any previous run.
+    </dd>
+
+    <dt id="Selection">Selection</dt>
+    <dd>
+    </dd>
+
+    <dt id="arguments">Arguments</dt>
+    <dd>
+    </dd>
+
+    <dt id="subclass">Subclass</dt>
+    <dd>
+    </dd>
+</dl
+

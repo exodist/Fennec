@@ -3,6 +3,7 @@
  * Included by default
  * Random Seed
  * Simple Preview-sample (What does it look like?)
+ * Run a specific block (Vim Integration)
  * Import Arguments
 
 * Test-Workflow
@@ -12,7 +13,6 @@
  -- Note Parallel --
  * Test blocks (declare)
  -- Only declare moving forward --
- * Run a specific block (Vim Integration)
  * Test order
  * Describe
  * Setup/Teardown/Case

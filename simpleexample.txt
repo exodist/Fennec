@@ -1,0 +1,10 @@
+$ prove -v simpleexample.pl
+*** Seeding random with date (20130419) ***
+# Using temp dir: '/tmp/k09NDAURPM' for process results
+ok - use Data::Dumper;
+# Running: main
+ok - main->can('Dumper')
+ok - Group: exports
+ok - Serialize and De-Serialize
+ok - Group: dumper
+1..5
