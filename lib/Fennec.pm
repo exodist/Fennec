@@ -5,7 +5,7 @@ use warnings;
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module/;
 use Carp qw/croak carp/;
-our $VERSION = '2.001';
+our $VERSION = '2.002';
 
 sub defaults {
     (
