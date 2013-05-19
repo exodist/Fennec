@@ -28,7 +28,7 @@ my $build = Module::Build->new(
         resources => {
             repository  => 'http://github.com/exodist/Fennec',
             bugtracker  => 'http://github.com/exodist/Fennec/issues',
-            homepage    => 'http://open-exodus.net/projects/Fennec'
+            homepage    => 'http://exodist.github.io/Fennec/'
         },
     },
 );
