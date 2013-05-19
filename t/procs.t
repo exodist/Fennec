@@ -109,7 +109,7 @@ describe procs_nested => sub {
     };
 };
 
-after_all order_check => sub {
+done_testing( sub {
     close($fh);
     open( $fh, '<', $name ) || die $!;
     is_deeply( join( '' => <$fh> ), <<"    EOT", "Order is correct" );
@@ -120,6 +120,4 @@ INNER SETUP
 INNER TEST
 INNER TEST
     EOT
-};
-
-done_testing;
+});

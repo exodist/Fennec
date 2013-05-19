@@ -6,7 +6,7 @@ use base 'Fennec::Collector::TB';
 
 use File::Temp;
 
-use Fennec::Util qw/ accessors /;
+use Fennec::Util qw/ accessors verbose_message /;
 
 accessors qw/tempdir handles tempobj _pid/;
 
@@ -16,8 +16,7 @@ sub new {
     my $self = $class->SUPER::new(@_);
 
     my $temp = File::Temp::tempdir( CLEANUP => 0 );
-    print STDERR "# Using temp dir: '$temp' for process results\n"
-        if $ENV{HARNESS_IS_VERBOSE};
+    verbose_message("# Using temp dir: '$temp' for process results\n");
 
     $self->_pid($$);
     $self->handles( {} );

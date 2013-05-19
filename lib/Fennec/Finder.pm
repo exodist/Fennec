@@ -52,6 +52,7 @@ sub validate_file {
 
 sub run {
     my $self = shift;
+    my ($follow) = @_;
 
     $self->_ran(1);
 
@@ -74,6 +75,12 @@ sub run {
     }
 
     $frunner->finish();
+
+    if ($follow) {
+        $self->collector->collect;
+        $self->collector->diag("Entering final follow-up stage\n");
+        $follow->();
+    }
 
     $self->collector->collect;
     $self->collector->finish();

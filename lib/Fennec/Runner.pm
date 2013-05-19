@@ -2,14 +2,17 @@ package Fennec::Runner;
 use strict;
 use warnings;
 
+use Fennec::Util qw/verbose_message/;
+
 BEGIN {
     my @ltime = localtime;
     $ltime[5] += 1900;
+    $ltime[4] += 1;      # months start at 0?
     for ( 3, 4 ) {
         $ltime[4] = "0$ltime[$_]" unless $ltime[$_] > 9;
     }
     my $seed = $ENV{FENNEC_SEED} || join( '', @ltime[5, 4, 3] );
-    print "\n*** Seeding random with date ($seed) ***\n";
+    verbose_message("\n*** Seeding random with date ($seed) ***\n");
     srand($seed);
 }
 
@@ -158,7 +161,7 @@ sub prunner {
 
 sub run {
     my $self = shift;
-    my ($follow_up) = @_;
+    my ($follow) = @_;
 
     $self->_ran(1);
 
@@ -167,10 +170,13 @@ sub run {
         $self->run_test_class($class);
     }
 
-    $self->collector->collect;
-    $follow_up->() if $follow_up;
-    $self->collector->collect;
+    if ($follow) {
+        $self->collector->collect;
+        verbose_message("Entering final follow-up stage\n");
+        $follow->();
+    }
 
+    $self->collector->collect;
     $self->collector->finish();
 }
 
@@ -180,7 +186,7 @@ sub run_test_class {
 
     return unless $class;
 
-    print "# Running: $class\n";
+    verbose_message("Entering workflow stage: $class\n");
     return unless $class->can('TEST_WORKFLOW');
 
     my $instance = $class->can('new') ? $class->new : bless( {}, $class );
@@ -204,6 +210,13 @@ sub run_test_class {
 
     Test::Workflow::run_tests($instance);
     $ptests->finish;
+
+    if ( my $post = $class->FENNEC->post ) {
+        $self->collector->collect;
+        verbose_message("Entering follow-up stage: $class\n");
+        $post->();
+    }
+
     $self->check_pid;
 }
 

@@ -2,10 +2,12 @@ package Fennec;
 use strict;
 use warnings;
 
+BEGIN { require Fennec::Runner }
+
 use Fennec::Test;
-use Fennec::Util qw/inject_sub require_module/;
+use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.002';
+our $VERSION = '2.003';
 
 sub defaults {
     (
@@ -50,6 +52,8 @@ sub import {
         $defaults{runner_params},
     );
 
+    verbose_message("Entering build stage: $importer\n");
+
     push @{$runner->test_classes} => $importer;
 
     my $meta = $class->_init_meta( $importer, %params );
@@ -66,6 +70,8 @@ sub import {
         $runner,
         $runner_init,
     );
+
+    verbose_message("Entering primary stage: $importer\n");
 }
 
 sub init {
@@ -195,7 +201,10 @@ sub _export_done_testing {
     if ($runner_init) {
         no strict 'refs';
         no warnings 'redefine';
-        *{"$importer\::done_testing"} = sub { 1 };
+        *{"$importer\::done_testing"} = sub {
+            $importer->FENNEC->post(@_) if @_;
+            return 1;
+        };
     }
     else {
         no strict 'refs';
@@ -207,7 +216,8 @@ sub _export_done_testing {
 
             Fennec::EndRunner->set_runner(undef);
 
-            $runner->run(@_);
+            $importer->FENNEC->post(@_) if @_;
+            $runner->run();
 
             1;
         };

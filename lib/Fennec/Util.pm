@@ -5,7 +5,9 @@ use Exporter::Declare;
 use Carp qw/croak/;
 use Scalar::Util qw/blessed/;
 
-exports qw/inject_sub accessors get_test_call require_module/;
+exports qw{
+    inject_sub accessors get_test_call require_module verbose_message
+};
 
 sub inject_sub {
     my ( $package, $name, $code ) = @_;
@@ -79,6 +81,14 @@ sub get_test_call {
     }
 
     return ( $runner ? @$runner : ( "UNKNOWN", "UNKNOWN", 0 ) );
+}
+
+sub verbose_message {
+    return
+        if $ENV{HARNESS_ACTIVE}
+        && !$ENV{HARNESS_IS_VERBOSE};
+
+    print @_;
 }
 
 sub tb_ok         { Test::Builder->new->ok(@_) }
