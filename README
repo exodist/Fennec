@@ -201,6 +201,14 @@ IMPORT ARGUMENTS
         to fork for each test, but only run one at a time. Set to 0 to
         prevent forking.
 
+    collector_class => 'Fennec::Collector::TB::TempFiles'
+        Specify which collector to use. Defaults to a Test::Builder based
+        collector that uses temp files to funnel tests from child procs to
+        the parent.
+
+        You generally won't need to specify this, unless you use a test
+        infrastructure that is neither TAP nore Test::Builder based.
+
     runner_class => 'Fennec::Runner'
         Specify the runner class. You probably don't need this.
 
@@ -218,6 +226,15 @@ IMPORT ARGUMENTS
 
     utils => [ 'Test::Foo', ... ]
         Load these modules instead of the default list.
+
+        If you need to specify import arguments for any specific util class,
+        you can use the class name as the key with an arrayref containing
+        the arguments.
+
+            use Fennec(
+                utils          => [ 'Some::Module' ],
+                'Some::Module' => [ arg => $val, ... ],
+            );
 
     with_tests => [ 'Reusable::Tests', 'Common::Tests' ]
         Load these modules that have reusable tests. Reusable tests are
