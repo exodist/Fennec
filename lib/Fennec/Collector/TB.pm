@@ -22,7 +22,7 @@ sub finish {
     print STDOUT "\n";
 }
 
-sub initialize {
+sub init {
     my $self = shift;
     require Test::Builder;
 
@@ -92,6 +92,10 @@ sub PRINT {
 1;
 
 __END__
+
+=head1 NAME
+
+Fennec::Collector::TB - Base class for Test::Builder collectors
 
 =head1 AUTHORS
 

@@ -17,7 +17,7 @@ use Carp qw/carp croak confess/;
 use List::Util qw/shuffle/;
 use Scalar::Util qw/blessed/;
 use Fennec::Util qw/accessors require_module/;
-use Fennec::Collector;
+use Fennec::Collector::TB::TempFiles;
 use Parallel::Runner;
 
 accessors qw/pid test_classes collector _ran _skip_all/;
@@ -58,10 +58,8 @@ sub new {
 
     my %params = @_;
 
-    my $collector =
-        $params{collector_class}
-        ? Fennec::Collector->new( $params{collector_class} )
-        : Fennec::Collector->new();
+    my $collector_class = $params{collector_class} || 'Fennec::Collector::TB::TempFiles';
+    my $collector = $collector_class->new();
 
     $SINGLETON = bless(
         {

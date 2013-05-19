@@ -62,8 +62,6 @@ sub init {
     my $meta     = $params{meta};
 
     my $wfmeta = $importer->TEST_WORKFLOW;
-    Fennec::Runner->new->collector->update_wfmeta($wfmeta);
-
     $wfmeta->test_sort( $meta->test_sort )
         if $meta->test_sort;
 
@@ -455,6 +453,14 @@ Load the specified module and make it the base class for your test class.
 How many test blocks can be run in parallel. Default is 3. Set to 1 to fork for
 each test, but only run one at a time. Set to 0 to prevent forking.
 
+=item collector_class => 'Fennec::Collector::TB::TempFiles'
+
+Specify which collector to use. Defaults to a Test::Builder based collector
+that uses temp files to funnel tests from child procs to the parent.
+
+You generally won't need to specify this, unless you use a test infrastructure
+that is neither TAP nore Test::Builder based.
+
 =item runner_class => 'Fennec::Runner'
 
 Specify the runner class. You probably don't need this.
@@ -476,6 +482,14 @@ Code block accepts a list of Test::Workflow::Test objects.
 =item utils => [ 'Test::Foo', ... ]
 
 Load these modules instead of the default list.
+
+If you need to specify import arguments for any specific util class, you can
+use the class name as the key with an arrayref containing the arguments.
+
+    use Fennec(
+        utils          => [ 'Some::Module' ],
+        'Some::Module' => [ arg => $val, ... ],
+    );
 
 =item with_tests => [ 'Reusable::Tests', 'Common::Tests' ]
 

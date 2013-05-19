@@ -12,9 +12,44 @@ OPTIONS )> into each file.
 
 =head1 FENNEC SUBCLASS
 
-=head1 RUNNER SUBCLASS
+You can subclass Fennec and override the defaults sub to your specification.
+The defaults sub should return a list of Fennec import argument key-pairs.
+
+My/Fennec.pm
+    use strict;
+    use warnings;
+
+    use base 'Fennec';
+
+    sub defaults {
+        my $class = shift;
+        my %params = $class->SUPER::defaults;
+
+        # Add a new autoloading utility with import arguments.
+        push @{ $params->{utils} } => 'My::Util';
+        $params->{'My::Util'} = [ 'util' => 'args' ];
+
+        # Default number of concurrent procs for the test to use.
+        $params->{parallel} = 3;
+
+        return %params;
+    }
+
+    1;
 
 =head1 CUSTOM COLLECTOR
+
+The collector is responsible for 2 jobs:
+1) In the parent process it is responsible for gathering all test results from
+the child processes.
+2) In the child processes it is responsbile for sending results to the parent
+process.
+
+If TAP is not your thing, or you want to use Fennec with existing tests that do
+not use Test::Builder, you can create a custom collector to work for you.
+
+Documentation for a custom Collector can be found in the L<Fennec::Collector>
+POD.
 
 =head1 AUTHORS
 

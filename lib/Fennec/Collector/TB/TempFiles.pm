@@ -10,22 +10,21 @@ use Fennec::Util qw/ accessors /;
 
 accessors qw/tempdir handles tempobj _pid/;
 
-sub validate_env { 1 }
-
 sub new {
     my $class = shift;
+
+    my $self = $class->SUPER::new(@_);
 
     my $temp = File::Temp::tempdir( CLEANUP => 0 );
     print STDERR "# Using temp dir: '$temp' for process results\n"
         if $ENV{HARNESS_IS_VERBOSE};
 
-    return bless {
-        _pid    => $$,
-        handles => {},
+    $self->_pid($$);
+    $self->handles( {} );
+    $self->tempobj($temp);
+    $self->tempdir("$temp");
 
-        tempobj => $temp,
-        tempdir => "$temp",
-    }, $class;
+    return $self;
 }
 
 sub report {
@@ -137,6 +136,11 @@ sub DESTROY {
 1;
 
 __END__
+
+=head1 NAME
+
+Fennec::Collector::TB::TempFiles - Test::Builder collector that uses temporary
+files to convey results.
 
 =head1 AUTHORS
 
