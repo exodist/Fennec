@@ -155,6 +155,52 @@ function process( id, container ) {
             }
         )
     });
+
+    container.find( 'div.code' ).each( function() {
+        var list = $(this);
+        jQuery.ajax(
+            list.attr( 'src' ),
+            {
+                dataType: 'text',
+                success: function( data ) {
+                    list.replaceWith( build_code( data ));
+                    fixView();
+                },
+                error: function(blah, message1, message2) {
+                    $( '#error_window' ).show();
+                    $( '#error_window ul.errors' ).append( "<li>Error loading " + list.attr( 'src' ) + "</li>" )
+                    fixView();
+                }
+            }
+        )
+    });
+
+    container.find( 'div.output' ).each( function() {
+        var list = $(this);
+        jQuery.ajax(
+            list.attr( 'src' ),
+            {
+                dataType: 'text',
+                success: function( data ) {
+                    list.replaceWith( build_output( data ));
+                    fixView();
+                },
+                error: function(blah, message1, message2) {
+                    $( '#error_window' ).show();
+                    $( '#error_window ul.errors' ).append( "<li>Error loading " + list.attr( 'src' ) + "</li>" )
+                    fixView();
+                }
+            }
+        )
+    });
+}
+
+function build_code( data ) {
+    return '<div class="code">' + data + '</div>';
+}
+
+function build_output( data ) {
+    return '<pre class="output">' + data + '</pre>';
 }
 
 function build_sub_list( pid, data ) {
