@@ -5,7 +5,7 @@ use warnings;
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module/;
 use Carp qw/croak carp/;
-our $VERSION = '2.000';
+our $VERSION = '2.001';
 
 sub defaults {
     (
@@ -22,6 +22,18 @@ sub defaults {
         with_tests   => [],
         Child        => ['child'],
     );
+}
+
+sub _setup_class {
+    my $class = shift;
+    my ( $runner, $importer, $load ) = @_;
+    return unless $load;
+
+    require_module $load;
+
+    no strict 'refs';
+    *{"$importer\::CLASS"} = \$load;
+    *{"$importer\::class"} = sub { $load };
 }
 
 sub import {
@@ -42,6 +54,7 @@ sub import {
 
     my $meta = $class->_init_meta( $importer, %params );
 
+    $class->_setup_class( $runner, $importer, $params{class} );
     $class->_process_deps( $runner, $params{skip_without} );
     $class->_set_isa( $importer, 'Fennec::Test', $meta->base );
     $class->_load_utils( $importer, %params );
@@ -447,6 +460,26 @@ L<Test::Exception> - Test code that throws exceptions
 =item base => 'Some::Base'
 
 Load the specified module and make it the base class for your test class.
+
+=item class => 'What::To::Test'
+
+Used to specify the name of the package your test file is validating. When this
+parameter is specified 3 things are done for you: The class is automatically
+loaded, the $CLASS variable is imported and contains the module name, and the
+class() subroutine is defined and returns the name.
+
+    use Fennec class => 'Foo::Bar';
+
+    ok( $INC{'Foo/Bar.pm'}, "Loaded 'Foo::Bar'" );
+    is( $CLASS, 'Foo::Bar', "We have \$CLASS" );
+    is( class(), 'Foo::Bar', "We have class()" );
+
+    tests method => sub {
+        my $self = shift;
+        is( $self->class(), 'Foo::Bar', "We have class() method" );
+    };
+
+    done_testing;
 
 =item parallel => $PROC_LIMIT
 

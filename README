@@ -196,6 +196,26 @@ IMPORT ARGUMENTS
         Load the specified module and make it the base class for your test
         class.
 
+    class => 'What::To::Test'
+        Used to specify the name of the package your test file is
+        validating. When this parameter is specified 3 things are done for
+        you: The class is automatically loaded, the $CLASS variable is
+        imported and contains the module name, and the class() subroutine is
+        defined and returns the name.
+
+            use Fennec class => 'Foo::Bar';
+
+            ok( $INC{'Foo/Bar.pm'}, "Loaded 'Foo::Bar'" );
+            is( $CLASS, 'Foo::Bar', "We have \$CLASS" );
+            is( class(), 'Foo::Bar', "We have class()" );
+
+            tests method => sub {
+                my $self = shift;
+                is( $self->class(), 'Foo::Bar', "We have class() method" );
+            };
+
+            done_testing;
+
     parallel => $PROC_LIMIT
         How many test blocks can be run in parallel. Default is 3. Set to 1
         to fork for each test, but only run one at a time. Set to 0 to

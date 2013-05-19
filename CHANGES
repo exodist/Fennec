@@ -1,3 +1,18 @@
+V2.001 - May 18 2013
+    * Add 'class' import argument
+
+v2.000 - May 18 2013
+    * Replaced listener system with collector system
+    * Removed evil auto-run hack
+    * LOTS of bugfixes
+    * Fixed win32 (!!!)
+    * Added Child.pm as a default import
+    * Lots of new features
+    * Architecture overhaul
+    * Removed dead code
+    * Lots of simplifications
+    * Additional testing
+
 v1.014 - May 07 2013
     * Fixed more ordering issues
 
