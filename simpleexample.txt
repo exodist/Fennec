@@ -1,10 +1,11 @@
-$ prove -v simpleexample.pl
-*** Seeding random with date (20130419) ***
-# Using temp dir: '/tmp/k09NDAURPM' for process results
+*** Seeding random with date (20130519) ***
+# Using temp dir: '/tmp/P2OuzjhHps' for process results
+Entering build stage: main
+Entering primary stage: main
 ok - use Data::Dumper;
-# Running: main
-ok - main->can('Dumper')
-ok - Group: exports
+Entering workflow stage: main
 ok - Serialize and De-Serialize
 ok - Group: dumper
+ok - main->can('Dumper')
+ok - Group: exports
 1..5

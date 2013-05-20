@@ -1,5 +1,39 @@
 <dl class="listnav">
-    <dt id="concept">Features</dt>
+    <dt id="concept">Concept</dt>
+    <dd>
+        <h2>Concept</h2>
+
+        Fennec is the testers toolbox. The idea it to put all the things a
+        tester needs in a single place, and to take advantage of any
+        opportunity to enhance them.
+        <p>
+
+        Fennec ties together several testing related modules and enhances their
+        functionality in ways you don't get when loading them individually.
+        Fennec makes testing easier, and more useful. Areas Fennec effects are
+        Concurrency, State, Workflow, Tools, and Mocking.
+        <p>
+
+        <h2>History</h2>
+        The concept for <b>Fennec</b> came about after seeing test frameworks
+        not based on Test::Builder that had some desirable capabilities.
+        Unfortunately these frameworks also lacked things that made
+        Test::Builder desirable.  Initially Fennec was designed as an
+        independant framework that had capabilities gathered from many
+        different frameworks.
+        <p>
+        With <b>Fennec 1.000</b> the architecture was rewritten to be based off
+        of Test::Builder. Other features were re-written to take advantage of
+        Test::Builder and tools built from it. Finally several useful
+        components of Fennec were broken up into additional distributions.
+        <p>
+        <b>Fennec 2.000</b> Introduces some architecture changes that improve
+        on design mistakes of 1.000. In addition it fixes bugs, and introduces
+        handy new features.
+        <p>
+    </dd>
+
+    <dt id="features">Features</dt>
     <dd>
         <h2>These are the key features of Fennec</h2>
         <ul>
@@ -11,13 +45,14 @@
             <li>Customizability</li>
             <li>Supports OOP better</li>
             <li>No need to manage test count</li>
+            <li>fork() just works in fennec tests</li>
         </ul>
 
         Fennec also does the work of tying together several popular test
         modules reducing your boilerplate code.
     </dd>
 
-    <dt id="features">Modules</dt>
+    <dt id="modules">Modules</dt>
     <dd>
         <h2>Automatically loaded and imported</h2>
         <dl>
@@ -38,10 +73,31 @@
 
     <dt id="simpleexample">Example</dt>
     <dd>
-        simpleexample.pl:<br />
-        <div class="code" src="simpleexample.pl"></div>
-        <br />Output:<br />
-        <div class="output" src="simpleexample.txt"></div>
+        <dl class="sub_list">
+            <dt>Vanilla</dt>
+            <dd>
+                Here is a simple test file thats tests Data::Dumper.<p>
+                <small>(Vanilla Syntax)</small>
+                <div class="code" src="simpleexamplev.pl"></div>
+            </dd>
+            <dt>Declare</dt>
+            <dd>
+                Here is a simple test file thats tests Data::Dumper.<p>
+                <small>(Fennec::Declare Syntax)</small>
+                <div class="code" src="simpleexample.pl"></div>
+            </dd>
+            <dt>Output</dt>
+            <dd>
+                Here we can see the verbose output of the test file. Nothing
+                here would be displayed without the -v flag to prove.
+                <div class="output" src="simpleexample.txt"></div>
+
+                Note, we see the output for our 3 explicit tests, as well as 2
+                additional ones for our implicit tests. The codeblocks that
+                surround our tests are tests as well, they fail if the
+                codeblock dies or throws an exception.
+            </dd>
+        </dl>
     </dd>
 
     <dt id="predictability">Predictability</dt>
@@ -50,7 +106,7 @@
 
         There are 2 conflicting approaches to unit testing:
         <dl>
-            <dt>Consistant</dt>
+            <dt>Consistent</dt>
             <dd>
                 Every run of the unit test should be the same so that any
                 failure or success is reproducable.
@@ -82,14 +138,253 @@
 
     <dt id="Selection">Selection</dt>
     <dd>
+        <h2>Running a subset of tests</h2>
+
+        <div style="border-left: 1px dotted grey; padding-left:5px;">
+            Have you ever had to debug a broken test at the very end of a long
+            running test file?
+        </div>
+        <p>
+
+        With Fennec most tests should be grouped together by functionality or
+        subsystem. These groups will usually be contained in a 'tests'
+        codeblock. With fennec you can specify the 'FENNEC_TEST' environment
+        variable. This variable can be set to a test-block name, or a line
+        number. The line number can be any line between the start and end of
+        the block, this is useful for editor integration.
+        <p>
+
+        <h2>Vim Integration</h2>
+
+        Vim integration is easy. The following added to your vimrc lets you
+        press F8 to run whatever fennec test block is under your cursor.
+
+        <div class="vim" src="vimrc.vim"></div>
+
     </dd>
 
     <dt id="arguments">Arguments</dt>
     <dd>
+        <dl class="sub_list">
+            <dt>class</dt>
+            <dd>
+                Used to specify the name of the package your test file is
+                validating. When this parameter is specified 3 things are done
+                for you: The class is automatically loaded, the $CLASS variable
+                is imported and contains the module name, and the class()
+                subroutine is defined and returns the name.
+
+                <div class="code" src="classarg.pl"></div>
+            </dd>
+
+            <dt>utils</dt>
+            <dd>
+                Load these modules instead of the default list.
+
+                If you need to specify import arguments for any specific util
+                class, you can use the class name as the key with an arrayref
+                containing the arguments.
+
+                <div class="code" src="utilsarg.pl"></div>
+            </dd>
+
+            <dt>base</dt>
+            <dd>
+                Load the specified module and make it the base class for your test class.
+
+                <script class="code">
+                    use Fennec base => 'My::Base::Class';
+                </script>
+
+                This is much like 'parent' or 'base', but it may save you a
+                line. Really it is a pointless feature left in for legacy code
+                that actually used it.
+            </dd>
+   
+            <dt>parallel</dt>
+            <dd>
+                How many test blocks can be run in parallel.
+                <ul>
+                    <li>Default is 3</li>
+                    <li>Set to 1 to fork for each test, but only run one at a time.</li>
+                    <li>Set to 0 to prevent forking.</li>
+                    <li>Set to any positive integer.</li>
+                </ul>
+
+                Only test blocks are parallelized:
+
+                <script class="code">
+                    use Fennec::Declare parallel => 3;
+
+                    ok( 1, "This is run in the initial process" );
+
+                    tests block1 { print "This is in a child process" }
+                    tests block2 { print "This is in a another child process" }
+
+                    # The block above are not actually run until this gets
+                    # called.
+                    done_testing();
+                </script>
+            </dd>
+   
+            <dt>collector_class</dt>
+            <dd>
+                Specify which collector to use. Defaults to a Test::Builder
+                based collector that uses temp files to funnel tests from
+                child procs to the parent.
+                <p> 
+                You generally won't need to specify this, unless you use a
+                test infrastructure that is neither TAP nor Test::Builder
+                based.
+
+                <script class="code">
+                    use Fennec collector_class => 'My::Collector';
+                </script>
+            </dd>
+   
+            <dt>runner_class</dt>
+            <dd>
+                Specify the runner class. You probably don't need this.
+
+                <script class="code">
+                    use Fennec runner_class => 'My::Collector';
+                </script>
+            </dd>
+   
+            <dt>runner_params</dt>
+            <dd>
+                Lets you specify arguments used when Fennec::Runner is
+                initialized.
+
+                <script class="code">
+                    use Fennec(
+                        runner_class => 'My::Collector',
+                        runner_params => { foo => 'bar' },
+                    );
+                </script>
+            </dd>
+   
+            <dt>skip_without</dt>
+            <dd>
+                Tell Fennec to skip the test file if any of the specified
+                modules are missing.
+
+                <script class="code">
+                    use Fennec skip_without => [ 'Optional::Module' ];
+                </script>
+
+                This is useful if you have a test for optional functionality
+                that only works if another module is installed.
+            </dd>
+   
+            <dt>test_sort</dt>
+            <dd>
+                <ul>
+                    <li>random</li>
+                    <li>sorted</li>
+                    <li>ordered</li>
+                    <li>sub { ... }</li>
+                </ul>
+ 
+                <br />
+                Examples:
+                <script class="code">
+                    # Run in the order in which the blocks were defined
+                    use Fennec test_sort => 'ordered';
+
+                    # Run in sorted (ASCII) order
+                    use Fennec test_sort => 'sorted';
+                </script>
+
+                Code block accepts a list of Test::Workflow::Test objects.
+
+                <script class="code">
+                    use Fennec test_sort => sub {
+                        my @test_objs = @_;
+                        ...
+                        return @sorted_objs;
+                    };
+                </script>
+            </dd>
+   
+            <dt>with_tests</dt>
+            <dd>
+                Load these modules that have reusable tests. Reusable tests are tests that are
+                common to multiple test files.
+                <p>
+                Test:
+                <script class="code">
+                    use Fennec with_tests => [ 'Common::Tests' ];
+                    ...
+                    done_testing;
+                </script>
+
+                Common/Tests.pm:
+                <script class="code">
+                    package Common::Tests;
+                    use Test::Workflow;
+
+                    tests check_sanity => sub {
+                        ok( 1, "1 is true" );
+                        ok( 1 < 2, "Math seems to work" );
+                    };
+
+                    1;
+                </script>
+            </dd>
+        </dl>
     </dd>
 
     <dt id="subclass">Subclass</dt>
     <dd>
+        Sometimes a project may end up using a set of Fennec arguments in
+        almost every test. Sometimes there are utility modules everyone on the
+        project wants by default. When this happens it can be useful for a
+        project to subclass Fennec or Fennec::Declare.
+
+        <script class="code">
+            use base 'Fennec::Declare';
+             
+            sub defaults {
+                my $class = shift;
+                my %params = $class->SUPER::defaults;
+             
+                # Add a new autoloading utility with import arguments.
+                push @{ $params->{utils} } => 'My::Util';
+                $params->{'My::Util'} = [ 'util' => 'args' ];
+             
+                # Default number of concurrent procs for the test to use.
+                $params->{parallel} = 3;
+             
+                return %params;
+            }
+             
+            1;
+        </script>
+    </dd>
+
+    <dt id="posttest">Post-Testing</dt>
+    <dd>
+        Sometimes you want to have tests that run after all the test blocks and
+        workflows complete. That is you want them to be the absolute last thing
+        run. In these cases you can pass a coderef to done_testing(). This will
+        ensure the codeblock is the very last thing run before Fennec cleans
+        itself up. This is important because <B>You cannot have tests after
+        done_testing!</b>
+
+        <script class="code">
+            use Fennec;
+
+            ...
+
+            done_testing( sub {
+                ok( 1, "This is the last assertion!" );  
+            });
+        </script>
+
+        This is rarely useful, however it can be necessary when testing Fennec
+        plugins to ensure you ran the desired number of tests, something Fennec
+        normally prevents you from worrying about.
     </dd>
 </dl
 

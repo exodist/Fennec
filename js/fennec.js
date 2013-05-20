@@ -52,7 +52,7 @@ function build_content( data ) {
     var subnav = $( 'ul#main_subnav' );
 
     var hash = window.location.hash;
-    if ( !hash ) hash = '#about';
+    if ( !hash ) hash = '#fennec';
     var nav = hash.split('-');
 
     var new_stuff = $( '<div></div>' );
@@ -81,6 +81,7 @@ function build_content( data ) {
                     sn.show();
                     sn.children().removeClass('active');
                     subnav.children().hide();
+                    sn.children().first().click();
                     navitem.unbind( 'click' );
                     navitem.click( function() {
                         subnav.children().show();
@@ -135,25 +136,18 @@ function process( id, container ) {
         )
     });
 
-    container.find( 'div.sub_list' ).each( function() {
-        var list = $(this);
-        jQuery.ajax(
-            list.attr( 'src' ),
-            {
-                async: false,
-                dataType: 'json',
-                success: function( data ) {
-                    list.detach();
-                    build_sub_list( id, data );
-                    fixView();
-                },
-                error: function(blah, message1, message2) {
-                    $( '#error_window' ).show();
-                    $( '#error_window ul.errors' ).append( "<li>Error loading " + list.attr( 'src' ) + "</li>" )
-                    fixView();
-                }
-            }
-        )
+    container.find( 'dl.sub_list' ).each( function() {
+        $(this).detach();
+        build_sub_list( id, $(this) );
+        fixView();
+    });
+
+    process_samples( container );
+}
+
+function process_samples( container ) {
+    container.find( 'script.code' ).each( function() {
+        $(this).replaceWith( build_code( $(this).text() ));
     });
 
     container.find( 'div.code' ).each( function() {
@@ -193,174 +187,74 @@ function process( id, container ) {
             }
         )
     });
+
+    container.find( 'div.vim' ).each( function() {
+        var list = $(this);
+        jQuery.ajax(
+            list.attr( 'src' ),
+            {
+                dataType: 'text',
+                success: function( data ) {
+                    list.replaceWith( build_vim( data ));
+                    fixView();
+                },
+                error: function(blah, message1, message2) {
+                    $( '#error_window' ).show();
+                    $( '#error_window ul.errors' ).append( "<li>Error loading " + list.attr( 'src' ) + "</li>" )
+                    fixView();
+                }
+            }
+        )
+    });
 }
 
 function build_code( data ) {
-    return '<div class="code">' + data + '</div>';
+    var brush = new SyntaxHighlighter.brushes.Perl();
+
+    brush.init({ toolbar: false });
+    return brush.getHtml( data );
 }
 
 function build_output( data ) {
-    return '<pre class="output">' + data + '</pre>';
+    var brush = new SyntaxHighlighter.brushes.TAP();
+
+    brush.init({ toolbar: false });
+    return brush.getHtml( data );
 }
 
-function build_sub_list( pid, data ) {
+function build_vim( data ) {
+    var brush = new SyntaxHighlighter.brushes.Vimscript();
+
+    brush.init({ toolbar: false });
+    return brush.getHtml( data );
+}
+
+
+function build_sub_list( pid, list ) {
     var subnav = $( '<ul id="SN-' + pid + '" style="display: none;" class="second_subnav listnav"></ul>' );
 
     var hash = window.location.hash;
-    if ( !hash ) hash = '#about';
+    if ( !hash ) hash = '#fennec';
     var nav = hash.split('-');
 
-    for (navkey in data) {
-        build_sub_list_item( pid, navkey, data, nav, subnav );
-    }
+    list.find( 'dt' ).each( function() {
+        var navkey = $(this).text();
+        var section = $(this).next();
+        process_samples( section );
+        build_sub_list_item( pid, navkey, section, nav, subnav );
+    });
 
     $("#subnav").append( subnav );
 }
 
-function build_sub_list_item( pid, navkey, data, nav, subnav ) {
-    var navname    = data[navkey]["name"];
-    if ( !navname ) navname = navkey;
-    var desc       = data[navkey]["desc"];
-    var roles      = data[navkey]["roles"];
-    var attributes = data[navkey]["attributes"];
-    var methods    = data[navkey]["methods"];
-    var requires   = data[navkey]["requires"];
-    var keywords   = data[navkey]["keywords"];
-    var functions  = data[navkey]["functions"];
-    var operators  = data[navkey]["operators"];
-    var sigils     = data[navkey]["sigils"];
-    var types      = data[navkey]["types"];
-    var usage      = data[navkey]["usage"];
-    var father     = data[navkey]["parent"];
-
+function build_sub_list_item( pid, navkey, section, nav, subnav ) {
     var navitem = $(
-        '<li id="' + navkey + '"><a href="' + nav[0] + '-' + pid + '-' + navkey + '">' + navname + '</a></li>'
+        '<li id="' + navkey + '"><a href="' + nav[0] + '-' + pid + '-' + navkey + '">' + navkey + '</a></li>'
     );
     var viewitem = $(
-        '<div style="display: none"><h2>' + navname + '</h2>' + desc + '</div>'
+        '<div style="display: none"><h2>' + navkey + '</h2></div>'
     );
-
-    if ( father ) {
-        viewitem.append( '<h3>Lineage</h3>' );
-        var list = $( '<ul class="lineage"></ul>' );
-        var f = father;
-        while ( f ) {
-            list.append( '<li>' + f + '</li>' );
-            if ( data[f] ) {
-                f = data[f]["parent"];
-                if (!f) f = "Object";
-            }
-            else {
-                f = null;
-            }
-            if ( f == 'undef' ) break;
-            if ( f ) list.append( '<li><b>&gt;</b></li>' );
-        }
-        viewitem.append( list );
-    }
-
-    if ( usage ) {
-        viewitem.append( '<h3>Usage</h3>' );
-        viewitem.append( usage );
-    }
-
-    if ( roles ) {
-        viewitem.append( '<h3>Roles:</h3>' );
-        var list = $('<ul class="role_list"></ul>');
-        for (role in roles) {
-            list.append( '<li><a href="' + nav[0] + '-roles-' + roles[role] + '" onclick="openRole(\'' + roles[role] + '\')">' + roles[role] + '<a></li>' );
-        }
-        viewitem.append( list );
-    }
-
-    if ( requires ) {
-        viewitem.append( '<h3>Required Methods:</h3>' );
-        viewitem.append( build_symbol_list( requires ));
-    }
-
-    if ( keywords ) {
-        viewitem.append( '<h3>Keywords:</h3>' );
-        viewitem.append( build_symbol_list( keywords ));
-    }
-
-    if ( functions ) {
-        viewitem.append( '<h3>Functions:</h3>' );
-        viewitem.append( build_symbol_list( functions ));
-    }
-
-    if ( types ) {
-        viewitem.append( '<h3>Types:</h3>' );
-        viewitem.append( build_symbol_list( types ));
-    }
-
-    if ( operators ) {
-        viewitem.append( '<h3>Operators:</h3>' );
-        viewitem.append( build_symbol_list( operators ));
-    }
-
-    if ( sigils ) {
-        viewitem.append( '<h3>Sigils:</h3>' );
-        viewitem.append( build_symbol_list( sigils ));
-    }
-
-    if ( attributes || roles ) {
-        viewitem.append( '<h3>Attributes:</h3>' );
-        var role_attributes = {};
-        if ( roles ) {
-            jQuery.ajax(
-                'roles.json',
-                {
-                    async: false,
-                    dataType: 'json',
-                    success: function( data ) {
-                        for ( var r in roles ) {
-                            if (!data[roles[r]]) continue;
-
-                            if ( data[roles[r]]['attributes'] ) {
-                                role_attributes = $.extend( role_attributes, data[roles[r]]['attributes'] );
-                            };
-                        }
-                    },
-                    error: function() {
-                        $( '#error_window' ).show();
-                        $( '#error_window ul.errors' ).append( "<li>Error loading roles</li>" )
-                    }
-                }
-            )
-        }
-        viewitem.append( build_symbol_list( $.extend( true, {}, role_attributes, attributes )));
-    }
-
-    if ( methods || roles ) {
-        viewitem.append( '<h3>Methods:</h3>' );
-        var role_methods = {};
-        if ( roles ) {
-            jQuery.ajax(
-                'roles.json',
-                {
-                    async: false,
-                    dataType: 'json',
-                    success: function( data ) {
-                        for ( var r in roles ) {
-                            if (!data[roles[r]]) continue;
-
-                            if ( data[roles[r]]['requires'] ) {
-                                role_methods = $.extend( role_methods, data[roles[r]]['requires'] );
-                            }
-                            if ( data[roles[r]]['methods'] ) {
-                                role_methods = $.extend( role_methods, data[roles[r]]['methods'] );
-                            };
-                        }
-                    },
-                    error: function() {
-                        $( '#error_window' ).show();
-                        $( '#error_window ul.errors' ).append( "<li>Error loading roles</li>" )
-                    }
-                }
-            )
-        }
-        viewitem.append( build_symbol_list( $.extend( true, {}, role_methods, methods )));
-    }
+    viewitem.append( section );
 
     navitem.click( function() {
         $('#view').children().hide();
