@@ -1,0 +1,17 @@
+*** Seeding random with date (20130520) ***
+# Using temp dir: '/tmp/E313KCJP1_' for process results
+Entering build stage: main
+Entering primary stage: main
+ok - 1 is true
+Entering workflow stage: main
+ok - $state is valid
+ok - Initialized
+ok - not bleeding
+ok - Group: 'case_1' x 'inner_b'
+ok - $state is valid
+ok - Initialized
+ok - not bleeding
+ok - Group: 'case_2' x 'inner_b'
+Entering follow-up stage: main
+ok - 2 is true
+1..10

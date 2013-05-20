@@ -39,6 +39,24 @@ $( function() {
     else {
         $( '#fennec' ).trigger( 'click' )
     }
+
+    var navstate = 1;
+    $('#nonav').click( function() {
+        if ( navstate ) {
+            navstate = 0;
+            $('#view').addClass( 'nonav' );
+            $('#subnav').addClass( 'nonav' );
+            $(this).addClass( 'nonav' );
+            $(this).text( '' );
+        }
+        else {
+            navstate = 1;
+            $('#view').removeClass( 'nonav' );
+            $('#subnav').removeClass( 'nonav' );
+            $(this).removeClass( 'nonav' );
+            $(this).text( 'Hide Navigation' );
+        }
+    });
 })
 
 function fixView() {
@@ -80,15 +98,17 @@ function build_content( data ) {
                 if ( sn.length ) {
                     sn.show();
                     sn.children().removeClass('active');
-                    subnav.children().hide();
-                    sn.children().first().click();
-                    navitem.unbind( 'click' );
-                    navitem.click( function() {
-                        subnav.children().show();
+                    if ( sn.children().length > 4 ) {
+                        subnav.children().hide();
                         navitem.unbind( 'click' );
-                        navitem.click( normal_click );
-                        fixView();
-                    });
+                        navitem.click( function() {
+                            subnav.children().show();
+                            navitem.unbind( 'click' );
+                            navitem.click( normal_click );
+                            fixView();
+                        });
+                    }
+                    sn.children().first().click();
                 }
                 navitem.addClass( 'active' );
                 navitem.show();
@@ -159,6 +179,7 @@ function process_samples( container ) {
                 success: function( data ) {
                     list.replaceWith( build_code( data ));
                     fixView();
+                    start_debugger();
                 },
                 error: function(blah, message1, message2) {
                     $( '#error_window' ).show();
@@ -178,6 +199,7 @@ function process_samples( container ) {
                 success: function( data ) {
                     list.replaceWith( build_output( data ));
                     fixView();
+                    start_debugger();
                 },
                 error: function(blah, message1, message2) {
                     $( '#error_window' ).show();
@@ -197,6 +219,7 @@ function process_samples( container ) {
                 success: function( data ) {
                     list.replaceWith( build_vim( data ));
                     fixView();
+                    start_debugger();
                 },
                 error: function(blah, message1, message2) {
                     $( '#error_window' ).show();
@@ -308,3 +331,104 @@ function openRole( role ) {
     $('#SN-roles').find('#' + role).trigger( 'click' );
     fixView();
 }
+
+function start_debugger() {
+    stage_set_step(0);
+
+    $('#stage_r').unbind( 'click' );
+    $('#stage_b').unbind( 'click' );
+    $('#stage_f').unbind( 'click' );
+    $('#stage_e').unbind( 'click' );
+
+    $('#stage_r').click( function() { stage_set_step(0) } );
+    $('#stage_b').click( function() { stage_set_step(step - 1) } );
+    $('#stage_f').click( function() { stage_set_step(step + 1) } );
+    $('#stage_e').click( function() { stage_set_step(steps.length - 1) } );
+}
+
+steps = new Array(
+    { line: 0,  out: 0,  proc: 'parent', i: "", s: "", b: "" },
+    { line: 1,  out: 3,  proc: 'parent', i: "", s: "", b: "" },
+    { line: 3,  out: 5,  proc: 'parent' },
+    { line: 28, out: 6,  proc: 'parent',  i: '' },
+    { line: 6,  out: 6,  proc: 'parent',  i: 0, s: '' },
+    { line: 7,  out: 6,  proc: 'parent',  s: 0, b: '' },
+    { line: 8,  out: 6,  proc: 'parent',  b: 100, i: 0 },
+    { line: 10, out: 6,  proc: 'parent',  i: 1 },
+
+    { line: 12, out: 6,  proc: 'child_1', s: 1, b: 100 },
+    { line: 15, out: 6,  proc: 'child_1', b: 0 },
+    { line: 18, out: 7,  proc: 'child_1' },
+    { line: 19, out: 8,  proc: 'child_1' },
+    { line: 20, out: 9,  proc: 'child_1', b: 0},
+    { line: 21, out: 9,  proc: 'child_1', s: 1, i: 1, b: 5 },
+    { line: 24, out: 10, proc: 'child_1', s: 0, i: 0, b: 5 },
+
+    { line: 13, out: 10, proc: 'child_2', s: 2, b: 100 },
+    { line: 15, out: 10, proc: 'child_2', b: 0 },
+    { line: 18, out: 11, proc: 'child_2' },
+    { line: 19, out: 12, proc: 'child_2' },
+    { line: 20, out: 13, proc: 'child_2', b: 0 },
+    { line: 21, out: 13, proc: 'child_2', s: 2, i: 1, b: 5 },
+    { line: 24, out: 14, proc: 'child_2', s: 0, i: 0, b: 5 },
+
+    { line: 25, out: 14, proc: 'parent' },
+    { line: 29, out: 16, proc: 'parent' },
+    { line: 0,  out: 17, proc: 'parent', i: 1, s: 0, b: 100 }
+);
+
+var step = 0;
+var proc = 'parent';
+
+function stage_set_step( num ) {
+    // Sanity
+    if ( num < 0 ) num = 0;
+    if ( num >= steps.length ) num = steps.length - 1;
+
+    step = num;
+    var data = steps[step];
+    console.log( data );
+
+    // Hide children
+    $( '#debugger tr' ).removeClass( 'active' );
+    $( '#debugger tr.child' ).hide();
+    // Show proc if not parent
+    if ( data['proc'] != 'parent' ) {
+        $( '#debugger tr.' + data['proc'] ).show();
+    }
+    if( data['line'] ) $( '#debugger tr.' + data['proc'] ).addClass( 'active' );
+
+    // if proc changed, copy parent vals to proc
+    if ( data['proc'] != proc ) {
+        proc = data['proc'];
+        if ( proc != 'parent' ) {
+            var parent = $( '#debugger_state tr.parent'  );
+            var child  = $( '#debugger_state tr.' + proc );
+            child.find( 'td.vinit' ).text( parent.find( 'td.vinit' ).text()   );
+            child.find( 'td.vstate' ).text( parent.find( 'td.vstate' ).text() );
+            child.find( 'td.vbleed' ).text( parent.find( 'td.vbleed' ).text() );
+        }
+    }
+    // Set vals
+    var prow = $( '#debugger_state tr.' + proc );
+    if ( 'i' in data ) prow.find( 'td.vinit'  ).text( data['i'] );
+    if ( 's' in data ) prow.find( 'td.vstate' ).text( data['s'] );
+    if ( 'b' in data ) prow.find( 'td.vbleed' ).text( data['b'] );
+
+    // unhighlight lines
+    $( 'td#debug_source div.syntaxhighlighter div.line' ).removeClass( 'debug_highlight' );
+
+    // Highlight line
+    $(
+        'td#debug_source div.syntaxhighlighter div.line.number' + data['line']
+    ).addClass( 'debug_highlight' );
+
+    // Hide output
+    $( 'td#debug_out div.syntaxhighlighter div.line' ).hide();
+
+    // Display output up to 'out'
+    for( var i = 1; i <= data['out']; i++ ) {
+        $( 'td#debug_out div.syntaxhighlighter div.line.number' + i ).show();
+    }
+}
+

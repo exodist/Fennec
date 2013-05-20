@@ -1,0 +1,110 @@
+<dl class="listnav">
+    <dt id="overview">Overview</dt>
+    <dd>
+        <dl class="sub_list">
+            <dt id="vanilla">Vanilla</dt>
+            <dd>
+                <div class="code" src="wfexamplev.pl"></div>
+            </dd>
+        
+            <dt id="declare">Declare</dt>
+            <dd>
+                <div class="code" src="wfexample.plx"></div>
+            </dd>
+        </dl>
+    </dd>
+
+    <dt id="grouping">Grouping</dt>
+    <dd>
+    </dd>
+
+    <dt id="state">State</dt>
+    <dd>
+    </dd>
+
+    <dt id="nesting">Nesting</dt>
+    <dd>
+    </dd>
+
+    <dt id="posttest">Post-Testing</dt>
+    <dd>
+        Sometimes you want to have tests that run after all the test blocks and
+        workflows complete. That is you want them to be the absolute last thing
+        run. In these cases you can pass a coderef to done_testing(). This will
+        ensure the codeblock is the very last thing run before Fennec cleans
+        itself up. This is important because <B>You cannot have tests after
+        done_testing!</b>
+
+        <script class="code">
+            use Fennec;
+
+            ...
+
+            done_testing( sub {
+                ok( 1, "This is the last assertion!" );  
+            });
+        </script>
+
+        This is rarely useful, however it can be necessary when testing Fennec
+        plugins to ensure you ran the desired number of tests, something Fennec
+        normally prevents you from worrying about.
+    </dd>
+
+    <dt id="stages">Stages</dt>
+    <dd>
+        <ul id="debugger_controls">
+            <li id="stage_r">&lt;&lt; reset</li>
+            <li id="stage_b">&lt; step back</li>
+            <li id="stage_f">step forward &gt;</li>
+            <li id="stage_e">goto end &gt;&gt;</li>
+        </ul>
+        <table id="debugger">
+            <tr>
+                <td rowspan=3 id="debug_source">
+                    <div class="code" src="stages.plx"></div>
+                </td>
+                <td id="debugger_state_wrapper">
+                    <table id="debugger_state">
+                        <tr>
+                            <th></th>
+                            <th>$init</th>
+                            <th>$state</th>
+                            <th>$bleed</th>
+                        </tr>
+                        <tr class="parent">
+                            <th>Parent</th>
+                            <td class="vinit"></td>
+                            <td class="vstate"></td>
+                            <td class="vbleed"></td>
+                        </tr>
+
+                        <tr class="child child_1">
+                            <th>Child 1</th>
+                            <td class="vinit"></td>
+                            <td class="vstate"></td>
+                            <td class="vbleed"></td>
+                        </tr>
+
+                        <tr class="child child_2">
+                            <th>Child 2</th>
+                            <td class="vinit"></td>
+                            <td class="vstate"></td>
+                            <td class="vbleed"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+                <td>
+                    <h3>Output</h3>
+                </td>
+            </tr>
+            </tr>
+                <td id="debug_out">
+                    <div class="output" src="stages.txt"></div>
+                </td>
+            </tr>
+        </table>
+        <script>
+        </script>
+    </dd>
+</dl>

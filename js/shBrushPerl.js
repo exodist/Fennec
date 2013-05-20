@@ -42,12 +42,15 @@
 			'shmwrite shutdown sin sleep socket socketpair sort splice split sprintf ' + 
 			'sqrt srand stat study substr symlink syscall sysopen sysread sysseek ' + 
 			'system syswrite tell telldir time times tr truncate uc ucfirst umask ' + 
-			'undef unlink unpack unshift utime values vec wait waitpid warn write';
+			'undef unlink unpack unshift utime values vec wait waitpid warn write ' +
+            'ok is is_deeply done_testing use_ok require_ok child';
     
 		var keywords =  
 			'bless caller continue dbmclose dbmopen die do dump else elsif eval exit ' +
 			'for foreach goto if import last local my next no our package redo ref ' + 
-			'require return sub tie tied unless untie until use wantarray while';
+			'require return sub tie tied unless untie until use wantarray while ' +
+            'describe it tests before_all after_all before_each after_each case cases ' +
+            'around_each around_all';
     
 		this.regexList = [
 			{ regex: new RegExp('#[^!].*$', 'gm'),					css: 'comments' },

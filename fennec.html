@@ -362,29 +362,5 @@
             1;
         </script>
     </dd>
-
-    <dt id="posttest">Post-Testing</dt>
-    <dd>
-        Sometimes you want to have tests that run after all the test blocks and
-        workflows complete. That is you want them to be the absolute last thing
-        run. In these cases you can pass a coderef to done_testing(). This will
-        ensure the codeblock is the very last thing run before Fennec cleans
-        itself up. This is important because <B>You cannot have tests after
-        done_testing!</b>
-
-        <script class="code">
-            use Fennec;
-
-            ...
-
-            done_testing( sub {
-                ok( 1, "This is the last assertion!" );  
-            });
-        </script>
-
-        This is rarely useful, however it can be necessary when testing Fennec
-        plugins to ensure you ran the desired number of tests, something Fennec
-        normally prevents you from worrying about.
-    </dd>
 </dl
 
