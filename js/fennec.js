@@ -46,6 +46,7 @@ $( function() {
             navstate = 0;
             $('#view').addClass( 'nonav' );
             $('#subnav').addClass( 'nonav' );
+            $('ul.second_subnav').addClass( 'nonav' );
             $(this).addClass( 'nonav' );
             $(this).text( '' );
         }
@@ -53,6 +54,7 @@ $( function() {
             navstate = 1;
             $('#view').removeClass( 'nonav' );
             $('#subnav').removeClass( 'nonav' );
+            $('ul.second_subnav').removeClass( 'nonav' );
             $(this).removeClass( 'nonav' );
             $(this).text( 'Hide Navigation' );
         }

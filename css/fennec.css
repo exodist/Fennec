@@ -339,7 +339,7 @@ div#nonav.nonav {
 }
 
 div#subnav.nonav ul {
-    display: none;
+    display: none !important;
 }
 
 div#view.nonav {
