@@ -5,7 +5,7 @@ use warnings;
 use base 'Fennec::Runner';
 
 use File::Find qw/find/;
-use Fennec::Util qw/accessors/;
+use Fennec::Util qw/accessors verbose_message/;
 use List::Util qw/shuffle/;
 
 accessors qw/test_files parallel/;
@@ -78,7 +78,7 @@ sub run {
 
     if ($follow) {
         $self->collector->collect;
-        $self->collector->diag("Entering final follow-up stage\n");
+        verbose_message("Entering final follow-up stage\n");
         $follow->();
     }
 
