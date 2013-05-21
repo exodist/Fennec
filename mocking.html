@@ -1,6 +1,39 @@
 <dl class="listnav">
     <dt id="instance">Instance</dt>
     <dd>
+        With Mock::Quick you can mock object instances on the fly, no need for
+        a package.
+
+        <script class="code">
+            my $obj = qobj(
+                method_name1 => 'value',
+                method_name2 => qmeth { ... CODE ... },
+                method_name3 => sub { "This is a subref as value, not a method" },
+            );
+        </script>
+
+        This defines an object with 3 methods, the first simply returns a
+        value, the second is a custom method, the third returns a subref.
+
+        <script class="code">
+            $obj->method_name2( qclear );
+        </script>
+
+        This will remove the method code from the method_name2 turning it into
+        an empty read/write accessor.
+
+        <script class="code">
+            $obj->foo( 'Autovivified Method!' );
+        </script>
+
+        Any method you do not define will auto-vivify as a read/write accessor.
+
+        <script class="code">
+            my $sobj = qstrict( ... );
+        </script>
+
+        This is the same as qobj, except that there is no method
+        auto-vivifying.
     </dd>
 
     <dt id="class">Class</dt>
