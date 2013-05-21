@@ -6,7 +6,7 @@
             <dd>
                 <div class="code" src="wfexamplev.pl"></div>
             </dd>
-        
+
             <dt id="declare">Declare</dt>
             <dd>
                 <div class="code" src="wfexample.plx"></div>
@@ -14,17 +14,84 @@
         </dl>
     </dd>
 
-    <dt id="grouping">Grouping</dt>
-    <dd>
-    </dd>
-
     <dt id="state">State</dt>
     <dd>
+        With Fennec you can define setup, teardown, and case methods that apply
+        to tests in unique ways. These methods can be used to set variables,
+        attributes, environment, or anything else.
+
+        <script class="code">
+            case NAME { ... }
+        </script>
+
+        A case is a scenario under which your tests should pass. When you
+        define multiple case blocks and multiple tests, all your tests will be
+        run for all your cases.
+
+        <script class="code">
+            before_each NAME { ... }
+            after_each  NAME { ... }
+        </script>
+
+        before_each and after_each define code that should be run before or
+        after each test block. Each test will only run once, but the
+        before_each will run multiple times, once per test. after_each is the
+        same but rans after each test.
+
+        <script class="code">
+            before_all NAME { ... }
+            after_all  NAME { ... }
+        </script>
+
+        before_all and after_all define blocks that only ever run once.
+        before_each runs once before all tests, and after_each runs once, after
+        all tests.
+
+        <script class="code">
+            around_each NAME {
+                # Note $self is shifted for us.
+                my ( $inner ) = @_;
+                local $ENV{MY_VAR} = ...;
+                $inner->();
+            }
+        </script>
+
+        around_each and around_all are more complicated, but they are useful
+        when paired with 'local'.
     </dd>
 
-    <dt id="nesting">Nesting</dt>
+    <dt id="grouping">Grouping</dt>
     <dd>
+        Grouping is done using the 'describe' keyword. Any setup, teardown, and
+        case methods defined within a describe block will ONLY apply to test
+        blocks defined within that describe block. You can nest describe
+        blocks, child describe blocks will inherit the setup, teardown and case
+        methods from the parent describe blocks.
+
+        <script class="code">
+            describe NAME {
+                case NAME_A { ... }
+                case NAME_B { ... }
+
+                before_each SETUP_A { ... }
+
+                tests TESTS_A { ... }
+                tests TESTS_B { ... }
+
+                describe INNER {
+                    before_each SETUP_B { ... }
+
+                    tests TESTS_INNER { ... }
+                }
+            }
+
+            tests OUTSIDE { ... }
+        </script>
+
+        No case or before_each applies to OUTSIDE, TESTS_A and TESTS_B get
+        everything except SETUP_B, TESTS_INNER gets every setup and teardown.
     </dd>
+
 
     <dt id="posttest">Post-Testing</dt>
     <dd>
@@ -41,7 +108,7 @@
             ...
 
             done_testing( sub {
-                ok( 1, "This is the last assertion!" );  
+                ok( 1, "This is the last assertion!" );
             });
         </script>
 

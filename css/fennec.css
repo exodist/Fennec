@@ -121,7 +121,7 @@ ul.listnav {
     padding-bottom: 12px;
     margin-right: -120px;
     width: 114px;
-    
+
     list-style: none;
 
     text-align: center;
@@ -182,7 +182,6 @@ div#view {
     clear: right;
 
     min-width: 700px;
-    max-width: 1024px;
     min-height: 350px;
     padding: 14px;
 
