@@ -188,6 +188,14 @@ div#view {
     margin-left: 130px;
 }
 
+div#view>div{
+    width: 900px;
+}
+
+div#view>div.debugger{
+    width: auto;
+}
+
 table.symbol_list {
     border-spacing: 0px;
     width: 100%;

@@ -85,8 +85,9 @@ function build_content( data ) {
             var navitem = $(
                 '<li id="' + id + '"><a href="' + nav[0] + '-' + id + '">' + dt.html() + '</a></li>'
             );
+            var classes = dd.attr( 'class' );
             var viewitem = $(
-                '<div style="display: none">' + dd.html() + '</div>'
+                '<div style="display: none" class="' + classes + '">' + dd.html() + '</div>'
             );
 
             process( id, viewitem );

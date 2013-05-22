@@ -38,5 +38,42 @@
 
     <dt id="class">Class</dt>
     <dd>
+        You can implement a class, this also prevents the real one from loading
+        at all.
+        <script class="code">
+            my $control = qimplement 'Some::Package' => (
+                -with_new => 1,
+                -subclass => 'Parent::Class',
+                attribute => 'foo',
+                method    => sub { ... }
+            );
+        </script>
+
+        You can takeover an already loaded class, then override any methods on
+        that class:
+        <script class="code">
+            my $control = qtakeover 'Some::Package' => (
+                some_method => sub { ... },
+                other_meth  => sub { ... },
+            );
+        </script>
+
+        You can use the control object to apply more overrides, or restore
+        original method.
+        <script class="code">
+            $control->override( foo => sub { ... } );
+            ...
+            $control->restore( 'foo' );
+        </script>
+
+        When the $control object is destroyed, or falls out of scope the
+        original methods are all restored.
+        <script class="code">
+            $control = undef;
+            # All methods are restored.
+        </script>
+
+        This means you need to pay attention to your control object and make
+        sure you store it until it is not needed.
     </dd>
 </dl>

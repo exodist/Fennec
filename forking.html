@@ -1,10 +1,49 @@
 <dl class="listnav">
-    <dt id="instance">Spawning</dt>
+    <dt id="instance">Child</dt>
     <dd>
-    </dd>
+        Fennec imports Child.pm which brings in the 'child {}' function.
 
-    <dt id="control">Control</dt>
-    <dd>
+        <ul>
+            <li>Forking is hard to get right</li>
+            <li>Child is an OO interface to fork</li>
+            <li>With Child forking is easy</li>
+        </ul>
+
+        <script class="code">
+            my $child = child {
+                my $parent = shift;
+                ...
+            };
+
+            ...
+
+            $child->wait();
+        </script>
+
+        As the above example shows, you do not need to check if you are parent
+        or child, you also do not need to worry about closing your child
+        process. The child process will run the codeblock, then it will exit.
+
+        <p>
+
+        This is a list of other methods the child object has available.
+
+        <script class="code">
+            $child->kill( $SIG )
+            $proc->is_complete()
+            $proc->wait()
+            $proc->kill($SIG)
+            $proc->pid()
+            $proc->exit_status()
+            $proc->unix_exit()
+        </script>
+
+        The $parent object also has some helpful methods
+
+        <script class="code">
+            $parent->pid
+            $parent->detach
+        </script>
     </dd>
 </dl>
 
