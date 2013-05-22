@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-=head1 DESCRIPTION
+Fennec::Manual - The Fennec Manual
 
 =head1 COMPONENT DOCS
 
