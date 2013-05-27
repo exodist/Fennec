@@ -58,6 +58,7 @@ sub report {
 
 sub collect {
     my $self = shift;
+    return unless $self->_pid == $$;
 
     my $handle;
     if ( $self->handles->{tempdir} ) {

@@ -103,7 +103,6 @@ sub load_file {
     my ($file) = @_;
     print "Loading: $file\n";
     eval { require $file; 1 } || $self->exception( $file, $@ );
-    $self->check_pid();
 }
 
 sub load_module {
@@ -111,7 +110,6 @@ sub load_module {
     my $module = shift;
     print "Loading: $module\n";
     eval { require_module $module } || $self->exception( $module, $@ );
-    $self->check_pid();
 }
 
 sub check_pid {
@@ -138,25 +136,21 @@ sub prunner {
     my $self = shift;
     my ($max) = @_;
 
-    $self->{prunner} ||= do {
-        my $runner = Parallel::Runner->new($max);
+    my $runner = Parallel::Runner->new($max);
 
-        $runner->reap_callback(
-            sub {
-                my ( $status, $pid, $pid_again, $proc ) = @_;
+    $runner->reap_callback(
+        sub {
+            my ( $status, $pid, $pid_again, $proc ) = @_;
 
-                # Status as returned from system, so 0 is good, 1+ is bad.
-                $self->exception( "Child process did not exit cleanly", "Status: $status" )
-                    if $status;
-            }
-        );
+            # Status as returned from system, so 0 is good, 1+ is bad.
+            $self->exception( "Child process did not exit cleanly", "Status: $status" )
+                if $status;
+        }
+    );
 
-        $runner->iteration_callback( sub { $self->collector->collect } );
+    $runner->iteration_callback( sub { $self->collector->collect } );
 
-        $runner;
-    };
-
-    return $self->{prunner};
+    return $runner;
 }
 
 sub run {
@@ -168,6 +162,7 @@ sub run {
     for my $class ( shuffle @{$self->test_classes} ) {
         next unless $class;
         $self->run_test_class($class);
+        $self->check_pid;
     }
 
     if ($follow) {
@@ -190,7 +185,7 @@ sub run_test_class {
     return unless $class->can('TEST_WORKFLOW');
 
     my $instance = $class->can('new') ? $class->new : bless( {}, $class );
-    my $ptests   = Parallel::Runner->new( $class->FENNEC->parallel );
+    my $ptests   = $self->prunner( $class->FENNEC->parallel );
     my $pforce   = $class->FENNEC->parallel ? 1 : 0;
     my $meta     = $instance->TEST_WORKFLOW;
 
@@ -214,10 +209,8 @@ sub run_test_class {
     if ( my $post = $class->FENNEC->post ) {
         $self->collector->collect;
         verbose_message("Entering follow-up stage: $class\n");
-        $post->();
+        eval { $post->(); 1 } || $self->exception( 'done_testing', $@ );
     }
-
-    $self->check_pid;
 }
 
 sub DESTROY {

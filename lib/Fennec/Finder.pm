@@ -61,8 +61,6 @@ sub run {
     for my $file ( @{$self->test_files} ) {
         $frunner->run(
             sub {
-                $self->pid($$);
-
                 $self->load_file($file);
 
                 for my $class ( shuffle @{$self->test_classes} ) {
@@ -72,6 +70,8 @@ sub run {
             },
             1
         );
+
+        $self->check_pid;
     }
 
     $frunner->finish();
@@ -79,7 +79,7 @@ sub run {
     if ($follow) {
         $self->collector->collect;
         verbose_message("Entering final follow-up stage\n");
-        $follow->();
+        eval { $follow->(); 1 } || $self->exception( 'done_testing', $@ );
     }
 
     $self->collector->collect;
