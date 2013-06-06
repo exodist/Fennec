@@ -106,7 +106,7 @@ sub finish {
     die "($$) Not all files were collected?!"
         if grep { m/^\d+(\.ready)?$/ } readdir $handle;
 
-    if ( !$ENV{HARNESS_IS_VERBOSE} ) {
+    if ( !$ENV{FENNEC_DEBUG} ) {
         rewinddir $handle;
         while ( my $file = readdir $handle ) {
             next unless $file =~ m/\.done$/;

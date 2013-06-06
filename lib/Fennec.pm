@@ -7,7 +7,7 @@ BEGIN { require Fennec::Runner }
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.005';
+our $VERSION = '2.006';
 
 sub defaults {
     (
@@ -45,6 +45,9 @@ sub import {
     my %defaults = $class->defaults;
     $defaults{runner_class} ||= 'Fennec::Runner';
     my %params = ( %defaults, @_ );
+
+    $ENV{FENNEC_SEED}  ||= $params{seed}  if $params{seed};
+    $ENV{FENNEC_DEBUG} ||= $params{debug} if $params{debug};
 
     my ( $runner, $runner_init ) = $class->_get_runner(
         $importer,
@@ -538,6 +541,35 @@ use the class name as the key with an arrayref containing the arguments.
 
 Load these modules that have reusable tests. Reusable tests are tests that are
 common to multiple test files.
+
+=item seed => '...'
+
+Set the random seed to be used. Defaults to current date, can be overriden by
+the FENNEC_SEED environment variable.
+
+=item debug => $BOOL
+
+Can be used to turn on internal debugging for Fennec. This currently does very
+little.
+
+=back
+
+=head1 ENVIRONMENT VARIABLES
+
+=over 4
+
+=item FENNEC_SEED
+
+Can be used to set a specific random seed
+
+=item FENNEC_TEST
+
+Can be used to tell Fennec to only run specific tests (can be given a line
+number or a block name).
+
+=item FENNEC_DEBUG
+
+When true internal debugging is turned on.
 
 =back
 

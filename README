@@ -260,6 +260,25 @@ IMPORT ARGUMENTS
         Load these modules that have reusable tests. Reusable tests are
         tests that are common to multiple test files.
 
+    seed => '...'
+        Set the random seed to be used. Defaults to current date, can be
+        overriden by the FENNEC_SEED environment variable.
+
+    debug => $BOOL
+        Can be used to turn on internal debugging for Fennec. This currently
+        does very little.
+
+ENVIRONMENT VARIABLES
+    FENNEC_SEED
+        Can be used to set a specific random seed
+
+    FENNEC_TEST
+        Can be used to tell Fennec to only run specific tests (can be given
+        a line number or a block name).
+
+    FENNEC_DEBUG
+        When true internal debugging is turned on.
+
 EXPORTED FUNCTIONS
   FROM FENNEC
     done_testing()
