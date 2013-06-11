@@ -218,6 +218,7 @@ sub DESTROY {
     return unless $self->pid == $$;
     return if $self->_ran;
     return if $self->_skip_all;
+    return if $^C; # No warning in syntax check
 
     my $tests = join "\n" => map { "#   * $_" } @{$self->test_classes};
 

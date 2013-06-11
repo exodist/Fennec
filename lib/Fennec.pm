@@ -7,7 +7,7 @@ BEGIN { require Fennec::Runner }
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.007';
+our $VERSION = '2.008';
 
 sub defaults {
     (

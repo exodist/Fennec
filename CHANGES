@@ -1,3 +1,9 @@
+V2.008 - Supress messages on syntax check
+
+V2.007 - Supress never run message on syntax check
+
+V2.002-V2.006 - Minor Bugfixes
+
 V2.001 - May 18 2013
     * Add 'class' import argument
 

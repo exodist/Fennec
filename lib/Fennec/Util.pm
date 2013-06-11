@@ -88,6 +88,9 @@ sub verbose_message {
         if $ENV{HARNESS_ACTIVE}
         && !$ENV{HARNESS_IS_VERBOSE};
 
+    # Do not print the messages on syntax check
+    return if $^C;
+
     print @_;
 }
 
