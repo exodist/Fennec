@@ -20,6 +20,7 @@ END {
     return if $?;
     return unless $RUNNER;
     return if $RUNNER->_skip_all;
+    return if $^C; # Do not print this message if perl is called with -c
 
     print STDERR <<"    EOT";
 
