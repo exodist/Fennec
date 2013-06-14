@@ -519,6 +519,56 @@ EXAMPLES
 
         # use qstrict() to make an object that does not autovivify accessors.
 
+   SCOPE OF MOCKS IN FENNEC
+    With vanilla Mock::Quick a mock is destroyed when the control object is
+    destroyed.
+
+        my $control = qtakeover Foo => (blah => 'blah');
+        is( Foo->blah, 'blah', "got mock" );
+        $control = undef;
+        ok( !Foo->can('blah'), "Mock destroyed" );
+
+        # WITHOUT FENNEC This issues a warning, the $control object is ignored so
+        # the mock is destroyed before it can be used.
+        qtakover Foo => (blah => 'blah');
+        ok( !Foo->can('blah'), "Mock destroyed before it could be used" );
+
+    With the workflow support provided by Fennec, you can omit the control
+    object and let the mock be scoped implicitly.
+
+        tests implicit_mock_scope => sub {
+            my $self = shift;
+            can_ok( $self, 'QINTERCEPT' );
+            qtakeover Foo => (blah => sub { 'blah' });
+            is( Foo->blah, 'blah', "Mock not auto-destroyed" );
+        };
+
+        describe detailed_implicit_mock_scope => sub {
+            qtakeover Foo => ( outer => 'outer' );
+            ok( !Foo->can( 'outer' ), "No Leak" );
+
+            before_all ba => sub {
+                qtakeover Foo => ( ba => 'ba' );
+                can_ok( 'Foo', qw/outer ba/ );
+            };
+
+            before_each be => sub {
+                qtakeover Foo => ( be => 'be' );
+                can_ok( 'Foo', qw/outer ba be/ );
+            };
+
+            tests the_check => sub {
+                qtakeover Foo => ( inner => 'inner' );
+
+                can_ok( 'Foo', qw/outer ba be inner/ );
+            };
+
+            ok( !Foo->can( 'outer' ), "No Leak" );
+            ok( !Foo->can( 'ba' ), "No Leak" );
+            ok( !Foo->can( 'be' ), "No Leak" );
+            ok( !Foo->can( 'inner' ), "No Leak" );
+        };
+
    TAKEOVER AN EXISTING CLASS
         require Some::Class;
         my $control = qtakeover 'Some::Class' => (
