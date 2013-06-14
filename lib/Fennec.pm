@@ -6,7 +6,7 @@ BEGIN { require Fennec::Runner }
 
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
-use Carp qw/croak carp confess/;
+use Carp qw/croak carp/;
 our $VERSION = '2.009';
 
 sub defaults {
@@ -73,8 +73,6 @@ sub import {
             my ($code) = @_;
             my @caller = caller;
 
-            use Data::Dumper;
-            confess Dumper( \@_ ) unless ref $code eq 'CODE';
             my $store = $wfmeta->control_store;
             return push @$store => $code->() if $store;
 
