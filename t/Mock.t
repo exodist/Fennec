@@ -40,4 +40,39 @@ tests class => sub {
     is( $two->package, 'Foo', "took over Foo" );
 };
 
-done_testing;
+tests class_store => sub {
+    my $self = shift;
+    can_ok( $self, 'QINTERCEPT' );
+    qtakeover(Foo => (blah => sub { 'blah' }));
+    is( Foo->blah, 'blah', "Mock not auto-destroyed" );
+};
+
+describe outer_wrap => sub {
+    qtakeover( Foo => ( outer => 'outer' ));
+    ok( !Foo->can( 'outer' ), "No Leak" );
+
+    before_all ba => sub {
+        qtakeover( Foo => ( ba => 'ba' ));
+        can_ok( 'Foo', qw/outer ba/ );
+    };
+
+    before_each be => sub {
+        qtakeover( Foo => ( be => 'be' ));
+        can_ok( 'Foo', qw/outer ba be/ );
+    };
+
+    tests the_check => sub {
+        qtakeover( Foo => ( inner => 'inner' ));
+
+        can_ok( 'Foo', qw/outer ba be inner/ );
+    };
+
+    ok( !Foo->can( 'outer' ), "No Leak" );
+    ok( !Foo->can( 'ba' ), "No Leak" );
+    ok( !Foo->can( 'be' ), "No Leak" );
+    ok( !Foo->can( 'inner' ), "No Leak" );
+};
+
+done_testing sub {
+    ok( !Foo->can('blah'), "Mock did not leak" );
+};

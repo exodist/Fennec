@@ -9,7 +9,7 @@ use Fennec::Util qw/accessors/;
 
 accessors qw{
     test_class build_complete root_layer test_run test_wait test_sort ok diag
-    skip todo_start todo_end
+    skip todo_start todo_end control_store
 };
 
 sub new {

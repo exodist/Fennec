@@ -6,8 +6,8 @@ BEGIN { require Fennec::Runner }
 
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
-use Carp qw/croak carp/;
-our $VERSION = '2.008';
+use Carp qw/croak carp confess/;
+our $VERSION = '2.009';
 
 sub defaults {
     (
@@ -65,6 +65,26 @@ sub import {
     $class->_process_deps( $runner, $params{skip_without} );
     $class->_set_isa( $importer, 'Fennec::Test', $meta->base );
     $class->_load_utils( $importer, %params );
+
+    # Intercept Mock::Quick mocks
+    my $wfmeta = $importer->TEST_WORKFLOW;
+    if ( $wfmeta && grep { $_ eq 'Mock::Quick' } @{$defaults{utils} || []}) {
+        my $intercept = sub {
+            my ($code) = @_;
+            my @caller = caller;
+
+            use Data::Dumper;
+            confess Dumper( \@_ ) unless ref $code eq 'CODE';
+            my $store = $wfmeta->control_store;
+            return push @$store => $code->() if $store;
+
+            my $layer = $wfmeta->peek_layer || $wfmeta->root_layer;
+            $layer->add_control($code);
+        };
+        no strict 'refs';
+        *{"$importer\::QINTERCEPT"} = sub{ $intercept };
+    }
+
     $class->_with_tests( $importer, $params{with_tests} );
     $class->init( %params, importer => $importer, meta => $meta );
 

@@ -18,6 +18,7 @@ our @ATTRIBUTES = qw{
     after_all
     around_each
     around_all
+    control
 };
 
 accessors 'finalized', @ATTRIBUTES;
@@ -33,6 +34,11 @@ sub merge_in {
         require_module $class;
         push @{$self->$_} => @{$class->TEST_WORKFLOW->root_layer->$_} for @ATTRIBUTES;
     }
+}
+
+sub add_control {
+    my $self = shift;
+    push @{$self->control} => @_;
 }
 
 for my $type (qw/test case child before_each before_all around_each around_all/) {

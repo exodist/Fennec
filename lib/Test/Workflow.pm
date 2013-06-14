@@ -105,7 +105,7 @@ sub run_tests {
         $instance ||= bless( {}, $caller );
     }
     my $layer = $instance->TEST_WORKFLOW->root_layer;
-    my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [] );
+    my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [], [] );
     $instance->TEST_WORKFLOW->build_complete(1);
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
     @tests = order_tests( $sort, @tests );
@@ -137,11 +137,12 @@ sub order_tests {
 
 #<<< no-tidy
 sub get_tests {
-    my ( $instance, $layer, $name, $before_each, $after_each, $around_each, $todo ) = @_;
+    my ( $instance, $layer, $name, $before_each, $after_each, $around_each, $control, $todo ) = @_;
 
     # get before_each and after_each
     push    @$before_each => @{ $layer->before_each };
     push    @$around_each => @{ $layer->around_each };
+    push    @$control     => @{ $layer->control     };
     unshift @$after_each  => @{ $layer->after_each  };
 
     my @tests = @{ $layer->test };
@@ -177,6 +178,7 @@ sub get_tests {
                     ],
                     teardown   => [ @$after_each  ],
                     around     => [ @$around_each ],
+                    control    => [ @$control     ],
                     block_name => $name,
                 );
             }
@@ -189,6 +191,7 @@ sub get_tests {
             tests      => [ $_            ],
             teardown   => [ @$after_each  ],
             around     => [ @$around_each ],
+            control    => [ @$control     ],
             block_name => $name,
         )} @tests;
     }
@@ -207,6 +210,7 @@ sub get_tests {
             [@$before_each],
             [@$after_each],
             [@$around_each],
+            [@$control],
             $_->todo,
         );
 
@@ -226,14 +230,16 @@ sub get_tests {
     my @before_all = @{ $layer->before_all };
     my @after_all  = @{ $layer->after_all  };
     my @around_all = @{ $layer->around_all };
+    my @control    = @{ $layer->control    };
     return Test::Workflow::Test->new(
         setup      => [ @before_all ],
         tests      => [ @tests      ],
         teardown   => [ @after_all  ],
         around     => [ @around_all ],
+        control    => [ @control    ],
         block_name => $name,
         is_wrap    => 1,
-    ) if @before_all || @after_all || @around_all;
+    ) if @before_all || @after_all || @around_all || @control;
 
     return @tests;
 }

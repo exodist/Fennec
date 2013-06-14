@@ -23,8 +23,8 @@ sub new {
     my ( $caller, $name, @args ) = @_;
     my $code;
 
-    croak "You must provide a caller"
-        unless $caller && @$caller;
+    croak "You must provide a caller (got: $caller)"
+        unless $caller && ref $caller && ref $caller eq 'ARRAY' && @$caller;
     croak "You must provide a name"
         unless $name and !ref $name;
 

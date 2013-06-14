@@ -6,7 +6,7 @@ use Fennec::Util qw/accessors/;
 use List::Util qw/shuffle/;
 use Carp qw/cluck/;
 
-accessors qw/setup tests teardown around block_name is_wrap/;
+accessors qw/setup tests teardown around block_name is_wrap control/;
 
 sub new {
     my $class  = shift;
@@ -17,6 +17,7 @@ sub new {
             tests      => $params{tests}      || [],
             teardown   => $params{teardown}   || [],
             around     => $params{around}     || [],
+            control    => $params{control}    || [],
             block_name => $params{block_name} || "",
             is_wrap    => $params{is_wrap}    || 0,
         },
@@ -53,13 +54,19 @@ sub _wrap_tests {
     my $self = shift;
     my ($instance) = @_;
 
-    my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
+    my $meta = $instance->TEST_WORKFLOW;
+
+    my $sort = $meta->test_sort || 'rand';
     my @tests = Test::Workflow::order_tests( $sort, @{$self->tests} );
 
-    my $wait = $instance->TEST_WORKFLOW->test_wait;
+    my $wait = $meta->test_wait;
     my $pid  = $$;
 
     return sub {
+        my $control_store = [];
+        $meta->control_store($control_store);
+        push @$control_store => $_->() for @{$self->control};
+
         $_->run($instance) for @{$self->setup};
         for my $test (@tests) {
             my $outer = sub { $test->run($instance) };
@@ -71,6 +78,10 @@ sub _wrap_tests {
             $outer->();
         }
         $_->run($instance) for @{$self->teardown};
+
+        $meta->control_store(undef);
+        $control_store = undef;
+
         $wait->() if $wait && $self->is_wrap;
     };
 }
