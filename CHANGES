@@ -1,3 +1,7 @@
+V2.009 - Better mocking scoping
+ * Make it so that Mock::Quick control objects can be implicitly captured by
+   Fennec scopes.
+
 V2.008 - Supress messages on syntax check
 
 V2.007 - Supress never run message on syntax check
