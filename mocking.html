@@ -76,4 +76,51 @@
         This means you need to pay attention to your control object and make
         sure you store it until it is not needed.
     </dd>
+
+    <dt id="mockfennec">Fennec</dt>
+    <dd>
+        <h2>What Fennec brings to the party</h2>
+        <b>Note: Fennec 2.009 or greater is required for this.</b>
+        <p>
+
+        As seen in the previous sections, Mock::Quick functions return a
+        control object that you need to keep track of. If you fail to capture
+        the control object a warning is issued because your mock is immedietly
+        destroyed. With Fennec you can omit the control object, it will be
+        implicitly captured by the current scope, and inherited by child
+        scopes.
+
+        <script class="code">
+            tests implicit_mock_scope => sub {
+                qtakeover Foo => (blah => sub { 'blah' });
+                is( Foo->blah, 'blah', "Mock not auto-destroyed" );
+            };
+
+            describe detailed_implicit_mock_scope => sub {
+                qtakeover Foo => ( outer => 'outer' );
+                ok( !Foo->can( 'outer' ), "No Leak" );
+
+                before_all ba => sub {
+                    qtakeover Foo => ( ba => 'ba' );
+                    can_ok( 'Foo', qw/outer ba/ );
+                };
+
+                before_each be => sub {
+                    qtakeover Foo => ( be => 'be' );
+                    can_ok( 'Foo', qw/outer ba be/ );
+                };
+
+                tests the_check => sub {
+                    qtakeover Foo => ( inner => 'inner' );
+
+                    can_ok( 'Foo', qw/outer ba be inner/ );
+                };
+
+                ok( !Foo->can( 'outer' ), "No Leak" );
+                ok( !Foo->can( 'ba' ), "No Leak" );
+                ok( !Foo->can( 'be' ), "No Leak" );
+                ok( !Foo->can( 'inner' ), "No Leak" );
+            };
+        </script>
+    <dd>
 </dl>
