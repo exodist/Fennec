@@ -35,9 +35,13 @@ tests class => sub {
     isa_ok( $one, 'Mock::Quick::Class' );
     can_ok( $one->package, 'foo' );
 
-    my $two = qtakeover('Foo');
+    my $two = qtakeover('Foo' => (blah => 'blah'));
     isa_ok( $two, 'Mock::Quick::Class' );
     is( $two->package, 'Foo', "took over Foo" );
+    is( Foo->blah, 'blah', "got mock" );
+
+    $two = undef;
+    ok( !Foo->can('blah'), "Mock destroyed" );
 };
 
 tests class_store => sub {
