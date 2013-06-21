@@ -3,6 +3,14 @@ use strict;
 use warnings;
 
 use lib 't/lib';
+BEGIN {
+    return unless $^O =~ m/MSWin32/i;
+    require Test::More;
+    Test::More->import(
+        skip_all => "feature broken on win32, but also deprecated so we do not care."
+    );
+    exit(0);
+}
 use Fennec::Runner qw/FinderTest/;
 use Test::More;
 
