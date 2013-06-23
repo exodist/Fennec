@@ -45,7 +45,7 @@ SYNOPSYS
 
   DECLARE SYNTAX
     Note: In order to use this you MUST install Fennec::Declare which is a
-    seperate distribution on cpan. This module is seperate because it uses
+    separate distribution on cpan. This module is separate because it uses
     the controversial Devel::Declare module.
 
     t/some_test.t: package TEST::SomeTest; use strict; use warnings;
@@ -164,7 +164,7 @@ FEATURES
         *Provided by Mock::Quick*
 
 DEFAULT IMPORTED MODULES
-    Note: These can be overriden either on import, or by subclassing Fennec.
+    Note: These can be overridden either on import, or by subclassing Fennec.
 
     Child - Forking for dummies
         Child is an OO interface to forking that removes all the
@@ -262,7 +262,7 @@ IMPORT ARGUMENTS
 
     seed => '...'
         Set the random seed to be used. Defaults to current date, can be
-        overriden by the FENNEC_SEED environment variable.
+        overridden by the FENNEC_SEED environment variable.
 
     debug => $BOOL
         Can be used to turn on internal debugging for Fennec. This currently

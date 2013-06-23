@@ -13,8 +13,8 @@ L<Fennec> - The main glue and interface module.
 
 =item Fennec::Declare
 
-B<Note:> L<Fennec::Declare> is a seperate distribution, and must be installed
-seperately.
+B<Note:> L<Fennec::Declare> is a separate distribution, and must be installed
+separately.
 
 L<Fennec::Declare> - Provides the syntax sugar.
 

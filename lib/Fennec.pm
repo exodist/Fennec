@@ -305,7 +305,7 @@ t/some_test.t:
 =head2 DECLARE SYNTAX
 
 B<Note:> In order to use this you B<MUST> install L<Fennec::Declare> which is a
-seperate distribution on cpan. This module is seperate because it uses the
+separate distribution on cpan. This module is separate because it uses the
 controversial L<Devel::Declare> module.
 
 t/some_test.t:
@@ -448,7 +448,7 @@ I<Provided by Mock::Quick>
 
 =head1 DEFAULT IMPORTED MODULES
 
-B<Note:> These can be overriden either on import, or by subclassing Fennec.
+B<Note:> These can be overridden either on import, or by subclassing Fennec.
 
 =over 4
 
@@ -562,7 +562,7 @@ common to multiple test files.
 
 =item seed => '...'
 
-Set the random seed to be used. Defaults to current date, can be overriden by
+Set the random seed to be used. Defaults to current date, can be overridden by
 the FENNEC_SEED environment variable.
 
 =item debug => $BOOL
