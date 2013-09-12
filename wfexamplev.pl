@@ -1,6 +1,6 @@
 use Fennec::Declare;
 
-describe subsystemA {
+describe subsystemA => sub {
     before_all initialize => sub { ... };
 
     before_each reset => sub { ... };
@@ -11,16 +11,16 @@ describe subsystemA {
     after_each record => sub { ... };
 
     after_all deinitialize => sub { ... };
-}
+};
 
-describe subsystemB {
+describe subsystemB => sub {
     case is_cold    => sub { ... };
     case is_warm    => sub { ... };
     case is_unknown => sub { ... };
 
     tests will_not_shatter => sub { ... };
     tests will_not_melt    => sub { ... };
-}
+};
 
 done_testing sub {
     ok( 1, "This runs last" );

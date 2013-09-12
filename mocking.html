@@ -86,9 +86,20 @@
         As seen in the previous sections, Mock::Quick functions return a
         control object that you need to keep track of. If you fail to capture
         the control object a warning is issued because your mock is immedietly
-        destroyed. With Fennec you can omit the control object, it will be
-        implicitly captured by the current scope, and inherited by child
-        scopes.
+        destroyed.
+       
+        <p>
+
+        In Fennec, Mock::Quick functions where the return object is ignored,
+        will act as setup/teardown specifications. That is if you use qtakeover
+        in a describe block, the mocking will effect any test blocks (as well
+        as setup/teardown blocks) within that describe. The mocking however
+        will NOT apply to the describe block itself.
+
+        <p>
+
+        On top of that you can use qtakeover and similar functions inside the
+        test block and safely ignore the returned control object.
 
         <script class="code">
             tests implicit_mock_scope => sub {
