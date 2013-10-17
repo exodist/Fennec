@@ -716,6 +716,7 @@ Examples can be the best form of documentation.
 =head3 VANILLA SYNTAX
 
 t/simple.t
+
     use strict;
     use warnings;
 
@@ -744,6 +745,7 @@ t/simple.t
 =head3 DECLARE SYNTAX
 
 t/simple.t
+
     use strict;
     use warnings;
 
@@ -782,6 +784,7 @@ in total 8 tests will be run.
 =head3 VANILLA
 
 sample.t:
+
     use strict;
     use warnings;
 
@@ -806,6 +809,7 @@ sample.t:
 =head3 OBJECT ORIENTED
 
 sample.t
+
     use strict;
     use warnings;
 
@@ -841,6 +845,7 @@ sample.t
 B<Note:> no need to shift $self, it is done for you!
 
 sample.t
+
     use strict;
     use warnings;
 
@@ -996,6 +1001,7 @@ argument to Fennec. This matters because you can subclass Fennec to always
 include this library.
 
 t/test.t
+
     use strict;
     use warnings;
     use Fennec;
@@ -1005,6 +1011,7 @@ t/test.t
     done_testing;
 
 lib/Some/Test/Lib.pm
+
     package Some::Test::Lib;
     use Test::Workflow;
     use Test::More;
@@ -1080,6 +1087,7 @@ for the main process to demonstrate that after_all really does come last.
     7253 after_all runs last.
 
 sample.t
+
     use strict;
     use warnings;
 
