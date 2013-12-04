@@ -44,7 +44,9 @@ sub add_control {
 for my $type (qw/test case child before_each before_all around_each around_all/) {
     my $add = sub {
         my $self = shift;
-        push @{$self->$type} => Test::Workflow::Block->new(@_);
+        my $block = Test::Workflow::Block->new(@_);
+        $block->subtype($type);
+        push @{$self->$type} => $block;
     };
     no strict 'refs';
     *{"add_$type"} = $add;
@@ -53,7 +55,9 @@ for my $type (qw/test case child before_each before_all around_each around_all/)
 for my $type (qw/after_each after_all/) {
     my $add = sub {
         my $self = shift;
-        unshift @{$self->$type} => Test::Workflow::Block->new(@_);
+        my $block = Test::Workflow::Block->new(@_);
+        $block->subtype($type);
+        unshift @{$self->$type} => $block;
     };
     no strict 'refs';
     *{"add_$type"} = $add;

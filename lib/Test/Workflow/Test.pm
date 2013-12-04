@@ -5,6 +5,7 @@ use warnings;
 use Fennec::Util qw/accessors/;
 use List::Util qw/shuffle/;
 use Carp qw/cluck/;
+require Time::HiRes;
 
 accessors qw/setup tests teardown around block_name is_wrap control/;
 
@@ -54,6 +55,9 @@ sub _wrap_tests {
     my $self = shift;
     my ($instance) = @_;
 
+    my $ref = ref $self;
+    $ref =~ s/^.*:://;
+
     my $meta = $instance->TEST_WORKFLOW;
 
     my $sort = $meta->test_sort || 'rand';
@@ -62,10 +66,28 @@ sub _wrap_tests {
     my $wait = $meta->test_wait;
     my $pid  = $$;
 
+    my $debug = $instance->can('FENNEC') && $instance->FENNEC->debug;
+    my $collector = $debug ? Fennec::Runner->new->collector : undef;
+
     return sub {
         my $control_store = [];
         $meta->control_store($control_store);
-        push @$control_store => $_->() for @{$self->control};
+        for my $sub (@{$self->control}) {
+            my $control = $sub->();
+            if ($debug) {
+                my ($sec, $ms) = Time::HiRes::gettimeofday;
+                my $msg = sprintf(
+                    "FENNEC_DEBUG_MOCK:PID:%d\0CLASS:%s\0SEC:%d\0MSEC:%d\0OVERRIDES:%s\n",
+                    $$,
+                    $control->package,
+                    $sec,
+                    $ms,
+                    join ' ' => grep { /^\w/ } keys %$control
+                );
+                $collector->diag($msg);
+            }
+            push @$control_store => $control;
+        }
 
         $_->run($instance) for @{$self->setup};
         for my $test (@tests) {

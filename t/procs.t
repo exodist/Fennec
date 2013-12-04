@@ -78,6 +78,14 @@ describe procs_nested => sub {
             push @pids => $$;
         };
 
+        around_each spin_me_right_round => sub {
+            my $self = shift;
+            my ($run) = @_;
+            print $fh "AROUND START\n";
+            $run->();
+            print $fh "AROUND END\n";
+        };
+
         tests a => sub {
             print $fh "INNER TEST\n";
             ok( $$ != $pids[-1], "Multiple Tests, each should have a different proc" );
@@ -117,7 +125,11 @@ OUTER SETUP
 OUTER TEST
 OUTER TEST
 INNER SETUP
+AROUND START
 INNER TEST
+AROUND END
+AROUND START
 INNER TEST
+AROUND END
     EOT
 });

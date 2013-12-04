@@ -4,21 +4,23 @@ use warnings;
 
 use Carp qw/confess/;
 use Fennec::Util qw/accessors require_module/;
+use File::Temp qw/tempfile/;
 
-accessors qw/test_count test_failed/;
+accessors qw/test_count test_failed debug_data/;
 
 sub ok      { confess "Must override ok" }
 sub diag    { confess "Must override diag" }
 sub end_pid { confess "Must override end_pid" }
 sub collect { confess "Must override collect" }
 
-sub finish { }
 sub init   { }
 
 sub new {
     my $class  = shift;
     my %params = @_;
     my $self   = bless \%params, $class;
+
+    $self->debug_data([]);
     $self->init;
 
     return $self;
@@ -34,6 +36,61 @@ sub inc_test_failed {
     my $self = shift;
     my $count = $self->test_failed || 0;
     $self->test_failed( $count + 1 );
+}
+
+sub debug {
+    my $self = shift;
+    my ($msg) = @_;
+    my ($action, $data) = $msg =~ m/^ ?# ?FENNEC_DEBUG_(MOCK|BLOCK):(.*)$/;
+
+    my $set = { ACTION => $action };
+
+    for my $field (split "\0", $data) {
+        my ($key, $val) = $field =~ m/([^:]+):(.*)/;
+        $set->{lc($key)} = $val;
+    }
+
+    push @{$self->debug_data} => $set;
+}
+
+sub finish {
+    my $self = shift;
+    return unless @{$self->debug_data};
+    my @data = sort { return $a->{sec} <=> $b->{sec} || $a->{msec} <=> $b->{msec} }
+        @{ $self->debug_data };
+
+    my $index = 0;
+    my $map = { $$ => $index++ };
+
+    my @out;
+
+    for my $item (@data) {
+        $map->{$item->{pid}} = $index++ unless defined $map->{$item->{pid}};
+        my $idx = $map->{$item->{pid}};
+        if ($item->{ACTION} eq 'MOCK') {
+            push @out => [ $idx, "MOCK $item->{class} => ($item->{overrides})" ];
+        }
+        else {
+            push @out => [ $idx, "BLOCK $item->{start_line}\->$item->{end_line} $item->{type}: $item->{name}" ];
+        }
+    }
+
+    my @pids = sort { $map->{$a} <=> $map->{$b} } keys %$map;
+    my ($fh, $filename) = tempfile( CLEANUP => 0 );
+
+    print $fh join "," => @pids;
+    print $fh "\n";
+    for my $row (@out) {
+        print $fh " ," x $row->[0];
+        print $fh $row->[1];
+        print $fh ", " x ($index - $row->[0]);
+        print $fh "\n";
+    }
+
+    close($fh);
+
+    print "# See $filename for process debugging\n";
+    print "# Try column -s, -t < '$filename' | less -#2 -S\n";
 }
 
 1;

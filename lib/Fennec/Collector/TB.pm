@@ -16,6 +16,8 @@ sub report { confess "Must override report" }
 sub finish {
     my $self = shift;
 
+    $self->SUPER::finish();
+
     my $count = $self->test_count || 0;
     print STDOUT "1..$count";
     print STDOUT " # SKIP " . $self->skip if $self->skip;
@@ -55,6 +57,8 @@ sub render {
         $self->inc_test_failed if $fail && !$mod;
         $self->inc_test_count;
     }
+
+    return $self->debug($part) if $part =~ m/# FENNEC_DEBUG/;
 
     if ( $ENV{HARNESS_IS_VERBOSE} || $handle eq 'STDOUT' ) {
         print STDOUT "$part\n";

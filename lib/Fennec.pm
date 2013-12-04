@@ -7,7 +7,7 @@ BEGIN { require Fennec::Runner }
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.010';
+our $VERSION = '2.011';
 
 sub defaults {
     (
@@ -19,10 +19,11 @@ sub defaults {
             'Mock::Quick',
             'Child',
         ],
-        parallel     => 3,
+        parallel     => $ENV{'FENNEC_PARALLEL'} || 3,
         runner_class => 'Fennec::Runner',
         with_tests   => [],
         Child        => ['child'],
+        debug        => $ENV{'FENNEC_DEBUG'} || 0,
     );
 }
 
@@ -516,6 +517,34 @@ class() subroutine is defined and returns the name.
 
 How many test blocks can be run in parallel. Default is 3. Set to 1 to fork for
 each test, but only run one at a time. Set to 0 to prevent forking.
+
+You can also set this using the C<$FENNEC_PARALLEL> environment variable.
+
+=item debug => 1
+
+Enable tracking debugging information. At the end of the Fennec run it will
+present you with a CSV temp file. This file lists all blocks that are run, and
+mocks that are made in sequence from top to bottom. The actions are split into
+columns by PID. This is usedul when debugging potential race-conditions when
+using parallel testing.
+
+Example:
+
+    26150,26151,26152,26153,26154
+    0 26150 BLOCK 54->78 child: outer_wrap, , , , , 
+     ,1 26151 BLOCK 47->52 test: class_store, , , , 
+    0 26150 MOCK Foo => (outer), , , , , 
+    0 26150 BLOCK 58->61 before_all: ba, , , , , 
+     , ,2 26152 MOCK Foo => (outer), , , 
+     , ,2 26152 BLOCK 63->66 before_each: be, , , 
+     , ,2 26152 BLOCK 68->72 test: the_check, , , 
+     , , ,3 26153 BLOCK 16->31 test: object, , 
+     , , , ,4 26154 BLOCK 33->45 test: class, 
+
+You can use this in a spreadsheet program, or use this command to look at it in
+a more friendly way.
+
+    column -s, -t < '/path/to/tempfile' | less -#2 -S
 
 =item collector_class => 'Fennec::Collector::TB::TempFiles'
 

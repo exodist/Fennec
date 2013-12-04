@@ -6,6 +6,7 @@ use Fennec::Util qw/accessors/;
 use Carp qw/croak/;
 use B ();
 use Scalar::Util qw/blessed/;
+require Time::HiRes;
 
 our @CARP_NOT = qw{
     Test::Workflow
@@ -15,7 +16,7 @@ our @CARP_NOT = qw{
 };
 
 accessors qw{
-    name start_line end_line code verbose package diag skip todo should_fail
+    name start_line end_line code verbose package diag skip todo should_fail subtype
 };
 
 sub new {
@@ -80,6 +81,25 @@ sub run {
     my ( $instance, $layer ) = @_;
     my $meta = $instance->TEST_WORKFLOW;
     my $name = "Group: " . $self->name;
+    my $debug = $instance->can('FENNEC') && $instance->FENNEC->debug;
+
+    my $ref = ref $self;
+    $ref =~ s/^.*:://;
+    if ($debug) {
+        my $collector = Fennec::Runner->new->collector;
+        my ($sec, $ms) = Time::HiRes::gettimeofday;
+        my $msg = sprintf(
+            "FENNEC_DEBUG_BLOCK:PID:%d\0START_LINE:%d\0END_LINE:%d\0TYPE:%s\0NAME:%s\0SEC:%d\0MSEC:%d\n",
+            $$,
+            $self->start_line,
+            $self->end_line,
+            $self->subtype,
+            $self->name,
+            $sec,
+            $ms,
+        );
+        $collector->diag($msg);
+    }
 
     return $meta->skip->( $name, $self->skip )
         if $self->skip;
