@@ -75,7 +75,7 @@ sub _wrap_tests {
         for my $sub (@{$self->control}) {
             my $control = $sub->();
             if ($debug) {
-                my ($sec, $ms) = Time::HiRes::gettimeofday;
+                my ($sec, $ms) = Time::HiRes::gettimeofday();
                 my $msg = sprintf(
                     "FENNEC_DEBUG_MOCK:PID:%d\0CLASS:%s\0SEC:%d\0MSEC:%d\0OVERRIDES:%s\n",
                     $$,

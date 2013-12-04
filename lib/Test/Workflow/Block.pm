@@ -87,7 +87,7 @@ sub run {
     $ref =~ s/^.*:://;
     if ($debug) {
         my $collector = Fennec::Runner->new->collector;
-        my ($sec, $ms) = Time::HiRes::gettimeofday;
+        my ($sec, $ms) = Time::HiRes::gettimeofday();
         my $msg = sprintf(
             "FENNEC_DEBUG_BLOCK:PID:%d\0START_LINE:%d\0END_LINE:%d\0TYPE:%s\0NAME:%s\0SEC:%d\0MSEC:%d\n",
             $$,
