@@ -4,7 +4,7 @@ Fennec::Manual::CustomFennec - Customizing Fennec for you project.
 
 =head1 DESCRIPTION
 
-L<Fennec> autmatically loads several utlities for you. In addition it assumes you
+L<Fennec> automatically loads several utilities for you. In addition it assumes you
 want to use L<Test::Builder>. Subclassing Fennec will let you specify exactly
 what utilities you want, and what collector to use. This way you can use your
 subclass in each test file instead of copying C<use Fennec ( YOUR CONFIG
@@ -42,7 +42,7 @@ My/Fennec.pm
 The collector is responsible for 2 jobs:
 1) In the parent process it is responsible for gathering all test results from
 the child processes.
-2) In the child processes it is responsbile for sending results to the parent
+2) In the child processes it is responsible for sending results to the parent
 process.
 
 If TAP is not your thing, or you want to use Fennec with existing tests that do
