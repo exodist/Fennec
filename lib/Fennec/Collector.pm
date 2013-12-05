@@ -106,7 +106,7 @@ Fennec::Collector - Funnel results from child to parent
 The collector is responsible for 2 jobs:
 1) In the parent process it is responsible for gathering all test results from
 the child processes.
-2) In the child processes it is responsbile for sending results to the parent
+2) In the child processes it is responsible for sending results to the parent
 process.
 
 =head1 METHODS SUBCLASSES MUST OVERRIDE
