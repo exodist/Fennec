@@ -460,7 +460,7 @@ checking if the pid changed, and making sure you exit the child process.
 
 =item Mock::Quick - Mocking without the eye gouging
 
-L<Mock::Quick> is a mocking library that makes mocking easy. In additon it uses
+L<Mock::Quick> is a mocking library that makes mocking easy. In addition it uses
 a declarative style interface. Unlike most other mocking libraries on CPAN, it
 does not make people want to gouge their eyes out and curl up in the fetal
 position.
@@ -1189,7 +1189,7 @@ You can also create a custom runner using a single .t file to run all your
 Fennec tests. This has caveats though, such as not knowing which test file had
 problems without checking the failure messages.
 
-This will find all *.ft and/or *.pm moduls under the t/ directory. It will load
+This will find all *.ft and/or *.pm modules under the t/ directory. It will load
 and run any found. These will be run in parallel
 
 t/runner.t
