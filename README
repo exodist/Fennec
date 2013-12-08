@@ -173,10 +173,10 @@ DEFAULT IMPORTED MODULES
         you exit the child process.
 
     Mock::Quick - Mocking without the eye gouging
-        Mock::Quick is a mocking library that makes mocking easy. In additon
-        it uses a declarative style interface. Unlike most other mocking
-        libraries on CPAN, it does not make people want to gouge their eyes
-        out and curl up in the fetal position.
+        Mock::Quick is a mocking library that makes mocking easy. In
+        addition it uses a declarative style interface. Unlike most other
+        mocking libraries on CPAN, it does not make people want to gouge
+        their eyes out and curl up in the fetal position.
 
     Test::Workflow - RSPEC for perl.
         Test::Workflow is a testing library written specifically for Fennec.
@@ -346,8 +346,13 @@ EXPORTED FUNCTIONS
     before_all $name => sub { ... };
         Setup, run once before any tests in the describe scope run.
 
+    before_case $name => sub { ... };
+        Setup, run before any case blocks are run.
+
     before_each $name => sub { ... };
-        Setup, run once per test, just before it runs.
+    after_case $name => sub { ... };
+        Setup, run once per test, just before it runs. Both run after the
+        case block (if there is one).
 
     around_each $name => sub { ... };
         Setup and/or teardown.
@@ -817,7 +822,7 @@ RUNNING FENNEC TEST FILES IN PARALLEL
     your Fennec tests. This has caveats though, such as not knowing which
     test file had problems without checking the failure messages.
 
-    This will find all *.ft and/or *.pm moduls under the t/ directory. It
+    This will find all *.ft and/or *.pm modules under the t/ directory. It
     will load and run any found. These will be run in parallel
 
     t/runner.t #!/usr/bin/perl use strict; use warnings;

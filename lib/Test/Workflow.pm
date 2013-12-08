@@ -16,6 +16,7 @@ default_exports qw/
     tests       run_tests
     describe    it
     cases       case
+    before_case after_case
     before_each after_each around_each
     before_all  after_all  around_all
     with_tests
@@ -54,7 +55,10 @@ sub with_tests {
     $layer->merge_in( \@caller, @_ );
 }
 
-*it = \&tests;
+{
+    no warnings 'once';
+    *it = \&tests;
+}
 
 sub tests {
     my $name   = shift;
@@ -79,10 +83,12 @@ sub _add_child {
 }
 
 sub case        { _add_type( 'case',        @_ ) }
+sub before_case { _add_type( 'before_case', @_ ) }
 sub before_each { _add_type( 'before_each', @_ ) }
 sub before_all  { _add_type( 'before_all',  @_ ) }
 sub after_each  { _add_type( 'after_each',  @_ ) }
 sub after_all   { _add_type( 'after_all',   @_ ) }
+sub after_case  { _add_type( 'before_each', @_ ) }
 sub around_each { _add_type( 'around_each', @_ ) }
 sub around_all  { _add_type( 'around_all',  @_ ) }
 
@@ -105,7 +111,7 @@ sub run_tests {
         $instance ||= bless( {}, $caller );
     }
     my $layer = $instance->TEST_WORKFLOW->root_layer;
-    my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [], [] );
+    my @tests = get_tests( $instance, $layer, 'PACKAGE LEVEL', [], [], [], [], [] );
     $instance->TEST_WORKFLOW->build_complete(1);
     my $sort = $instance->TEST_WORKFLOW->test_sort || 'rand';
     @tests = order_tests( $sort, @tests );
@@ -137,9 +143,10 @@ sub order_tests {
 
 #<<< no-tidy
 sub get_tests {
-    my ( $instance, $layer, $name, $before_each, $after_each, $around_each, $control, $todo ) = @_;
+    my ( $instance, $layer, $name, $before_case, $before_each, $after_each, $around_each, $control, $todo ) = @_;
 
     # get before_each and after_each
+    push    @$before_case => @{ $layer->before_case };
     push    @$before_each => @{ $layer->before_each };
     push    @$around_each => @{ $layer->around_each };
     push    @$control     => @{ $layer->control     };
@@ -170,7 +177,7 @@ sub get_tests {
         for my $test ( @tests ) {
             for my $case ( @cases ) {
                 push @new_tests => Test::Workflow::Test->new(
-                    setup => [ $case, @$before_each ],
+                    setup => [ @$before_case, $case, @$before_each ],
                     tests => [
                         $test->clone_with(
                             name => "'" . $case->name . "' x '" . $test->name . "'"
@@ -207,6 +214,7 @@ sub get_tests {
             $instance,
             $layer,
             $_->name,
+            [@$before_case],
             [@$before_each],
             [@$after_each],
             [@$around_each],

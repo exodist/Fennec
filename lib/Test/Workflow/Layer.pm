@@ -12,6 +12,7 @@ our @ATTRIBUTES = qw{
     test
     case
     child
+    before_case
     before_each
     before_all
     after_each
@@ -41,7 +42,11 @@ sub add_control {
     push @{$self->control} => @_;
 }
 
-for my $type (qw/test case child before_each before_all around_each around_all/) {
+sub add_after_case {
+    goto &before_each;
+}
+
+for my $type (qw/test case child before_case before_each before_all around_each around_all/) {
     my $add = sub {
         my $self = shift;
         my $block = Test::Workflow::Block->new(@_);
