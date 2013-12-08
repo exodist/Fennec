@@ -90,15 +90,23 @@ sub _wrap_tests {
         }
 
         $_->run($instance) for @{$self->setup};
-        for my $test (@tests) {
-            my $outer = sub { $test->run($instance) };
-            for my $around ( @{$self->around} ) {
-                my $inner = $outer;
-                $outer = sub { $around->run( $instance, $inner ) };
+
+
+        my $base = sub {
+            for my $test (@tests) {
+                $test->run($instance);
             }
-            $wait->() if $wait && $test->can('is_wrap') && $test->is_wrap;
-            $outer->();
+        };
+
+        my $outer = $base;
+        for my $around ( @{$self->around} ) {
+            my $inner = $outer;
+            $outer = sub { $around->run( $instance, $inner ) };
         }
+
+        $wait->() if $wait && $self->can('is_wrap') && $self->is_wrap;
+        $outer->();
+        
         $_->run($instance) for @{$self->teardown};
 
         $meta->control_store(undef);
