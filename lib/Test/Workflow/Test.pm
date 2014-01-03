@@ -89,8 +89,9 @@ sub _wrap_tests {
             push @$control_store => $control;
         }
 
-        $_->run($instance) for @{$self->setup};
+        $wait->() if $wait && $self->can('is_wrap') && $self->is_wrap;
 
+        $_->run($instance) for @{$self->setup};
 
         my $base = sub {
             for my $test (@tests) {
@@ -104,15 +105,14 @@ sub _wrap_tests {
             $outer = sub { $around->run( $instance, $inner ) };
         }
 
-        $wait->() if $wait && $self->can('is_wrap') && $self->is_wrap;
         $outer->();
-        
+
         $_->run($instance) for @{$self->teardown};
 
         $meta->control_store(undef);
         $control_store = undef;
 
-        $wait->() if $wait && $self->is_wrap;
+        $wait->() if $wait && $self->can('is_wrap') && $self->is_wrap;
     };
 }
 
