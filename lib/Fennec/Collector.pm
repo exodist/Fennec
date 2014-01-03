@@ -41,7 +41,7 @@ sub inc_test_failed {
 sub debug {
     my $self = shift;
     my ($msg) = @_;
-    my ($action, $data) = $msg =~ m/^ ?# ?FENNEC_DEBUG_(MOCK|BLOCK):(.*)$/;
+    my ($action, $data) = $msg =~ m/^ ?# ?FENNEC_DEBUG_(MOCK|BLOCK|CUSTOM):(.*)$/;
 
     my $set = { ACTION => $action };
 
@@ -70,8 +70,11 @@ sub finish {
         if ($item->{ACTION} eq 'MOCK') {
             push @out => [ $idx, "MOCK $item->{class} => ($item->{overrides})" ];
         }
+        elsif ($item->{ACTION} eq 'BLOCK') {
+            push @out => [ $idx, "BLOCK $item->{start_line}\->$item->{end_line} $item->{type}: $item->{name} ($item->{state})" ];
+        }
         else {
-            push @out => [ $idx, "BLOCK $item->{start_line}\->$item->{end_line} $item->{type}: $item->{name}" ];
+            push @out => [ $idx, "CUSTOM: $item->{message}" ];
         }
     }
 

@@ -7,7 +7,7 @@ BEGIN { require Fennec::Runner }
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.012';
+our $VERSION = '2.013';
 
 sub defaults {
     (
@@ -86,6 +86,27 @@ sub import {
 
     $class->_with_tests( $importer, $params{with_tests} );
     $class->init( %params, importer => $importer, meta => $meta );
+
+    if ($ENV{FENNEC_DEBUG} || $params{debug}) {
+        require Time::HiRes;
+        my $collector;
+        my $debug = sub {
+            my $msg = pop;
+
+            my ($sec, $ms) = Time::HiRes::gettimeofday();
+            my $line = sprintf(
+                "FENNEC_DEBUG_CUSTOM:PID:%d\0SEC:%d\0MSEC:%d\0MESSAGE:%s\n",
+                $$,
+                $sec,
+                $ms,
+                $msg
+            );
+            $collector ||= Fennec::Runner->new->collector;
+            $collector->diag($line);
+        };
+        no strict 'refs';
+        *{"$importer\::fennec_debug"} = $debug;
+    }
 
     $class->_export_done_testing(
         $importer,
