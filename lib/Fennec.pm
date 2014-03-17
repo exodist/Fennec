@@ -19,7 +19,7 @@ sub defaults {
             'Mock::Quick',
             'Child',
         ],
-        parallel     => $ENV{'FENNEC_PARALLEL'} || 3,
+        parallel     => defined $ENV{'FENNEC_PARALLEL'} ? $ENV{'FENNEC_PARALLEL'} : 3,
         runner_class => 'Fennec::Runner',
         with_tests   => [],
         Child        => ['child'],
