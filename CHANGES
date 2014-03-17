@@ -1,3 +1,6 @@
+V2.014 - Mar 17 2014
+    * Support FENNEC_PARALLEL=0 env var.
+
 V2.009 - Better mocking scoping
  * Make it so that Mock::Quick control objects can be implicitly captured by
    Fennec scopes.

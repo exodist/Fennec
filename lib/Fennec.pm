@@ -7,7 +7,7 @@ BEGIN { require Fennec::Runner }
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.013';
+our $VERSION = '2.014';
 
 sub defaults {
     (
@@ -19,7 +19,7 @@ sub defaults {
             'Mock::Quick',
             'Child',
         ],
-        parallel     => $ENV{'FENNEC_PARALLEL'} || 3,
+        parallel     => defined $ENV{'FENNEC_PARALLEL'} ? $ENV{'FENNEC_PARALLEL'} : 3,
         runner_class => 'Fennec::Runner',
         with_tests   => [],
         Child        => ['child'],
