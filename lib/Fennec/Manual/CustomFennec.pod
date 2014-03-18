@@ -35,6 +35,18 @@ My/Fennec.pm
         return %params;
     }
 
+    sub after_import {
+        my $class = shift;
+        my ($info) = @_;
+        # $info is a hashref with the importer, runner, and importer meta
+        # object, and some other fun things.
+
+        # Example of adding cases to any Fennec test that uses this subclass:
+        my @caller = caller(1);
+        $info->{layer}->add_case(\@caller, case_a => sub { $main::CASE_A = 1 });
+        $info->{layer}->add_case(\@caller, case_b => sub { $main::CASE_B = 1 });
+    }
+
     1;
 
 =head1 CUSTOM COLLECTOR

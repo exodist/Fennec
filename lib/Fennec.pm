@@ -7,7 +7,7 @@ BEGIN { require Fennec::Runner }
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.014';
+our $VERSION = '2.015';
 
 sub defaults {
     (
@@ -113,6 +113,14 @@ sub import {
         $runner,
         $runner_init,
     );
+
+    $class->after_import({
+        importer => $importer,
+        runner   => $runner,
+        meta     => $meta,
+        wf_meta  => $wfmeta,
+        layer    => $wfmeta->peek_layer || $wfmeta->root_layer,
+    }) if $class->can('after_import');
 
     verbose_message("Entering primary stage: $importer\n");
 }

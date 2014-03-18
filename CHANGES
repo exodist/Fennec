@@ -1,3 +1,6 @@
+v2.015 - Mar 18 2014
+    * Better subclass support
+
 V2.014 - Mar 17 2014
     * Support FENNEC_PARALLEL=0 env var.
 
