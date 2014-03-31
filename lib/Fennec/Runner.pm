@@ -232,8 +232,8 @@ sub DESTROY {
 #
 # This is new behavior as of Fennec 2.000. Old versions used a couple of evil
 # hacks to make it work without calling done_testing. These resulted in things
-# such as broken coverage tests, broken Win32 (who cares right?), and other
-# strange and hard to debug behavior.
+# such as broken coverage tests, broken Win32, and other strange and hard to
+# debug behavior.
 #
 # Fennec Tests loaded, but not run:
 $tests
