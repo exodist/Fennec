@@ -1,6 +1,6 @@
 /.vimrc
 Build
-MYMETA.yml
+MYMETA.*
 _build/
 blib/
 old
