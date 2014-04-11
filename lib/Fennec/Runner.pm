@@ -198,6 +198,7 @@ sub run_test_class {
             $ptests->run(
                 sub {
                     chdir $orig_cwd;
+                    local %ENV = %ENV;
                     $run->();
                     $self->collector->end_pid();
                 },
