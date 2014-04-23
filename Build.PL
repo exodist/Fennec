@@ -10,6 +10,7 @@ my $build = Module::Build->new(
     create_readme => 1,
     requires => {
         'Carp'              => 0,
+        'Child'             => '0.010',
         'Exporter::Declare' => 0,
         'Mock::Quick'       => '1.106',
         'Parallel::Runner'  => '0.013',
