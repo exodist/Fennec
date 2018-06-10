@@ -7,7 +7,7 @@ BEGIN { require Fennec::Runner }
 use Fennec::Test;
 use Fennec::Util qw/inject_sub require_module verbose_message/;
 use Carp qw/croak carp/;
-our $VERSION = '2.018';
+our $VERSION = '2.019';
 
 sub defaults {
     (
@@ -283,7 +283,7 @@ __END__
 
 =head1 NAME
 
-Fennec - A testers toolbox, and best friend
+Fennec - A testers toolbox, and best friend (DEPRECATED)
 
 =head1 DESCRIPTION
 
@@ -1247,6 +1247,10 @@ t/runner.t
 
     # You must call this.
     run();
+
+=head1 SEE ALSO
+
+L<Test2::Suite> makes this module largely obsolete.
 
 =head1 AUTHORS
 

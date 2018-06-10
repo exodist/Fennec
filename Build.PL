@@ -26,6 +26,7 @@ my $build = Module::Build->new(
     build_requires => {
     },
     meta_merge => {
+        x_deprecated => 1,
         resources => {
             repository  => 'http://github.com/exodist/Fennec',
             bugtracker  => 'http://github.com/exodist/Fennec/issues',
